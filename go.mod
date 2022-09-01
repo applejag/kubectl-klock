@@ -3,40 +3,37 @@ module github.com/replicatedhq/krew-plugin-template
 go 1.16
 
 require (
-	github.com/Microsoft/go-winio v0.4.12 // indirect
-	github.com/NYTimes/gziphandler v1.1.1 // indirect
-	github.com/blang/semver v3.5.1+incompatible
-	github.com/containerd/continuity v0.0.0-20181203112020-004b46473808 // indirect
-	github.com/docker/docker v1.13.1
-	github.com/docker/go-connections v0.4.0 // indirect
+	github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf // indirect
 	github.com/evanphx/json-patch v4.5.0+incompatible // indirect
 	github.com/fatih/color v1.7.0
-	github.com/genuinetools/reg v0.16.0
-	github.com/gin-gonic/gin v1.4.0
-	github.com/gizak/termui/v3 v3.1.0
-	github.com/google/gofuzz v1.0.0 // indirect
+	github.com/ghodss/yaml v1.0.0 // indirect
+	github.com/gogo/protobuf v1.2.1 // indirect
+	github.com/golang/protobuf v1.3.3 // indirect
+	github.com/google/btree v1.0.0 // indirect
 	github.com/googleapis/gnostic v0.3.1 // indirect
-	github.com/gopherjs/gopherjs v0.0.0-20190328170749-bb2674552d8f // indirect
-	github.com/hashicorp/go-cleanhttp v0.5.1 // indirect
-	github.com/hashicorp/go-getter v1.3.0
-	github.com/hashicorp/go-multierror v1.0.0
-	github.com/hashicorp/go-version v1.1.0
+	github.com/gregjones/httpcache v0.0.0-20180305231024-9cad4c3443a7 // indirect
 	github.com/imdario/mergo v0.3.7 // indirect
+	github.com/json-iterator/go v1.1.9 // indirect
 	github.com/manifoldco/promptui v0.3.2
-	github.com/mholt/archiver v3.1.1+incompatible
+	github.com/mattn/go-isatty v0.0.12 // indirect
+	github.com/modern-go/reflect2 v1.0.1 // indirect
+	github.com/nicksnyder/go-i18n v1.10.1 // indirect
 	github.com/onsi/ginkgo v1.8.0 // indirect
-	github.com/onsi/gomega v1.5.0
-	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
+	github.com/onsi/gomega v1.5.0 // indirect
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
-	github.com/smartystreets/assertions v0.0.0-20190401211740-f487f9de1cd3 // indirect
-	github.com/spf13/cobra v0.0.4
-	github.com/spf13/viper v1.4.0
-	github.com/stretchr/testify v1.3.0
-	github.com/tj/go-spin v1.1.0
-	golang.org/x/net v0.0.0-20190812203447-cdfb69ac37fc
-	gopkg.in/cheggaaa/pb.v1 v1.0.28 // indirect
-	gopkg.in/yaml.v2 v2.2.2
-	gotest.tools v2.2.0+incompatible // indirect
+	github.com/pkg/errors v0.8.0 // indirect
+	github.com/spf13/cobra v0.0.4 // indirect
+	github.com/stretchr/testify v1.4.0 // indirect
+	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9 // indirect
+	golang.org/x/lint v0.0.0-20190313153728-d0100b6bd8b3 // indirect
+	golang.org/x/net v0.0.0-20190812203447-cdfb69ac37fc // indirect
+	golang.org/x/oauth2 v0.0.0-20181203162652-d668ce993890 // indirect
+	golang.org/x/text v0.3.2 // indirect
+	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4 // indirect
+	google.golang.org/appengine v1.3.0 // indirect
+	gopkg.in/alecthomas/kingpin.v3-unstable v3.0.0-20191105091915-95d230a53780 // indirect
+	gopkg.in/inf.v0 v0.9.1 // indirect
+	gopkg.in/yaml.v2 v2.2.8 // indirect
 	k8s.io/api v0.0.0-20190313235455-40a48860b5ab // indirect
 	k8s.io/apimachinery v0.0.0-20190313205120-d7deff9243b1
 	k8s.io/cli-runtime v0.0.0-20190314001948-2899ed30580f
