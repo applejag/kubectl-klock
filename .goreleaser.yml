@@ -1,10 +1,10 @@
-project_name: {{ .PluginName }}
+project_name: klock
 release:
   github:
-    owner: {{ .Owner }}
-    name: {{ .Repo }}
+    owner: jilleJr
+    name: kubectl-klock
 builds:
-  - id: {{ .PluginName }}
+  - id: klock
     goos:
     - linux
     - windows
@@ -17,12 +17,12 @@ builds:
       - GO111MODULE=on
     main: cmd/plugin/main.go
     ldflags: -s -w
-      -X github.com/{{ .Owner }}/{{ .Repo }}/pkg/version.version=
+      -X github.com/jilleJr/kubectl-klock/pkg/version.version=
 archives:
-  - id: {{ .PluginName }}
+  - id: klock
     builds:
-    - {{ .PluginName }}
-    name_template: {{ `"{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"` }}
+    - klock
+    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
     format_overrides:
     - goos: windows
       format: zip
