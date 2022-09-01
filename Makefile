@@ -1,29 +1,29 @@
+ifeq ($(OS),Windows_NT)
+BINARY := klock.exe
+else
+BINARY := klock
+endif
 
-export GO111MODULE=on
+.PHONY: build
+build: bin/${BINARY}
 
-.PHONY: test
-test:
-	go test ./pkg/... ./cmd/... -coverprofile cover.out
+bin/${BINARY}: bin cmd/*.go pkg/*/*.go
+	go build -o bin/${BINARY}
 
-.PHONY: bin
-bin: fmt vet
-	go build -o bin/klock github.com/jilleJr/kubectl-klock/cmd/plugin
+bin:
+	mkdir bin
 
-.PHONY: fmt
-fmt:
-	go fmt ./pkg/... ./cmd/...
+.PHONY: clean
+clean:
+	rm -fv bin/${BINARY}
 
-.PHONY: vet
-vet:
-	go vet ./pkg/... ./cmd/...
+.PHONY: check
+check:
+	go test ./... -coverprofile cover.out
 
-.PHONY: kubernetes-deps
-kubernetes-deps:
-	go get k8s.io/client-go@v11.0.0
-	go get k8s.io/api@kubernetes-1.14.0
-	go get k8s.io/apimachinery@kubernetes-1.14.0
-	go get k8s.io/cli-runtime@kubernetes-1.14.0
+.PHONY: deps
+deps: deps-go
 
-.PHONY: setup
-setup:
-	make -C setup
+.PHONY: deps-go
+deps-go:
+	go get

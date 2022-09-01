@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
 project_name: klock
 release:
   github:
@@ -15,7 +16,7 @@ builds:
     env:
       - CGO_ENABLED=0
       - GO111MODULE=on
-    main: cmd/plugin/main.go
+    main: main.go
     ldflags: -s -w
       -X github.com/jilleJr/kubectl-klock/pkg/version.version=
 archives:
