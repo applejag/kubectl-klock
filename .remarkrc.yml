@@ -1,0 +1,37 @@
+# Dinkur the task time tracking utility.
+# <https://github.com/dinkur/dinkur>
+#
+# SPDX-FileCopyrightText: 2021 Kalle Fagerberg
+# SPDX-License-Identifier: CC0-1.0
+
+plugins:
+  - preset-lint-markdown-style-guide
+  -
+    - lint-list-item-indent
+    - space
+  - # Great linting rule, but it's just too buggy.
+    - lint-list-item-spacing
+    - false
+  -
+    - lint-ordered-list-marker-value
+    - ordered
+  -
+    - lint-no-file-name-irregular-characters
+    - "\\.a-zA-Z0-9-_"
+  -
+    - lint-emphasis-marker
+    - _
+  -
+    - stringify
+    - bullet: "-"
+      fences: true
+      listItemIndent: one
+      rule: "-"
+      emphasis: "_"
+      strong: "*"
+  - # Buggy in VS Code
+    - lint-table-cell-padding
+    - false
+  - # Buggy in VS Code
+    - lint-table-pipe-alignment
+    - false
