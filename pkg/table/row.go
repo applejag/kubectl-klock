@@ -11,22 +11,30 @@ import (
 )
 
 type RowStyles struct {
-	Cell            lipgloss.Style
-	Deleted         lipgloss.Style
-	DeletedProgress lipgloss.Style
+	Cell    lipgloss.Style
+	Error   lipgloss.Style
+	Deleted lipgloss.Style
 }
 
 var DefaultRowStyle = RowStyles{
-	Cell:            lipgloss.NewStyle(),
-	Deleted:         lipgloss.NewStyle().Foreground(lipgloss.Color("1")),
-	DeletedProgress: lipgloss.NewStyle().Foreground(lipgloss.Color("1")).Background(lipgloss.Color("9")),
+	Cell:    lipgloss.NewStyle(),
+	Error:   lipgloss.NewStyle().Foreground(lipgloss.Color("1")),
+	Deleted: lipgloss.NewStyle().Foreground(lipgloss.Color("8")),
 }
 
 type Row struct {
-	ID      string
-	Fields  []string
-	Deleted bool
+	ID     string
+	Fields []string
+	Status Status
 }
+
+type Status int
+
+const (
+	StatusDefault Status = iota
+	StatusError
+	StatusDeleted
+)
 
 // ensure [Row] implements the interface.
 var _ list.Item = Row{}
@@ -82,9 +90,12 @@ func (d RowDelegate) Render(w io.Writer, m list.Model, index int, listItem list.
 	if !ok {
 		return
 	}
-	if item.Deleted {
+	switch item.Status {
+	case StatusError:
+		d.RenderColumns(w, item.Fields, d.Styles.Error)
+	case StatusDeleted:
 		d.RenderColumns(w, item.Fields, d.Styles.Deleted)
-	} else {
+	default:
 		d.RenderColumns(w, item.Fields, d.Styles.Cell)
 	}
 }

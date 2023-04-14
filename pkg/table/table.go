@@ -10,6 +10,8 @@ import (
 	"gopkg.in/typ.v4/avl"
 )
 
+const extraHeight = 2
+
 type Styles struct {
 	TitleBar lipgloss.Style
 	Title    lipgloss.Style
@@ -31,38 +33,56 @@ type Model struct {
 	rows     avl.Tree[Row]
 }
 
-func NewModel() Model {
-	var listItems = []list.Item{
-		Row{Fields: []string{"pod-1", "1/1", "Running", "0", "0s"}},
-		Row{Fields: []string{"pod-2", "1/1", "Running", "10", "0s"}},
-		Row{Fields: []string{"pod-2", "1/1", "Error", "0", "0s"}, Deleted: true},
-	}
+func NewModel() *Model {
 	delegate := &RowDelegate{FieldSpacing: 3}
-	headers := []string{"NAME", "READY", "STATUS", "RESTARTS", "AGE"}
-	delegate.UpdateFieldMaxLengths(listItems, headers)
 
-	l := list.New(listItems, delegate, 80, len(listItems)+2)
+	l := list.New(nil, delegate, 80, extraHeight)
 	l.SetShowPagination(false)
 	l.SetShowStatusBar(false)
 	l.SetShowHelp(false)
-	return Model{
+	return &Model{
 		Styles:   DefaultStyles,
 		list:     l,
 		delegate: delegate,
-		headers:  headers,
+		headers:  nil,
 		rows: avl.New(func(a, b Row) int {
+			if len(a.Fields) > 0 && len(b.Fields) > 0 {
+				if cmp := typ.Compare(a.Fields[0], b.Fields[0]); cmp != 0 {
+					return cmp
+				}
+			}
+			if cmp := typ.Compare(a.Status, b.Status); cmp != 0 {
+				return cmp
+			}
 			return typ.Compare(a.ID, b.ID)
 		}),
 	}
 }
 
-func (m *Model) AddRow(row Row) {
-	var listItems = []list.Item{
-		Row{Fields: []string{"pod-1", "1/1", "Running", "0", "0s"}},
-		Row{Fields: []string{"pod-2", "1/1", "Running", "10", "0s"}},
-		Row{Fields: []string{"pod-2", "1/1", "Error", "0", "0s"}, Deleted: true},
+func (m *Model) AddRow(row Row) tea.Cmd {
+	m.rows.Add(row)
+	cmd := m.list.SetItems(m.itemsFromTree())
+	m.list.SetHeight(len(m.list.Items()) + extraHeight)
+	m.delegate.UpdateFieldMaxLengths(m.list.Items(), m.headers)
+	return cmd
+}
+
+func (m *Model) SetRows(rows []Row) tea.Cmd {
+	for _, row := range rows {
+		m.rows.Add(row)
 	}
-	m.delegate.UpdateFieldMaxLengths(listItems, m.headers)
+	cmd := m.list.SetItems(m.itemsFromTree())
+	m.list.SetHeight(len(m.list.Items()) + extraHeight)
+	m.delegate.UpdateFieldMaxLengths(m.list.Items(), m.headers)
+	return cmd
+}
+
+func (m *Model) itemsFromTree() []list.Item {
+	slice := make([]list.Item, 0, m.rows.Len())
+	m.rows.WalkInOrder(func(value Row) {
+		slice = append(slice, value)
+	})
+	return slice
 }
 
 func (m Model) Init() tea.Cmd {
@@ -70,12 +90,12 @@ func (m Model) Init() tea.Cmd {
 	return nil
 }
 
-func (m *Model) SetTitle(headers []string) {
+func (m *Model) SetHeaders(headers []string) {
 	m.headers = headers
 	m.delegate.UpdateFieldMaxLengths(m.list.Items(), headers)
 }
 
-func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	m.list, cmd = m.list.Update(msg)
 	return m, cmd
