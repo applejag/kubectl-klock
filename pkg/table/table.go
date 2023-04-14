@@ -6,8 +6,6 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"gopkg.in/typ.v4"
-	"gopkg.in/typ.v4/avl"
 )
 
 const extraHeight = 2
@@ -30,7 +28,6 @@ type Model struct {
 	list     list.Model
 	delegate *RowDelegate
 	headers  []string
-	rows     avl.Tree[Row]
 }
 
 func NewModel() *Model {
@@ -45,44 +42,38 @@ func NewModel() *Model {
 		list:     l,
 		delegate: delegate,
 		headers:  nil,
-		rows: avl.New(func(a, b Row) int {
-			if len(a.Fields) > 0 && len(b.Fields) > 0 {
-				if cmp := typ.Compare(a.Fields[0], b.Fields[0]); cmp != 0 {
-					return cmp
-				}
-			}
-			if cmp := typ.Compare(a.Status, b.Status); cmp != 0 {
-				return cmp
-			}
-			return typ.Compare(a.ID, b.ID)
-		}),
 	}
 }
 
 func (m *Model) AddRow(row Row) tea.Cmd {
-	m.rows.Add(row)
-	cmd := m.list.SetItems(m.itemsFromTree())
+	var cmd tea.Cmd
+	var modified bool
+	for i, listItem := range m.list.Items() {
+		item, ok := listItem.(Row)
+		if ok && item.ID == row.ID {
+			cmd = m.list.SetItem(i, row)
+			modified = true
+			break
+		}
+	}
+
+	if !modified {
+		cmd = m.list.InsertItem(len(m.list.Items()), row)
+	}
 	m.list.SetHeight(len(m.list.Items()) + extraHeight)
 	m.delegate.UpdateFieldMaxLengths(m.list.Items(), m.headers)
 	return cmd
 }
 
 func (m *Model) SetRows(rows []Row) tea.Cmd {
-	for _, row := range rows {
-		m.rows.Add(row)
+	items := make([]list.Item, len(rows))
+	for i, row := range rows {
+		items[i] = row
 	}
-	cmd := m.list.SetItems(m.itemsFromTree())
+	cmd := m.list.SetItems(items)
 	m.list.SetHeight(len(m.list.Items()) + extraHeight)
 	m.delegate.UpdateFieldMaxLengths(m.list.Items(), m.headers)
 	return cmd
-}
-
-func (m *Model) itemsFromTree() []list.Item {
-	slice := make([]list.Item, 0, m.rows.Len())
-	m.rows.WalkInOrder(func(value Row) {
-		slice = append(slice, value)
-	})
-	return slice
 }
 
 func (m Model) Init() tea.Cmd {
@@ -96,6 +87,10 @@ func (m *Model) SetHeaders(headers []string) {
 }
 
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.list.SetWidth(msg.Width)
+	}
 	var cmd tea.Cmd
 	m.list, cmd = m.list.Update(msg)
 	return m, cmd
