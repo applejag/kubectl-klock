@@ -8,23 +8,31 @@ import (
 	"time"
 
 	"github.com/charmbracelet/bubbles/key"
+	"github.com/charmbracelet/bubbles/paginator"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"gopkg.in/typ.v4/slices"
 )
 
-const extraHeight = 4
-
 type Styles struct {
 	TitleBar lipgloss.Style
 	Title    lipgloss.Style
 	Row      RowStyles
+
+	Pagination lipgloss.Style
 }
+
+var verySubduedColor = lipgloss.AdaptiveColor{Light: "#DDDADA", Dark: "#3C3C3C"}
+var subduedColor = lipgloss.AdaptiveColor{Light: "#9B9B9B", Dark: "#5C5C5C"}
 
 var DefaultStyles = Styles{
 	TitleBar: lipgloss.NewStyle(),
 	Title:    lipgloss.NewStyle(),
 	Row:      DefaultRowStyle,
+
+	Pagination: lipgloss.NewStyle().
+		Foreground(subduedColor).
+		SetString("PAGE:"),
 }
 
 type Model struct {
@@ -34,6 +42,8 @@ type Model struct {
 	// Key mappings for navigating the list.
 	KeyMap KeyMap
 
+	Paginator paginator.Model
+
 	headers      []string
 	maxHeight    int
 	rows         []Row
@@ -41,10 +51,18 @@ type Model struct {
 	quitting     bool
 }
 
+const (
+	ellipsis = "…"
+)
+
 func NewModel() *Model {
+
+	p := paginator.NewModel()
+
 	return &Model{
 		Styles:      DefaultStyles,
 		KeyMap:      DefaultKeyMap,
+		Paginator:   p,
 		CellSpacing: 3,
 		headers:     nil,
 		maxHeight:   30,
@@ -61,12 +79,6 @@ func (m *Model) RowIndex(id string) int {
 	return -1
 }
 
-type rowUpdateMsg struct{}
-
-func rowUpdate() tea.Msg {
-	return rowUpdateMsg{}
-}
-
 func (m *Model) AddRow(row Row) tea.Cmd {
 	index := m.RowIndex(row.ID)
 	if index == -1 {
@@ -77,23 +89,31 @@ func (m *Model) AddRow(row Row) tea.Cmd {
 
 	m.sortItems()
 	m.updateColumnWidths()
-	return tea.Batch(m.updateHeight(), rowUpdate)
+	m.updatePagination()
+	return m.updateHeight()
 }
 
 func (m *Model) SetRows(rows []Row) tea.Cmd {
 	m.rows = slices.Clone(rows)
 	m.sortItems()
 	m.updateColumnWidths()
-	return tea.Batch(m.updateHeight(), rowUpdate)
+	m.updatePagination()
+	return m.updateHeight()
 }
 
 func (m *Model) updateHeight() tea.Cmd {
-	height := len(m.rows) + extraHeight
-	shouldShowPagination := height > m.maxHeight
-	if shouldShowPagination {
+	if m.paginatorVisible() {
 		return tea.EnterAltScreen
 	}
 	return tea.ExitAltScreen
+}
+
+func (m *Model) paginatorVisible() bool {
+	if m.maxHeight <= 2 {
+		return false
+	}
+	height := len(m.rows) + 1 // +1 for header
+	return height > m.maxHeight
 }
 
 func (m *Model) sortItems() {
@@ -102,12 +122,22 @@ func (m *Model) sortItems() {
 	})
 }
 
+func (m *Model) updatePagination() {
+	perPage := m.maxHeight - 2 // 1 for header & 1 for paginator
+	if perPage < 1 {
+		perPage = 1
+	}
+	m.Paginator.PerPage = perPage
+	m.Paginator.SetTotalPages(len(m.rows))
+}
+
 func (m Model) Init() tea.Cmd {
 	return doTick()
 }
 
 func (m *Model) SetHeaders(headers []string) {
 	m.headers = headers
+	m.updateColumnWidths()
 }
 
 type TickMsg time.Time
@@ -121,14 +151,20 @@ func doTick() tea.Cmd {
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		if key.Matches(msg, m.KeyMap.ForceQuit) {
+		switch {
+		case key.Matches(msg, m.KeyMap.ForceQuit):
 			m.quitting = true
 			return m, tea.Quit
+		case key.Matches(msg, m.KeyMap.PrevPage):
+			m.Paginator.PrevPage()
+			return m, nil
+		case key.Matches(msg, m.KeyMap.NextPage):
+			m.Paginator.NextPage()
+			return m, nil
 		}
 	case tea.WindowSizeMsg:
 		m.maxHeight = msg.Height
-	case rowUpdateMsg:
-		// TODO: update filter
+		m.updatePagination()
 	case TickMsg:
 		for i := range m.rows {
 			m.rows[i].ReRenderFields()
@@ -144,10 +180,25 @@ func (m Model) View() string {
 		return "No resources found"
 	}
 	var buf bytes.Buffer
-	m.columnsView(&buf, m.headers, lipgloss.Style{})
-	for _, row := range m.rows {
+	if m.maxHeight > 1 {
+		m.columnsView(&buf, m.headers, lipgloss.Style{})
 		buf.WriteByte('\n')
+	}
+
+	currentPage := m.currentPaginatedPage()
+	for i, row := range currentPage {
+		if i > 0 {
+			buf.WriteByte('\n')
+		}
 		m.rowView(&buf, row)
+	}
+
+	if m.paginatorVisible() {
+		for i := len(currentPage); i < m.Paginator.PerPage; i++ {
+			buf.WriteByte('\n')
+		}
+		buf.WriteByte('\n')
+		buf.WriteString(m.Styles.Pagination.Render(m.Paginator.View()))
 	}
 
 	if m.quitting {
@@ -155,6 +206,14 @@ func (m Model) View() string {
 	}
 
 	return buf.String()
+}
+
+func (m Model) currentPaginatedPage() []Row {
+	if len(m.rows) == 0 {
+		return nil
+	}
+	start, end := m.Paginator.GetSliceBounds(len(m.rows))
+	return m.rows[start:end]
 }
 
 func (m Model) rowView(w io.Writer, row Row) {

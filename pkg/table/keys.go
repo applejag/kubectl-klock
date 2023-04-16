@@ -69,8 +69,8 @@ var DefaultKeyMap = KeyMap{
 		key.WithHelp("?", "more"),
 	),
 	CloseFullHelp: key.NewBinding(
-		key.WithKeys("?"),
-		key.WithHelp("?", "close help"),
+		key.WithKeys("?", "esc"),
+		key.WithHelp("?/esc", "close help"),
 	),
 
 	// Quitting.
