@@ -9,9 +9,11 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/jilleJr/kubectl-klock/pkg/table"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	metav1beta1 "k8s.io/apimachinery/pkg/apis/meta/v1beta1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/cli-runtime/pkg/resource"
@@ -52,42 +54,92 @@ func Execute(o Options, args []string) error {
 		return err
 	}
 
-	watch, err := r.Watch("0")
-	if err != nil {
-		return err
-	}
-
-	t := table.NewModel()
+	t := table.New()
 	p := tea.NewProgram(t)
+	go p.Send(t.StartSpinner()())
+	printer := Printer{Table: t}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go func() {
-		var colDefs []metav1.TableColumnDefinition
+
+	watchAndPrint := func() error {
+		obj, err := r.Object()
+		if err != nil {
+			return err
+		}
+
+		// watching from resourceVersion 0, starts the watch at ~now and
+		// will return an initial watch event.  Starting form ~now, rather
+		// the rv of the object will insure that we start the watch from
+		// inside the watch window, which the rv of the object might not be.
+		rv := "0"
+		isList := meta.IsListType(obj)
+		var objsToPrint []runtime.Object
+		if isList {
+			// the resourceVersion of list objects is ~now but won't return
+			// an initial watch event
+			rv, err = meta.NewAccessor().ResourceVersion(obj)
+			if err != nil {
+				return err
+			}
+			objsToPrint, _ = meta.ExtractList(obj)
+		} else {
+			objsToPrint = []runtime.Object{obj}
+		}
+
+		var cmd tea.Cmd
+		for _, objToPrint := range objsToPrint {
+			var err error
+			cmd, err = printer.PrintObj(objToPrint, watch.Added)
+			if err != nil {
+				return err
+			}
+		}
+		t.StopSpinner()
+		p.Send(cmd())
+
+		watch, err := r.Watch(rv)
+		if err != nil {
+			return err
+		}
+
 		for {
 			select {
 			case <-ctx.Done():
 				watch.Stop()
-				return
+				return nil
 			case event := <-watch.ResultChan():
-				objTable, err := decodeIntoTable(event.Object)
+				cmd, err := printer.PrintObj(event.Object, event.Type)
 				if err != nil {
-					p.Quit()
-					fmt.Fprintf(os.Stderr, "err: %s\n", err)
-					return
+					return err
 				}
-				colDefs = updateColDefHeaders(t, colDefs, objTable)
-				cmd, err := addObjectToTable(t, colDefs, objTable, event.Type)
-				if err != nil {
-					p.Quit()
-					fmt.Fprintf(os.Stderr, "err: %s\n", err)
-					return
-				}
-				p.Send(cmd)
+				p.Send(cmd())
 			}
 		}
+	}
+
+	go func() {
+		if err := watchAndPrint(); err != nil {
+			p.Quit()
+			fmt.Fprintf(os.Stderr, "err: %s\n", err)
+		}
 	}()
-	return p.Start()
+	_, err = p.Run()
+	return err
+}
+
+type Printer struct {
+	Table   *table.Model
+	colDefs []metav1.TableColumnDefinition
+}
+
+func (p *Printer) PrintObj(obj runtime.Object, eventType watch.EventType) (tea.Cmd, error) {
+	objTable, err := decodeIntoTable(obj)
+	if err != nil {
+		return nil, err
+	}
+	p.colDefs = updateColDefHeaders(p.Table, p.colDefs, objTable)
+	return addObjectToTable(p.Table, p.colDefs, objTable, eventType)
 }
 
 func updateColDefHeaders(t *table.Model, oldColDefs []metav1.TableColumnDefinition, objTable *metav1.Table) []metav1.TableColumnDefinition {
@@ -106,7 +158,7 @@ func updateColDefHeaders(t *table.Model, oldColDefs []metav1.TableColumnDefiniti
 }
 
 func addObjectToTable(t *table.Model, colDefs []metav1.TableColumnDefinition, objTable *metav1.Table, eventType watch.EventType) (tea.Cmd, error) {
-	var cmds []tea.Cmd
+	var cmd tea.Cmd
 	for _, row := range objTable.Rows {
 		unstrucObj, ok := row.Object.Object.(*unstructured.Unstructured)
 		if !ok {
@@ -165,9 +217,11 @@ func addObjectToTable(t *table.Model, colDefs []metav1.TableColumnDefinition, ob
 		if eventType == watch.Deleted {
 			tableRow.Status = table.StatusDeleted
 		}
-		cmds = append(cmds, t.AddRow(tableRow))
+		// it's fine to only use the latest returned cmd, because of how
+		// [table.AddRow] is implemented
+		cmd = t.AddRow(tableRow)
 	}
-	return tea.Batch(cmds...), nil
+	return cmd, nil
 }
 
 func transformRequests(req *rest.Request) {

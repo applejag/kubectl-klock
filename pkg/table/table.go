@@ -10,6 +10,7 @@ import (
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/paginator"
+	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"gopkg.in/typ.v4/slices"
@@ -45,8 +46,10 @@ type Model struct {
 	// Key mappings for navigating the list.
 	KeyMap KeyMap
 
-	Help      help.Model
-	Paginator paginator.Model
+	help        help.Model
+	Paginator   paginator.Model
+	spinner     spinner.Model
+	showSpinner bool
 
 	headers      []string
 	maxHeight    int
@@ -60,16 +63,19 @@ const (
 	ellipsis = "…"
 )
 
-func NewModel() *Model {
+func New() *Model {
 	return &Model{
 		Styles:      DefaultStyles,
 		KeyMap:      DefaultKeyMap,
-		Help:        help.New(),
 		Paginator:   paginator.New(),
 		CellSpacing: 3,
-		headers:     nil,
-		maxHeight:   30,
-		rows:        nil,
+
+		help:    help.New(),
+		spinner: spinner.New(spinner.WithSpinner(spinner.Dot)),
+
+		headers:   nil,
+		maxHeight: 30,
+		rows:      nil,
 	}
 }
 
@@ -172,6 +178,18 @@ func doTick() tea.Cmd {
 	})
 }
 
+func (m *Model) StartSpinner() tea.Cmd {
+	if m.showSpinner {
+		return nil
+	}
+	m.showSpinner = true
+	return m.spinner.Tick
+}
+
+func (m *Model) StopSpinner() {
+	m.showSpinner = false
+}
+
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
@@ -200,9 +218,16 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.ShowHelp = false
 			return m, nil
 		}
+
+	case spinner.TickMsg:
+		s, cmd := m.spinner.Update(msg)
+		m.spinner = s
+		if m.showSpinner {
+			return m, cmd
+		}
 	case tea.WindowSizeMsg:
 		m.maxHeight = msg.Height
-		m.Help.Width = msg.Width
+		m.help.Width = msg.Width
 		m.updatePagination()
 	case TickMsg:
 		for i := range m.rows {
@@ -216,7 +241,10 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m Model) View() string {
 	if m.ShowHelp {
-		return m.Help.FullHelpView(m.FullHelp())
+		return m.help.FullHelpView(m.FullHelp())
+	}
+	if m.showSpinner {
+		return m.spinner.View()
 	}
 	if len(m.rows) == 0 {
 		return "No resources found"
@@ -248,7 +276,6 @@ func (m Model) View() string {
 
 	if m.quitting {
 		buf.WriteByte('\n')
-		fmt.Fprintf(&buf, "hide? %t\n", m.HideDeleted)
 	}
 
 	return buf.String()
