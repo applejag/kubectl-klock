@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/paginator"
 	tea "github.com/charmbracelet/bubbletea"
@@ -39,10 +40,12 @@ type Model struct {
 	Styles      Styles
 	CellSpacing int
 	HideDeleted bool
+	ShowHelp    bool
 
 	// Key mappings for navigating the list.
 	KeyMap KeyMap
 
+	Help      help.Model
 	Paginator paginator.Model
 
 	headers      []string
@@ -58,13 +61,11 @@ const (
 )
 
 func NewModel() *Model {
-
-	p := paginator.NewModel()
-
 	return &Model{
 		Styles:      DefaultStyles,
 		KeyMap:      DefaultKeyMap,
-		Paginator:   p,
+		Help:        help.New(),
+		Paginator:   paginator.New(),
 		CellSpacing: 3,
 		headers:     nil,
 		maxHeight:   30,
@@ -192,9 +193,16 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.updatePagination()
 			m.updateColumnWidths()
 			return m, nil
+		case !m.ShowHelp && key.Matches(msg, m.KeyMap.ShowFullHelp):
+			m.ShowHelp = true
+			return m, nil
+		case m.ShowHelp && key.Matches(msg, m.KeyMap.CloseFullHelp):
+			m.ShowHelp = false
+			return m, nil
 		}
 	case tea.WindowSizeMsg:
 		m.maxHeight = msg.Height
+		m.Help.Width = msg.Width
 		m.updatePagination()
 	case TickMsg:
 		for i := range m.rows {
@@ -207,6 +215,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) View() string {
+	if m.ShowHelp {
+		return m.Help.FullHelpView(m.FullHelp())
+	}
 	if len(m.rows) == 0 {
 		return "No resources found"
 	}

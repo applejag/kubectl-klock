@@ -79,5 +79,44 @@ var DefaultKeyMap = KeyMap{
 	),
 
 	// Quitting.
-	ForceQuit: key.NewBinding(key.WithKeys("ctrl+c")),
+	ForceQuit: key.NewBinding(
+		key.WithKeys("ctrl+c"),
+		key.WithHelp("ctrl+c", "quit"),
+	),
+}
+
+// FullHelp returns bindings to show the full help view. It's part of the
+// help.KeyMap interface.
+func (m Model) FullHelp() [][]key.Binding {
+	kb := [][]key.Binding{{
+		m.KeyMap.NextPage,
+		m.KeyMap.PrevPage,
+		m.KeyMap.GoToStart,
+		m.KeyMap.GoToEnd,
+	}}
+
+	//filtering := m.filterState == Filtering
+
+	//// If the delegate implements the help.KeyMap interface add full help
+	//// keybindings to a special section of the full help.
+	//if !filtering {
+	//	if b, ok := m.delegate.(help.KeyMap); ok {
+	//		kb = append(kb, b.FullHelp()...)
+	//	}
+	//}
+
+	listLevelBindings := []key.Binding{
+		m.KeyMap.ToggleDeleted,
+		//m.KeyMap.Filter,
+		//m.KeyMap.ClearFilter,
+		//m.KeyMap.AcceptWhileFiltering,
+		//m.KeyMap.CancelWhileFiltering,
+	}
+
+	return append(kb,
+		listLevelBindings,
+		[]key.Binding{
+			m.KeyMap.ForceQuit,
+			m.KeyMap.CloseFullHelp,
+		})
 }
