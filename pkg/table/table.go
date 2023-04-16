@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
@@ -101,12 +102,19 @@ func (m *Model) sortItems() {
 }
 
 func (m Model) Init() tea.Cmd {
-	// Just return `nil`, which means "no I/O right now, please."
-	return nil
+	return doTick()
 }
 
 func (m *Model) SetHeaders(headers []string) {
 	m.headers = headers
+}
+
+type TickMsg time.Time
+
+func doTick() tea.Cmd {
+	return tea.Tick(time.Second, func(t time.Time) tea.Msg {
+		return TickMsg(t)
+	})
 }
 
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -123,6 +131,12 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.maxHeight = msg.Height
 	case rowUpdateMsg:
 		// TODO: update filter
+	case TickMsg:
+		for i := range m.rows {
+			m.rows[i].ReRenderFields()
+		}
+		m.updateColumnWidths()
+		return m, doTick()
 	}
 	return m, nil
 }
@@ -142,22 +156,22 @@ func (m Model) View() string {
 }
 
 func (m Model) rowView(w io.Writer, row Row) {
+	style := m.Styles.Row.Cell
 	switch row.Status {
 	case StatusError:
-		m.columnsView(w, row.Fields, m.Styles.Row.Error)
+		style = m.Styles.Row.Error
 	case StatusWarning:
-		m.columnsView(w, row.Fields, m.Styles.Row.Warning)
+		style = m.Styles.Row.Warning
 	case StatusDeleted:
-		m.columnsView(w, row.Fields, m.Styles.Row.Deleted)
-	default:
-		m.columnsView(w, row.Fields, m.Styles.Row.Cell)
+		style = m.Styles.Row.Deleted
 	}
+	m.columnsView(w, row.RenderedFields(), style)
 }
 
 var lotsOfSpaces = strings.Repeat(" ", 200)
 
 func (m Model) columnsView(w io.Writer, columns []string, style lipgloss.Style) {
-	for i, f := range columns {
+	for i, col := range columns {
 		if i > 0 {
 			//TODO: test style.Width()
 			spacing := m.CellSpacing + m.columnWidths[i-1] - len(columns[i-1])
@@ -165,14 +179,14 @@ func (m Model) columnsView(w io.Writer, columns []string, style lipgloss.Style) 
 				fmt.Fprint(w, lotsOfSpaces[:spacing])
 			}
 		}
-		fmt.Fprintf(w, style.Render(f))
+		fmt.Fprintf(w, style.Render(col))
 	}
 }
 
 func (m *Model) updateColumnWidths() {
 	lengths := expandToMaxLengths(nil, m.headers)
 	for _, row := range m.rows {
-		lengths = expandToMaxLengths(lengths, row.Fields)
+		lengths = expandToMaxLengths(lengths, row.RenderedFields())
 	}
 	m.columnWidths = lengths
 }
@@ -185,6 +199,11 @@ func expandToMaxLengths(lengths []int, strs []string) []int {
 		}
 	}
 	return lengths
+}
+
+func resizeSlice[S ~[]E, E any](slice S, targetLen int) S {
+	slice = expandSlice(slice, targetLen)
+	return slice[:targetLen]
 }
 
 func expandSlice[S ~[]E, E any](slice S, minLen int) S {

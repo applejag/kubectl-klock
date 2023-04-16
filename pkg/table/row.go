@@ -1,7 +1,11 @@
 package table
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/charmbracelet/lipgloss"
+	"k8s.io/apimachinery/pkg/util/duration"
 )
 
 type RowStyles struct {
@@ -20,8 +24,10 @@ var DefaultRowStyle = RowStyles{
 
 type Row struct {
 	ID     string
-	Fields []string
+	Fields []any
 	Status Status
+
+	renderedFields []string
 }
 
 type Status int
@@ -35,5 +41,39 @@ const (
 
 // SortValue value is the value we use when sorting the list.
 func (r Row) SortValue() string {
-	return r.Fields[0]
+	if len(r.Fields) == 0 {
+		return ""
+	}
+	str, ok := r.Fields[0].(string)
+	if !ok {
+		return ""
+	}
+	return str
+}
+
+func (r *Row) RenderedFields() []string {
+	if len(r.renderedFields) != len(r.Fields) {
+		r.ReRenderFields()
+	}
+	return r.renderedFields
+}
+
+func (r *Row) ReRenderFields() {
+	r.renderedFields = resizeSlice(r.renderedFields, len(r.Fields))
+	for i, col := range r.Fields {
+		r.renderedFields[i] = renderColumn(col)
+	}
+}
+
+func renderColumn(value any) string {
+
+	switch value := value.(type) {
+	case string:
+		return value
+	case time.Time:
+		dur := time.Since(value)
+		return duration.HumanDuration(dur)
+	default:
+		return fmt.Sprint(value)
+	}
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/jilleJr/kubectl-klock/pkg/table"
@@ -121,9 +122,17 @@ func addObjectToTable(t *table.Model, colDefs []metav1.TableColumnDefinition, ob
 		if !ok {
 			return nil, fmt.Errorf("metadata.uid: want string, got %T", metadata["uid"])
 		}
+		creationTimestamp, ok := metadata["creationTimestamp"].(string)
+		if !ok {
+			return nil, fmt.Errorf("metadata.creationTimestamp: want string, got %T", metadata["creationTimestamp"])
+		}
+		creationTime, err := time.Parse(time.RFC3339, creationTimestamp)
+		if err != nil {
+			return nil, fmt.Errorf("metadata.creationTimestamp: %w", err)
+		}
 		tableRow := table.Row{
 			ID:     uid,
-			Fields: make([]string, 0, len(colDefs)),
+			Fields: make([]any, 0, len(colDefs)),
 		}
 		for i, cell := range row.Cells {
 			if i >= len(colDefs) {
@@ -146,7 +155,11 @@ func addObjectToTable(t *table.Model, colDefs []metav1.TableColumnDefinition, ob
 					cellStr = "Deleted"
 				}
 			}
-			tableRow.Fields = append(tableRow.Fields, cellStr)
+			if colDef.Name == "Age" {
+				tableRow.Fields = append(tableRow.Fields, creationTime)
+			} else {
+				tableRow.Fields = append(tableRow.Fields, cellStr)
+			}
 		}
 		if eventType == watch.Error {
 			tableRow.Status = table.StatusError
