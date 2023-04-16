@@ -212,6 +212,9 @@ func addObjectToTable(t *table.Model, colDefs []metav1.TableColumnDefinition, ob
 				case StatusWarning:
 					tableRow.Status = table.StatusWarning
 				}
+				if eventType == watch.Deleted {
+					cellStr = "Deleted"
+				}
 			}
 			tableRow.Fields = append(tableRow.Fields, cellStr)
 		}

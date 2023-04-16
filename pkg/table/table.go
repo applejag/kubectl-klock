@@ -1,6 +1,7 @@
 package table
 
 import (
+	"sort"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/list"
@@ -60,9 +61,19 @@ func (m *Model) AddRow(row Row) tea.Cmd {
 	if !modified {
 		cmd = m.list.InsertItem(len(m.list.Items()), row)
 	}
+	m.sortItems()
 	m.list.SetHeight(len(m.list.Items()) + extraHeight)
 	m.delegate.UpdateFieldMaxLengths(m.list.Items(), m.headers)
 	return cmd
+}
+
+func (m *Model) sortItems() {
+	items := m.list.Items()
+	sort.Slice(items, func(i, j int) bool {
+		a := items[i].(Row)
+		b := items[j].(Row)
+		return a.Fields[0] < b.Fields[0]
+	})
 }
 
 func (m *Model) SetRows(rows []Row) tea.Cmd {
@@ -71,6 +82,7 @@ func (m *Model) SetRows(rows []Row) tea.Cmd {
 		items[i] = row
 	}
 	cmd := m.list.SetItems(items)
+	m.sortItems()
 	m.list.SetHeight(len(m.list.Items()) + extraHeight)
 	m.delegate.UpdateFieldMaxLengths(m.list.Items(), m.headers)
 	return cmd

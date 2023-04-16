@@ -20,7 +20,7 @@ type RowStyles struct {
 var DefaultRowStyle = RowStyles{
 	Cell:    lipgloss.NewStyle(),
 	Error:   lipgloss.NewStyle().Foreground(lipgloss.Color("1")),
-	Warning: lipgloss.NewStyle().Foreground(lipgloss.Color("6")),
+	Warning: lipgloss.NewStyle().Foreground(lipgloss.Color("3")),
 	Deleted: lipgloss.NewStyle().Foreground(lipgloss.Color("8")),
 }
 
