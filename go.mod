@@ -7,6 +7,7 @@ require (
 	github.com/charmbracelet/bubbletea v0.23.2
 	github.com/charmbracelet/lipgloss v0.7.1
 	github.com/fatih/color v1.13.0
+	github.com/muesli/reflow v0.3.0
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.15.0
 	gopkg.in/typ.v4 v4.2.0
@@ -63,7 +64,6 @@ require (
 	github.com/monochromegane/go-gitignore v0.0.0-20200626010858-205db1a8cc00 // indirect
 	github.com/muesli/ansi v0.0.0-20230316100256-276c6243b2f6 // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect
-	github.com/muesli/reflow v0.3.0 // indirect
 	github.com/muesli/termenv v0.15.1 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.7 // indirect

@@ -8,16 +8,35 @@
 
 package klock
 
-type Status int
+import (
+	"fmt"
 
-const (
-	StatusDefault Status = iota
-	StatusOK
-	StatusWarning
-	StatusError
+	"github.com/charmbracelet/lipgloss"
 )
 
-func ParseStatus(status string) Status {
+var (
+	StyleFractionOK      = lipgloss.NewStyle().Foreground(lipgloss.ANSIColor(2))
+	StyleFractionWarning = lipgloss.NewStyle().Foreground(lipgloss.ANSIColor(3))
+
+	StyleStatusDefault = lipgloss.NewStyle()
+	StyleStatusOK      = lipgloss.NewStyle().Foreground(lipgloss.ANSIColor(2))
+	StyleStatusError   = lipgloss.NewStyle().Foreground(lipgloss.ANSIColor(1))
+	StyleStatusWarning = lipgloss.NewStyle().Foreground(lipgloss.ANSIColor(3))
+)
+
+func ParseFractionStyle(str string) (lipgloss.Style, bool) {
+	var count int
+	var total int
+	if _, err := fmt.Sscanf(str, "%d/%d", &count, &total); err != nil {
+		return lipgloss.Style{}, false
+	}
+	if count == total {
+		return StyleFractionOK, true
+	}
+	return StyleFractionWarning, true
+}
+
+func ParseStatusStyle(status string) lipgloss.Style {
 	switch status {
 	case
 		// from https://github.com/kubernetes/kubernetes/blob/master/pkg/kubelet/events/event.go
@@ -71,7 +90,7 @@ func ParseStatus(status string) Status {
 		"FailedScheduling",
 		"Error",
 		"ErrImagePull":
-		return StatusError
+		return StyleStatusError
 	case
 		// from https://github.com/kubernetes/kubernetes/blob/master/pkg/kubelet/events/event.go
 		// Container event reason list
@@ -101,12 +120,12 @@ func ParseStatus(status string) Status {
 		"PodInitializing",
 		"Terminating",
 		"Warning":
-		return StatusWarning
+		return StyleStatusWarning
 	case
 		"Running",
 		"Completed",
 		"Ready":
-		return StatusOK
+		return StyleStatusOK
 	}
 	// some ok status, not colored:
 	// "Pulled",
@@ -118,5 +137,5 @@ func ParseStatus(status string) Status {
 	// "NodeReady",
 	// "Started",
 	// "Normal",
-	return StatusDefault
+	return StyleStatusDefault
 }

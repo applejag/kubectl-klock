@@ -13,6 +13,7 @@ import (
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/muesli/reflow/ansi"
 	"gopkg.in/typ.v4/slices"
 )
 
@@ -294,8 +295,6 @@ func (m Model) rowView(w io.Writer, row Row) {
 	switch row.Status {
 	case StatusError:
 		style = m.Styles.Row.Error
-	case StatusWarning:
-		style = m.Styles.Row.Warning
 	case StatusDeleted:
 		style = m.Styles.Row.Deleted
 	}
@@ -308,7 +307,7 @@ func (m Model) columnsView(w io.Writer, columns []string, style lipgloss.Style) 
 	for i, col := range columns {
 		if i > 0 {
 			//TODO: test style.Width()
-			spacing := m.CellSpacing + m.columnWidths[i-1] - len(columns[i-1])
+			spacing := m.CellSpacing + m.columnWidths[i-1] - ansi.PrintableRuneWidth(columns[i-1])
 			if spacing > 0 {
 				fmt.Fprint(w, lotsOfSpaces[:spacing])
 			}
@@ -328,8 +327,9 @@ func (m *Model) updateColumnWidths() {
 func expandToMaxLengths(lengths []int, strs []string) []int {
 	lengths = expandSlice(lengths, len(strs))
 	for i, f := range strs {
-		if len(f) > lengths[i] {
-			lengths[i] = len(f)
+		strLen := ansi.PrintableRuneWidth(f)
+		if strLen > lengths[i] {
+			lengths[i] = strLen
 		}
 	}
 	return lengths

@@ -11,15 +11,18 @@ import (
 type RowStyles struct {
 	Cell    lipgloss.Style
 	Error   lipgloss.Style
-	Warning lipgloss.Style
 	Deleted lipgloss.Style
 }
 
 var DefaultRowStyle = RowStyles{
 	Cell:    lipgloss.NewStyle(),
 	Error:   lipgloss.NewStyle().Foreground(lipgloss.Color("1")),
-	Warning: lipgloss.NewStyle().Foreground(lipgloss.Color("3")),
 	Deleted: lipgloss.NewStyle().Foreground(lipgloss.Color("8")),
+}
+
+type StyledColumn struct {
+	Value any
+	Style lipgloss.Style
 }
 
 type Row struct {
@@ -66,8 +69,9 @@ func (r *Row) ReRenderFields() {
 }
 
 func renderColumn(value any) string {
-
 	switch value := value.(type) {
+	case StyledColumn:
+		return value.Style.Render(renderColumn(value.Value))
 	case string:
 		return value
 	case time.Time:

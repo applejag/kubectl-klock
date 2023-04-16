@@ -96,7 +96,9 @@ func Execute(o Options, args []string) error {
 			}
 		}
 		t.StopSpinner()
-		p.Send(cmd())
+		if cmd != nil {
+			p.Send(cmd())
+		}
 
 		watch, err := r.Watch(rv)
 		if err != nil {
@@ -193,28 +195,37 @@ func addObjectToTable(t *table.Model, colDefs []metav1.TableColumnDefinition, ob
 				continue
 			}
 			cellStr := fmt.Sprint(cell)
-			if colDef.Name == "Status" {
-				status := ParseStatus(cellStr)
-				switch status {
-				case StatusError:
-					tableRow.Status = table.StatusError
-				case StatusWarning:
-					tableRow.Status = table.StatusWarning
-				}
-				if eventType == watch.Deleted {
-					cellStr = "Deleted"
-				}
-			}
-			if colDef.Name == "Age" {
+			switch colDef.Name {
+			case "Age":
 				tableRow.Fields = append(tableRow.Fields, creationTime)
-			} else {
-				tableRow.Fields = append(tableRow.Fields, cellStr)
+			case "Status":
+				if eventType == watch.Deleted {
+					cell = "Deleted"
+				} else {
+					style := ParseStatusStyle(cellStr)
+					cell = table.StyledColumn{
+						Value: cell,
+						Style: style,
+					}
+				}
+				tableRow.Fields = append(tableRow.Fields, cell)
+			default:
+				if eventType != watch.Deleted {
+					fractionStyle, ok := ParseFractionStyle(cellStr)
+					if ok {
+						cell = table.StyledColumn{
+							Value: cell,
+							Style: fractionStyle,
+						}
+					}
+				}
+				tableRow.Fields = append(tableRow.Fields, cell)
 			}
 		}
-		if eventType == watch.Error {
+		switch eventType {
+		case watch.Error:
 			tableRow.Status = table.StatusError
-		}
-		if eventType == watch.Deleted {
+		case watch.Deleted:
 			tableRow.Status = table.StatusDeleted
 		}
 		// it's fine to only use the latest returned cmd, because of how
