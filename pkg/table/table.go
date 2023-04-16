@@ -38,6 +38,7 @@ type Model struct {
 	maxHeight    int
 	rows         []Row
 	columnWidths []int
+	quitting bool
 }
 
 func NewModel() *Model {
@@ -122,8 +123,10 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, m.KeyMap.ForceQuit):
+			m.quitting = true
 			return m, tea.Quit
 		case key.Matches(msg, m.KeyMap.Quit):
+			m.quitting = true
 			// TODO: Only check quit when browsing.
 			return m, tea.Quit
 		}
@@ -150,6 +153,10 @@ func (m Model) View() string {
 	for _, row := range m.rows {
 		buf.WriteByte('\n')
 		m.rowView(&buf, row)
+	}
+
+	if m.quitting {
+		buf.WriteByte('\n')
 	}
 
 	return buf.String()
