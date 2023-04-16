@@ -38,13 +38,13 @@ type Model struct {
 	maxHeight    int
 	rows         []Row
 	columnWidths []int
-	quitting bool
+	quitting     bool
 }
 
 func NewModel() *Model {
 	return &Model{
 		Styles:      DefaultStyles,
-		KeyMap:      DefaultKeyMap(),
+		KeyMap:      DefaultKeyMap,
 		CellSpacing: 3,
 		headers:     nil,
 		maxHeight:   30,
@@ -121,13 +121,8 @@ func doTick() tea.Cmd {
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		switch {
-		case key.Matches(msg, m.KeyMap.ForceQuit):
+		if key.Matches(msg, m.KeyMap.ForceQuit) {
 			m.quitting = true
-			return m, tea.Quit
-		case key.Matches(msg, m.KeyMap.Quit):
-			m.quitting = true
-			// TODO: Only check quit when browsing.
 			return m, tea.Quit
 		}
 	case tea.WindowSizeMsg:
