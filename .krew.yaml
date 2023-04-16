@@ -12,22 +12,72 @@ spec:
   platforms:
   - selector:
       matchLabels:
-        os: darwin
+        os: linux
         arch: amd64
-    {{addURIAndSha "https://github.com/jilleJr/kubectl-klock/releases/download/{{ .TagName }}/kubectl-klock_{{ .TagName }}_darwin_amd64.tar.gz" .TagName }}
-    bin: kubectl-klock
-  - selector:
-      matchLabels:
-        os: darwin
-        arch: arm64
-    {{addURIAndSha "https://github.com/jilleJr/kubectl-klock/releases/download/{{ .TagName }}/kubectl-klock_{{ .TagName }}_darwin_arm64.tar.gz" .TagName }}
-    bin: kubectl-klock
+    uri: https://github.com/jilleJr/kubectl-klock/releases/download/{{ .TagName }}/klock_linux_amd64.tar.gz
+    {{addURIAndSha "https://github.com/jilleJr/kubectl-klock/releases/download/{{ .TagName }}/klock_linux_amd64.tar.gz" .TagName }}
+    files:
+    - from: "./klock"
+      to: "."
+    - from: LICENSE
+      to: "."
+    bin: "klock"
+
   - selector:
       matchLabels:
         os: linux
+        arch: "386"
+    uri: https://github.com/jilleJr/kubectl-klock/releases/download/{{ .TagName }}/klock_linux_386.tar.gz
+    {{addURIAndSha "https://github.com/jilleJr/kubectl-klock/releases/download/{{ .TagName }}/klock_linux_386.tar.gz" .TagName }}
+    files:
+    - from: "./klock"
+      to: "."
+    - from: LICENSE
+      to: "."
+    bin: "klock"
+
+  - selector:
+      matchLabels:
+        os: darwin
         arch: amd64
-    {{addURIAndSha "https://github.com/jilleJr/kubectl-klock/releases/download/{{ .TagName }}/kubectl-klock_{{ .TagName }}_linux_amd64.tar.gz" .TagName }}
-    bin: kubectl-klock
+    uri: https://github.com/jilleJr/kubectl-klock/releases/download/{{ .TagName }}/klock_darwin_amd64.tar.gz
+    {{addURIAndSha "https://github.com/jilleJr/kubectl-klock/releases/download/{{ .TagName }}/klock_darwin_amd64.tar.gz" .TagName }}
+    sha256: ""
+    files:
+    - from: "./klock"
+      to: "."
+    - from: LICENSE
+      to: "."
+    bin: "klock"
+
+  - selector:
+      matchLabels:
+        os: windows
+        arch: amd64
+    uri: https://github.com/jilleJr/kubectl-klock/releases/download/{{ .TagName }}/klock_windows_amd64.zip
+    {{addURIAndSha "https://github.com/jilleJr/kubectl-klock/releases/download/{{ .TagName }}/klock_windows_amd64.zip" .TagName }}
+    sha256: ""
+    files:
+    - from: "/klock.exe"
+      to: "."
+    - from: LICENSE
+      to: "."
+    bin: "klock.exe"
+
+  - selector:
+      matchLabels:
+        os: windows
+        arch: "386"
+    uri: https://github.com/jilleJr/kubectl-klock/releases/download/{{ .TagName }}/klock_windows_386.zip
+    {{addURIAndSha "https://github.com/jilleJr/kubectl-klock/releases/download/{{ .TagName }}/klock_windows_386.zip" .TagName }}
+    sha256: ""
+    files:
+    - from: "/klock.exe"
+      to: "."
+    - from: LICENSE
+      to: "."
+    bin: "klock.exe"
+
   shortDescription: Watches resources
   description: |
     Usage:
