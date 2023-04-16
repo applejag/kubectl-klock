@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2023 Kalle Fagerberg
+#
+# SPDX-License-Identifier: CC0-1.0
+
 ifeq ($(OS),Windows_NT)
 BINARY := klock.exe
 else
@@ -45,11 +49,11 @@ lint: lint-md lint-go lint-license
 lint-fix: lint-md-fix lint-go-fix
 
 .PHONY: lint-md
-lint-md:
+lint-md: node_modules
 	npx remark . .github
 
 .PHONY: lint-md-fix
-lint-md-fix:
+lint-md-fix: node_modules
 	npx remark . .github -o
 
 .PHONY: lint-go

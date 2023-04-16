@@ -3,6 +3,19 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
+// This program is free software: you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by the
+// Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful, but WITHOUT
+// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+// FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+// more details.
+//
+// You should have received a copy of the GNU General Public License along
+// with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
 // This file contains modified version taken from kubecolor's source:
 // https://github.com/kubecolor/kubecolor/blob/aace98d870cc1a7da5f6f99ab61f99eea61b6418/printer/kubectl_output_colored_printer.go
 

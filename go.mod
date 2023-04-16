@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2023 Kalle Fagerberg
+//
+// SPDX-License-Identifier: CC0-1.0
+
 module github.com/jilleJr/kubectl-klock
 
 go 1.20

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2023 Kalle Fagerberg
+#
+# SPDX-License-Identifier: CC0-1.0
+
 # yaml-language-server: $schema=https://goreleaser.com/static/schema.json
 project_name: klock
 release:

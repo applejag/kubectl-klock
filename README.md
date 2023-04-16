@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2023 Kalle Fagerberg
+
+SPDX-License-Identifier: CC-BY-4.0
+-->
+
 # klock kubectl
 
 A `kubectl` plugin to render the `kubectl get pods --watch` output in a
