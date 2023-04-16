@@ -6,12 +6,13 @@ import "github.com/charmbracelet/bubbles/key"
 // is used to render the menu menu.
 type KeyMap struct {
 	// Keybindings used when browsing the list.
-	NextPage    key.Binding
-	PrevPage    key.Binding
-	GoToStart   key.Binding
-	GoToEnd     key.Binding
-	Filter      key.Binding
-	ClearFilter key.Binding
+	NextPage      key.Binding
+	PrevPage      key.Binding
+	GoToStart     key.Binding
+	GoToEnd       key.Binding
+	Filter        key.Binding
+	ClearFilter   key.Binding
+	ToggleDeleted key.Binding
 
 	// Keybindings used when setting a filter.
 	CancelWhileFiltering key.Binding
@@ -29,11 +30,11 @@ type KeyMap struct {
 var DefaultKeyMap = KeyMap{
 	// Browsing.
 	PrevPage: key.NewBinding(
-		key.WithKeys("left", "h", "pgup", "b", "u"),
+		key.WithKeys("left", "h", "pgup", "b"),
 		key.WithHelp("←/h/pgup", "prev page"),
 	),
 	NextPage: key.NewBinding(
-		key.WithKeys("right", "l", "pgdown", "f", "d"),
+		key.WithKeys("right", "l", "pgdown", "f"),
 		key.WithHelp("→/l/pgdn", "next page"),
 	),
 	GoToStart: key.NewBinding(
@@ -51,6 +52,10 @@ var DefaultKeyMap = KeyMap{
 	ClearFilter: key.NewBinding(
 		key.WithKeys("esc"),
 		key.WithHelp("esc", "clear filter"),
+	),
+	ToggleDeleted: key.NewBinding(
+		key.WithKeys("d"),
+		key.WithHelp("d", "show/hide deleted"),
 	),
 
 	// Filtering.

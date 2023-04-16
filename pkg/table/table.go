@@ -38,6 +38,7 @@ var DefaultStyles = Styles{
 type Model struct {
 	Styles      Styles
 	CellSpacing int
+	HideDeleted bool
 
 	// Key mappings for navigating the list.
 	KeyMap KeyMap
@@ -47,6 +48,7 @@ type Model struct {
 	headers      []string
 	maxHeight    int
 	rows         []Row
+	filteredRows []Row
 	columnWidths []int
 	quitting     bool
 }
@@ -88,6 +90,7 @@ func (m *Model) AddRow(row Row) tea.Cmd {
 	}
 
 	m.sortItems()
+	m.updateFilteredRows()
 	m.updateColumnWidths()
 	m.updatePagination()
 	return m.updateHeight()
@@ -96,9 +99,24 @@ func (m *Model) AddRow(row Row) tea.Cmd {
 func (m *Model) SetRows(rows []Row) tea.Cmd {
 	m.rows = slices.Clone(rows)
 	m.sortItems()
+	m.updateFilteredRows()
 	m.updateColumnWidths()
 	m.updatePagination()
 	return m.updateHeight()
+}
+
+func (m *Model) updateFilteredRows() {
+	if !m.HideDeleted {
+		m.filteredRows = m.rows
+		return
+	}
+	m.filteredRows = make([]Row, 0, len(m.rows))
+	for _, row := range m.rows {
+		if m.HideDeleted && row.Status == StatusDeleted {
+			continue
+		}
+		m.filteredRows = append(m.filteredRows, row)
+	}
 }
 
 func (m *Model) updateHeight() tea.Cmd {
@@ -112,7 +130,7 @@ func (m *Model) paginatorVisible() bool {
 	if m.maxHeight <= 2 {
 		return false
 	}
-	height := len(m.rows) + 1 // +1 for header
+	height := len(m.filteredRows) + 1 // +1 for header
 	return height > m.maxHeight
 }
 
@@ -128,7 +146,12 @@ func (m *Model) updatePagination() {
 		perPage = 1
 	}
 	m.Paginator.PerPage = perPage
-	m.Paginator.SetTotalPages(len(m.rows))
+	m.Paginator.SetTotalPages(len(m.filteredRows))
+
+	// Make sure the page stays in bounds
+	if m.Paginator.Page >= m.Paginator.TotalPages-1 {
+		m.Paginator.Page = m.Paginator.TotalPages - 1
+	}
 }
 
 func (m Model) Init() tea.Cmd {
@@ -157,9 +180,17 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		case key.Matches(msg, m.KeyMap.PrevPage):
 			m.Paginator.PrevPage()
+			m.updateColumnWidths()
 			return m, nil
 		case key.Matches(msg, m.KeyMap.NextPage):
 			m.Paginator.NextPage()
+			m.updateColumnWidths()
+			return m, nil
+		case key.Matches(msg, m.KeyMap.ToggleDeleted):
+			m.HideDeleted = !m.HideDeleted
+			m.updateFilteredRows()
+			m.updatePagination()
+			m.updateColumnWidths()
 			return m, nil
 		}
 	case tea.WindowSizeMsg:
@@ -178,6 +209,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m Model) View() string {
 	if len(m.rows) == 0 {
 		return "No resources found"
+	}
+	if len(m.filteredRows) == 0 {
+		return "No resources visible"
 	}
 	var buf bytes.Buffer
 	if m.maxHeight > 1 {
@@ -203,17 +237,18 @@ func (m Model) View() string {
 
 	if m.quitting {
 		buf.WriteByte('\n')
+		fmt.Fprintf(&buf, "hide? %t\n", m.HideDeleted)
 	}
 
 	return buf.String()
 }
 
 func (m Model) currentPaginatedPage() []Row {
-	if len(m.rows) == 0 {
+	if len(m.filteredRows) == 0 {
 		return nil
 	}
-	start, end := m.Paginator.GetSliceBounds(len(m.rows))
-	return m.rows[start:end]
+	start, end := m.Paginator.GetSliceBounds(len(m.filteredRows))
+	return m.filteredRows[start:end]
 }
 
 func (m Model) rowView(w io.Writer, row Row) {
@@ -246,7 +281,7 @@ func (m Model) columnsView(w io.Writer, columns []string, style lipgloss.Style) 
 
 func (m *Model) updateColumnWidths() {
 	lengths := expandToMaxLengths(nil, m.headers)
-	for _, row := range m.rows {
+	for _, row := range m.currentPaginatedPage() {
 		lengths = expandToMaxLengths(lengths, row.RenderedFields())
 	}
 	m.columnWidths = lengths
@@ -271,6 +306,9 @@ func expandSlice[S ~[]E, E any](slice S, minLen int) S {
 	delta := minLen - len(slice)
 	if delta <= 0 {
 		return slice
+	}
+	if cap(slice) >= minLen {
+		return slice[:minLen]
 	}
 	return append(slice, make(S, delta)...)
 }
