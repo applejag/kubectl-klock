@@ -2,6 +2,9 @@
 // SPDX-FileCopyrightText: 2021 Kalle Fagerberg
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
+//
+// This file contains modified version from official kubectl-get's source:
+// https://github.com/kubernetes/kubectl/blob/2d31ffc50c2ce65603a2cdbf9fbda83d4d3b59bd/pkg/cmd/get/table_printer.go
 
 package klock
 
@@ -24,12 +27,7 @@ var recognizedTableVersions = map[schema.GroupVersionKind]bool{
 var _ metav1.Table = metav1beta1.Table{}
 var _ metav1beta1.Table = metav1.Table{}
 
-func decodeIntoTable(obj runtime.Object) (runtime.Object, error) {
-	event, isEvent := obj.(*metav1.WatchEvent)
-	if isEvent {
-		obj = event.Object.Object
-	}
-
+func decodeIntoTable(obj runtime.Object) (*metav1.Table, error) {
 	if !recognizedTableVersions[obj.GetObjectKind().GroupVersionKind()] {
 		return nil, fmt.Errorf("attempt to decode non-Table object")
 	}
@@ -53,11 +51,6 @@ func decodeIntoTable(obj runtime.Object) (runtime.Object, error) {
 			return nil, err
 		}
 		row.Object.Object = converted
-	}
-
-	if isEvent {
-		event.Object.Object = table
-		return event, nil
 	}
 	return table, nil
 }

@@ -13,12 +13,14 @@ import (
 type RowStyles struct {
 	Cell    lipgloss.Style
 	Error   lipgloss.Style
+	Warning lipgloss.Style
 	Deleted lipgloss.Style
 }
 
 var DefaultRowStyle = RowStyles{
 	Cell:    lipgloss.NewStyle(),
 	Error:   lipgloss.NewStyle().Foreground(lipgloss.Color("1")),
+	Warning: lipgloss.NewStyle().Foreground(lipgloss.Color("6")),
 	Deleted: lipgloss.NewStyle().Foreground(lipgloss.Color("8")),
 }
 
@@ -33,6 +35,7 @@ type Status int
 const (
 	StatusDefault Status = iota
 	StatusError
+	StatusWarning
 	StatusDeleted
 )
 
@@ -93,6 +96,8 @@ func (d RowDelegate) Render(w io.Writer, m list.Model, index int, listItem list.
 	switch item.Status {
 	case StatusError:
 		d.RenderColumns(w, item.Fields, d.Styles.Error)
+	case StatusWarning:
+		d.RenderColumns(w, item.Fields, d.Styles.Warning)
 	case StatusDeleted:
 		d.RenderColumns(w, item.Fields, d.Styles.Deleted)
 	default:

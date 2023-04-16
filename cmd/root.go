@@ -21,12 +21,12 @@ func RootCmd() *cobra.Command {
 		Long:          `.`,
 		SilenceErrors: true,
 		SilenceUsage:  true,
-		Args:          cobra.ExactArgs(1),
+		Args:          cobra.MinimumNArgs(1),
 		PreRun: func(cmd *cobra.Command, args []string) {
 			viper.BindPFlags(cmd.Flags())
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := klock.Execute(o, args[0]); err != nil {
+			if err := klock.Execute(o, args); err != nil {
 				return err
 			}
 			return nil
