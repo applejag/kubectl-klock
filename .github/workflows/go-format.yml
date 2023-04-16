@@ -1,0 +1,40 @@
+# SPDX-FileCopyrightText: 2021 Wharf (Iver Sverige AB)
+#
+# SPDX-License-Identifier: MIT
+
+name: Go format
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  goimports_diff:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '1.20'
+          cache: true
+
+      - name: Install goimports
+        run: go install golang.org/x/tools/cmd/goimports@latest
+
+      - name: checkout
+        uses: actions/checkout@v2
+
+      - name: Format all .go files
+        run:
+          echo "Checking files:"
+          find . -name '*.go' -not -path './api/**'
+          goimports -w $(find . -name '*.go' -not -path './api/**')
+
+      - name: Git diff
+        run: git diff --exit-code
+
