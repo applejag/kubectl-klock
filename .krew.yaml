@@ -1,0 +1,32 @@
+apiVersion: krew.googlecontainertools.github.com/v1alpha2
+kind: Plugin
+metadata:
+  name: klock
+spec:
+  version: {{ .TagName }}
+  homepage: https://github.com/jilleJr/kubectl-klock
+  platforms:
+  - selector:
+      matchLabels:
+        os: darwin
+        arch: amd64
+    {{addURIAndSha "https://github.com/jilleJr/kubectl-klock/releases/download/{{ .TagName }}/kubectl-klock_{{ .TagName }}_darwin_amd64.tar.gz" .TagName }}
+    bin: kubectl-klock
+  - selector:
+      matchLabels:
+        os: darwin
+        arch: arm64
+    {{addURIAndSha "https://github.com/jilleJr/kubectl-klock/releases/download/{{ .TagName }}/kubectl-klock_{{ .TagName }}_darwin_arm64.tar.gz" .TagName }}
+    bin: kubectl-klock
+  - selector:
+      matchLabels:
+        os: linux
+        arch: amd64
+    {{addURIAndSha "https://github.com/jilleJr/kubectl-klock/releases/download/{{ .TagName }}/kubectl-klock_{{ .TagName }}_linux_amd64.tar.gz" .TagName }}
+    bin: kubectl-klock
+  shortDescription: Watches resources
+  description: |
+    Usage:
+      $ kubectl klock <resource> [name]
+      This plugin watches resources and prints them in a human-readable manner. Very similar to `kubectl get`, but with live updates.
+      Read more documentation at: https://github.com/jilleJr/kubectl-klock

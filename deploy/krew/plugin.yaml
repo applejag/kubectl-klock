@@ -53,7 +53,7 @@ spec:
 
     For additional options:
       $ kubectl klock --help
-      or https://github.com/jilleJr/kubectl-klock/blob/v0.1.0/doc/USAGE.md
+      or https://github.com/jilleJr/kubectl-klock/blob/v0.1.0/README.md
 
   description: |
     This is a new plugin
