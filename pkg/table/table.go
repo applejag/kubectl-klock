@@ -9,7 +9,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-const extraHeight = 2
+const extraHeight = 4
 
 type Styles struct {
 	TitleBar lipgloss.Style
@@ -26,23 +26,25 @@ var DefaultStyles = Styles{
 type Model struct {
 	Styles Styles
 
-	list     list.Model
-	delegate *RowDelegate
-	headers  []string
+	list      list.Model
+	delegate  *RowDelegate
+	headers   []string
+	maxHeight int
 }
 
 func NewModel() *Model {
 	delegate := &RowDelegate{FieldSpacing: 3}
 
-	l := list.New(nil, delegate, 80, extraHeight)
+	l := list.New(nil, delegate, 80, 30)
 	l.SetShowPagination(false)
 	l.SetShowStatusBar(false)
 	l.SetShowHelp(false)
 	return &Model{
-		Styles:   DefaultStyles,
-		list:     l,
-		delegate: delegate,
-		headers:  nil,
+		Styles:    DefaultStyles,
+		list:      l,
+		delegate:  delegate,
+		headers:   nil,
+		maxHeight: 30,
 	}
 }
 
@@ -62,18 +64,7 @@ func (m *Model) AddRow(row Row) tea.Cmd {
 		cmd = m.list.InsertItem(len(m.list.Items()), row)
 	}
 	m.sortItems()
-	m.list.SetHeight(len(m.list.Items()) + extraHeight)
-	m.delegate.UpdateFieldMaxLengths(m.list.Items(), m.headers)
-	return cmd
-}
-
-func (m *Model) sortItems() {
-	items := m.list.Items()
-	sort.Slice(items, func(i, j int) bool {
-		a := items[i].(Row)
-		b := items[j].(Row)
-		return a.Fields[0] < b.Fields[0]
-	})
+	return tea.Batch(cmd, m.updateHeight())
 }
 
 func (m *Model) SetRows(rows []Row) tea.Cmd {
@@ -83,9 +74,31 @@ func (m *Model) SetRows(rows []Row) tea.Cmd {
 	}
 	cmd := m.list.SetItems(items)
 	m.sortItems()
-	m.list.SetHeight(len(m.list.Items()) + extraHeight)
-	m.delegate.UpdateFieldMaxLengths(m.list.Items(), m.headers)
-	return cmd
+	return tea.Batch(cmd, m.updateHeight())
+}
+
+func (m *Model) updateHeight() tea.Cmd {
+	height := len(m.list.Items()) + extraHeight
+	if height > m.maxHeight {
+		height = m.maxHeight
+	}
+	m.list.SetHeight(height)
+	shouldShowPagination := height > m.maxHeight
+	if m.list.ShowPagination() != shouldShowPagination {
+		m.list.SetShowPagination(shouldShowPagination)
+		if shouldShowPagination {
+			return tea.EnterAltScreen
+		}
+		return tea.ExitAltScreen
+	}
+	return nil
+}
+
+func (m *Model) sortItems() {
+	items := m.list.Items()
+	sort.Slice(items, func(i, j int) bool {
+		return items[i].FilterValue() < items[j].FilterValue()
+	})
 }
 
 func (m Model) Init() tea.Cmd {
@@ -95,16 +108,17 @@ func (m Model) Init() tea.Cmd {
 
 func (m *Model) SetHeaders(headers []string) {
 	m.headers = headers
-	m.delegate.UpdateFieldMaxLengths(m.list.Items(), headers)
 }
 
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.list.SetWidth(msg.Width)
+		m.maxHeight = msg.Height
 	}
 	var cmd tea.Cmd
 	m.list, cmd = m.list.Update(msg)
+	m.delegate.UpdateFieldMaxLengths(m.populatedViewItems(), m.headers)
 	return m, cmd
 }
 
@@ -116,4 +130,13 @@ func (m Model) View() string {
 	m.list.Styles.Title = m.Styles.Title
 	m.list.Styles.TitleBar = m.Styles.TitleBar
 	return m.list.View()
+}
+
+func (m Model) populatedViewItems() []list.Item {
+	items := m.list.VisibleItems() // more like, "filtered items"
+	if len(items) > 0 {
+		start, end := m.list.Paginator.GetSliceBounds(len(items))
+		return items[start:end]
+	}
+	return items
 }
