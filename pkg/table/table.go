@@ -1,12 +1,15 @@
 package table
 
 import (
-	"sort"
+	"bytes"
+	"fmt"
+	"io"
 	"strings"
 
-	"github.com/charmbracelet/bubbles/list"
+	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"gopkg.in/typ.v4/slices"
 )
 
 const extraHeight = 4
@@ -24,80 +27,76 @@ var DefaultStyles = Styles{
 }
 
 type Model struct {
-	Styles Styles
+	Styles      Styles
+	CellSpacing int
 
-	list      list.Model
-	delegate  *RowDelegate
-	headers   []string
-	maxHeight int
+	// Key mappings for navigating the list.
+	KeyMap KeyMap
+
+	headers      []string
+	maxHeight    int
+	rows         []Row
+	columnWidths []int
 }
 
 func NewModel() *Model {
-	delegate := &RowDelegate{FieldSpacing: 3}
-
-	l := list.New(nil, delegate, 80, 30)
-	l.SetShowPagination(false)
-	l.SetShowStatusBar(false)
-	l.SetShowHelp(false)
 	return &Model{
-		Styles:    DefaultStyles,
-		list:      l,
-		delegate:  delegate,
-		headers:   nil,
-		maxHeight: 30,
+		Styles:      DefaultStyles,
+		KeyMap:      DefaultKeyMap(),
+		CellSpacing: 3,
+		headers:     nil,
+		maxHeight:   30,
+		rows:        nil,
 	}
+}
+
+func (m *Model) RowIndex(id string) int {
+	for i, row := range m.rows {
+		if row.ID == id {
+			return i
+		}
+	}
+	return -1
+}
+
+type rowUpdateMsg struct{}
+
+func rowUpdate() tea.Msg {
+	return rowUpdateMsg{}
 }
 
 func (m *Model) AddRow(row Row) tea.Cmd {
-	var cmd tea.Cmd
-	var modified bool
-	for i, listItem := range m.list.Items() {
-		item, ok := listItem.(Row)
-		if ok && item.ID == row.ID {
-			cmd = m.list.SetItem(i, row)
-			modified = true
-			break
-		}
+	index := m.RowIndex(row.ID)
+	if index == -1 {
+		m.rows = append(m.rows, row)
+	} else {
+		m.rows[index] = row
 	}
 
-	if !modified {
-		cmd = m.list.InsertItem(len(m.list.Items()), row)
-	}
 	m.sortItems()
-	return tea.Batch(cmd, m.updateHeight())
+	m.updateColumnWidths()
+	return tea.Batch(m.updateHeight(), rowUpdate)
 }
 
 func (m *Model) SetRows(rows []Row) tea.Cmd {
-	items := make([]list.Item, len(rows))
-	for i, row := range rows {
-		items[i] = row
-	}
-	cmd := m.list.SetItems(items)
+	m.rows = slices.Clone(rows)
 	m.sortItems()
-	return tea.Batch(cmd, m.updateHeight())
+	m.updateColumnWidths()
+	return tea.Batch(m.updateHeight(), rowUpdate)
 }
 
 func (m *Model) updateHeight() tea.Cmd {
-	height := len(m.list.Items()) + extraHeight
-	if height > m.maxHeight {
-		height = m.maxHeight
-	}
-	m.list.SetHeight(height)
+	height := len(m.rows) + extraHeight
 	shouldShowPagination := height > m.maxHeight
-	if m.list.ShowPagination() != shouldShowPagination {
-		m.list.SetShowPagination(shouldShowPagination)
-		if shouldShowPagination {
-			return tea.EnterAltScreen
-		}
-		return tea.ExitAltScreen
+	if shouldShowPagination {
+		return tea.EnterAltScreen
 	}
-	return nil
+	return tea.ExitAltScreen
 }
 
 func (m *Model) sortItems() {
-	items := m.list.Items()
-	sort.Slice(items, func(i, j int) bool {
-		return items[i].FilterValue() < items[j].FilterValue()
+	slices.SortStableFunc(m.rows, func(a, b Row) bool {
+		return a.SortValue() < b.SortValue()
 	})
 }
 
@@ -112,31 +111,86 @@ func (m *Model) SetHeaders(headers []string) {
 
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch {
+		case key.Matches(msg, m.KeyMap.ForceQuit):
+			return m, tea.Quit
+		case key.Matches(msg, m.KeyMap.Quit):
+			// TODO: Only check quit when browsing.
+			return m, tea.Quit
+		}
 	case tea.WindowSizeMsg:
-		m.list.SetWidth(msg.Width)
 		m.maxHeight = msg.Height
+	case rowUpdateMsg:
+		// TODO: update filter
 	}
-	var cmd tea.Cmd
-	m.list, cmd = m.list.Update(msg)
-	m.delegate.UpdateFieldMaxLengths(m.populatedViewItems(), m.headers)
-	return m, cmd
+	return m, nil
 }
 
 func (m Model) View() string {
-	var title strings.Builder
-	m.delegate.Styles = m.Styles.Row
-	m.delegate.RenderColumns(&title, m.headers, lipgloss.Style{})
-	m.list.Title = title.String()
-	m.list.Styles.Title = m.Styles.Title
-	m.list.Styles.TitleBar = m.Styles.TitleBar
-	return m.list.View()
+	if len(m.rows) == 0 {
+		return "No resources found"
+	}
+	var buf bytes.Buffer
+	m.columnsView(&buf, m.headers, lipgloss.Style{})
+	for _, row := range m.rows {
+		buf.WriteByte('\n')
+		m.rowView(&buf, row)
+	}
+
+	return buf.String()
 }
 
-func (m Model) populatedViewItems() []list.Item {
-	items := m.list.VisibleItems() // more like, "filtered items"
-	if len(items) > 0 {
-		start, end := m.list.Paginator.GetSliceBounds(len(items))
-		return items[start:end]
+func (m Model) rowView(w io.Writer, row Row) {
+	switch row.Status {
+	case StatusError:
+		m.columnsView(w, row.Fields, m.Styles.Row.Error)
+	case StatusWarning:
+		m.columnsView(w, row.Fields, m.Styles.Row.Warning)
+	case StatusDeleted:
+		m.columnsView(w, row.Fields, m.Styles.Row.Deleted)
+	default:
+		m.columnsView(w, row.Fields, m.Styles.Row.Cell)
 	}
-	return items
+}
+
+var lotsOfSpaces = strings.Repeat(" ", 200)
+
+func (m Model) columnsView(w io.Writer, columns []string, style lipgloss.Style) {
+	for i, f := range columns {
+		if i > 0 {
+			//TODO: test style.Width()
+			spacing := m.CellSpacing + m.columnWidths[i-1] - len(columns[i-1])
+			if spacing > 0 {
+				fmt.Fprint(w, lotsOfSpaces[:spacing])
+			}
+		}
+		fmt.Fprintf(w, style.Render(f))
+	}
+}
+
+func (m *Model) updateColumnWidths() {
+	lengths := expandToMaxLengths(nil, m.headers)
+	for _, row := range m.rows {
+		lengths = expandToMaxLengths(lengths, row.Fields)
+	}
+	m.columnWidths = lengths
+}
+
+func expandToMaxLengths(lengths []int, strs []string) []int {
+	lengths = expandSlice(lengths, len(strs))
+	for i, f := range strs {
+		if len(f) > lengths[i] {
+			lengths[i] = len(f)
+		}
+	}
+	return lengths
+}
+
+func expandSlice[S ~[]E, E any](slice S, minLen int) S {
+	delta := minLen - len(slice)
+	if delta <= 0 {
+		return slice
+	}
+	return append(slice, make(S, delta)...)
 }

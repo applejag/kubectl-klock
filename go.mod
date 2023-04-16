@@ -9,6 +9,7 @@ require (
 	github.com/fatih/color v1.13.0
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.15.0
+	gopkg.in/typ.v4 v4.2.0
 	k8s.io/apimachinery v0.27.0
 	k8s.io/cli-runtime v0.27.0
 	k8s.io/client-go v0.27.0
@@ -18,7 +19,6 @@ require (
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
 	github.com/MakeNowJust/heredoc v1.0.0 // indirect
-	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/chai2010/gettext-go v1.0.2 // indirect
 	github.com/containerd/console v1.0.3 // indirect
@@ -72,7 +72,6 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
-	github.com/sahilm/fuzzy v0.1.0 // indirect
 	github.com/spf13/afero v1.9.5 // indirect
 	github.com/spf13/cast v1.5.0 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
