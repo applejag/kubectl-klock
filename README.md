@@ -24,3 +24,49 @@ go install github.com/jilleJr/kubectl-klock@latest
 kubectl klock pods
 ```
 
+## Usage
+
+Supports a wide range of flags
+
+```sh
+kubectl klock <resource> [name(s)] [flags]
+
+# Examples:
+
+kubectl klock pods
+
+kubectl klock pods my-pod-7d68885db5-6dfst
+
+kubectl klock pods --selector app=my-app
+kubectl klock pods -l app=my-app
+
+kubectl klock pods --all-namespaces
+kubectl klock pods -A
+
+kubectl klock cronjobs
+kubectl klock deployments
+kubectl klock statefulsets
+kubectl klock nodes
+```
+
+There's also some hotkeys available:
+
+```text
+→/l/pgdn  next page      d  show/hide deleted    ctrl+c  quit
+←/h/pgup  prev page                              ?       show help
+g/home    go to start
+G/end     go to end
+```
+
+## Features
+
+- Pagination, for when the terminal window gets too small (height-wise)
+
+- Same output format as `kubectl get`
+
+- Watch arbitrary resources, just like `kubectl get <resource> [name]`
+
+- Auto updating age column.
+
+- Colors on statuses (e.g `Running`) and fractions (e.g `1/1`) to make
+  them stand out more.
