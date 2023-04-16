@@ -3,12 +3,18 @@
 A `kubectl` plugin to render the `kubectl get pods --watch` output in a
 much more readable fashion.
 
-> :warning: This is a work in progress. It does not work yet
+Think of it as running `watch kubectl get pods`, but instead of polling,
+it uses the regular watch feature to stream updates as soon as they occur.
+
+![demo](./docs/kubectl-klock-demo.gif)
 
 ## Quick Start
 
+Requires Go 1.20 (or later) installed.
+
 ```sh
-kubectl krew install klock
-kubectl klock
+go install github.com/jilleJr/kubectl-klock@latest
+
+kubectl klock pods
 ```
 
