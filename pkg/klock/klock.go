@@ -16,12 +16,10 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/cli-runtime/pkg/resource"
 	"k8s.io/client-go/rest"
-	"k8s.io/kubectl/pkg/cmd/get"
 )
 
 type Options struct {
 	ConfigFlags *genericclioptions.ConfigFlags
-	PrintFlags  *get.PrintFlags
 
 	LabelSelector     string
 	FieldSelector     string
