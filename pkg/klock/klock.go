@@ -40,13 +40,33 @@ import (
 type Options struct {
 	ConfigFlags *genericclioptions.ConfigFlags
 
-	LabelSelector     string
-	FieldSelector     string
-	AllNamespaces     bool
-	OutputWatchEvents bool
+	LabelSelector string
+	FieldSelector string
+	AllNamespaces bool
+
+	Output string
+}
+
+func (o Options) Validate() error {
+	const allowedFormats = "wide"
+	switch o.Output {
+	case "", "wide":
+		// Valid
+		return nil
+	case "custom-columns", "custom-columns-file", "go-template",
+		"go-template-file", "json", "jsonpath", "jsonpath-as-json",
+		"jsonpath-file", "name", "template", "templatefile", "yaml":
+		return fmt.Errorf("unsupported output format: %q, allowed formats are: %s", o.Output, allowedFormats)
+
+	default:
+		return fmt.Errorf("unknown output format: %q, allowed formats are: %s", o.Output, allowedFormats)
+	}
 }
 
 func Execute(o Options, args []string) error {
+	if err := o.Validate(); err != nil {
+		return err
+	}
 	ns, _, err := o.ConfigFlags.ToRawKubeConfigLoader().Namespace()
 	if err != nil {
 		return fmt.Errorf("read namespace: %w", err)
@@ -74,7 +94,7 @@ func Execute(o Options, args []string) error {
 	t := table.New()
 	p := tea.NewProgram(t)
 	go p.Send(t.StartSpinner()())
-	printer := Printer{Table: t}
+	printer := Printer{Table: t, WideOutput: o.Output == "wide"}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -148,8 +168,9 @@ func Execute(o Options, args []string) error {
 }
 
 type Printer struct {
-	Table   *table.Model
-	colDefs []metav1.TableColumnDefinition
+	Table      *table.Model
+	WideOutput bool
+	colDefs    []metav1.TableColumnDefinition
 }
 
 func (p *Printer) PrintObj(obj runtime.Object, eventType watch.EventType) (tea.Cmd, error) {
@@ -157,26 +178,26 @@ func (p *Printer) PrintObj(obj runtime.Object, eventType watch.EventType) (tea.C
 	if err != nil {
 		return nil, err
 	}
-	p.colDefs = updateColDefHeaders(p.Table, p.colDefs, objTable)
-	return addObjectToTable(p.Table, p.colDefs, objTable, eventType)
+	p.updateColDefHeaders(objTable)
+	return p.addObjectToTable(objTable, eventType)
 }
 
-func updateColDefHeaders(t *table.Model, oldColDefs []metav1.TableColumnDefinition, objTable *metav1.Table) []metav1.TableColumnDefinition {
+func (p *Printer) updateColDefHeaders(objTable *metav1.Table) {
 	if len(objTable.ColumnDefinitions) == 0 {
-		return oldColDefs
+		return
 	}
 
 	headers := make([]string, 0, len(objTable.ColumnDefinitions))
 	for _, colDef := range objTable.ColumnDefinitions {
-		if colDef.Priority == 0 {
+		if colDef.Priority == 0 || p.WideOutput {
 			headers = append(headers, strings.ToUpper(colDef.Name))
 		}
 	}
-	t.SetHeaders(headers)
-	return objTable.ColumnDefinitions
+	p.Table.SetHeaders(headers)
+	p.colDefs = objTable.ColumnDefinitions
 }
 
-func addObjectToTable(t *table.Model, colDefs []metav1.TableColumnDefinition, objTable *metav1.Table, eventType watch.EventType) (tea.Cmd, error) {
+func (p *Printer) addObjectToTable(objTable *metav1.Table, eventType watch.EventType) (tea.Cmd, error) {
 	var cmd tea.Cmd
 	for _, row := range objTable.Rows {
 		unstrucObj, ok := row.Object.Object.(*unstructured.Unstructured)
@@ -201,14 +222,14 @@ func addObjectToTable(t *table.Model, colDefs []metav1.TableColumnDefinition, ob
 		}
 		tableRow := table.Row{
 			ID:     uid,
-			Fields: make([]any, 0, len(colDefs)),
+			Fields: make([]any, 0, len(p.colDefs)),
 		}
 		for i, cell := range row.Cells {
-			if i >= len(colDefs) {
-				return nil, fmt.Errorf("cant find index %d (%v) in column defs: %v", i, cell, colDefs)
+			if i >= len(p.colDefs) {
+				return nil, fmt.Errorf("cant find index %d (%v) in column defs: %v", i, cell, p.colDefs)
 			}
-			colDef := colDefs[i]
-			if colDef.Priority != 0 {
+			colDef := p.colDefs[i]
+			if colDef.Priority != 0 && !p.WideOutput {
 				continue
 			}
 			cellStr := fmt.Sprint(cell)
@@ -247,7 +268,7 @@ func addObjectToTable(t *table.Model, colDefs []metav1.TableColumnDefinition, ob
 		}
 		// it's fine to only use the latest returned cmd, because of how
 		// [table.AddRow] is implemented
-		cmd = t.AddRow(tableRow)
+		cmd = p.Table.AddRow(tableRow)
 	}
 	return cmd, nil
 }
