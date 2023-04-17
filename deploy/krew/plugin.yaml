@@ -7,14 +7,14 @@ kind: Plugin
 metadata:
   name: klock
 spec:
-  version: v0.1.0
+  version: v0.1.1
   homepage: https://github.com/jilleJr/kubectl-klock
   platforms:
   - selector:
       matchLabels:
         os: linux
         arch: amd64
-    uri: https://github.com/jilleJr/kubectl-klock/releases/download/v0.1.0/klock_linux_amd64.tar.gz
+    uri: https://github.com/jilleJr/kubectl-klock/releases/download/v0.1.1/klock_linux_amd64.tar.gz
     sha256: 0c4f40249412235bf6eee199f693710b05160f787393d14fe03463b14938bbae
     files:
     - from: "./klock"
@@ -27,7 +27,7 @@ spec:
       matchLabels:
         os: linux
         arch: "386"
-    uri: https://github.com/jilleJr/kubectl-klock/releases/download/v0.1.0/klock_linux_386.tar.gz
+    uri: https://github.com/jilleJr/kubectl-klock/releases/download/v0.1.1/klock_linux_386.tar.gz
     sha256: 3e26f43b74d65364ff5bcd5826887327efbc0fdb622ef5899ef7f4189a51ba99
     files:
     - from: "./klock"
@@ -40,7 +40,7 @@ spec:
       matchLabels:
         os: darwin
         arch: amd64
-    uri: https://github.com/jilleJr/kubectl-klock/releases/download/v0.1.0/klock_darwin_amd64.tar.gz
+    uri: https://github.com/jilleJr/kubectl-klock/releases/download/v0.1.1/klock_darwin_amd64.tar.gz
     sha256: 7eddf1812a15195ed1eef57e9ccb8d75ed8d7f4edb6bc071f6dd032afe6d92e9
     files:
     - from: "./klock"
@@ -53,7 +53,7 @@ spec:
       matchLabels:
         os: windows
         arch: amd64
-    uri: https://github.com/jilleJr/kubectl-klock/releases/download/v0.1.0/klock_windows_amd64.zip
+    uri: https://github.com/jilleJr/kubectl-klock/releases/download/v0.1.1/klock_windows_amd64.zip
     sha256: e600f0c7148a0060d45b46e14aa62384889b7f495e66dda959a0d62d14eb4530
     files:
     - from: "/klock.exe"
@@ -66,7 +66,7 @@ spec:
       matchLabels:
         os: windows
         arch: "386"
-    uri: https://github.com/jilleJr/kubectl-klock/releases/download/v0.1.0/klock_windows_386.zip
+    uri: https://github.com/jilleJr/kubectl-klock/releases/download/v0.1.1/klock_windows_386.zip
     sha256: 4d733625ce634b5fa5ae883fcb15eebd2c2554e6986e0327a0200b0d0b26df4b
     files:
     - from: "/klock.exe"
