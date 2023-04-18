@@ -247,6 +247,14 @@ func (p *Printer) addObjectToTable(objTable *metav1.Table, eventType watch.Event
 					}
 				}
 				tableRow.Fields = append(tableRow.Fields, cell)
+			case "Restarts":
+				if eventType != watch.Deleted && cellStr != "0" {
+					cell = table.StyledColumn{
+						Value: cell,
+						Style: StyleFractionWarning,
+					}
+				}
+				tableRow.Fields = append(tableRow.Fields, cell)
 			default:
 				if eventType != watch.Deleted {
 					fractionStyle, ok := ParseFractionStyle(cellStr)

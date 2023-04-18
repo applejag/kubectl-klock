@@ -28,6 +28,8 @@ import (
 )
 
 var (
+	StyleRestartsWarning = lipgloss.NewStyle().Foreground(lipgloss.ANSIColor(3))
+
 	StyleFractionOK      = lipgloss.NewStyle().Foreground(lipgloss.ANSIColor(2))
 	StyleFractionWarning = lipgloss.NewStyle().Foreground(lipgloss.ANSIColor(3))
 
