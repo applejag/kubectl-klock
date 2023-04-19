@@ -233,10 +233,10 @@ func (p *Printer) addObjectToTable(objTable *metav1.Table, eventType watch.Event
 				continue
 			}
 			cellStr := fmt.Sprint(cell)
-			switch colDef.Name {
-			case "Age":
+			switch strings.ToLower(colDef.Name) {
+			case "age":
 				tableRow.Fields = append(tableRow.Fields, creationTime)
-			case "Status":
+			case "status":
 				if eventType == watch.Deleted {
 					cell = "Deleted"
 				} else {
@@ -247,7 +247,7 @@ func (p *Printer) addObjectToTable(objTable *metav1.Table, eventType watch.Event
 					}
 				}
 				tableRow.Fields = append(tableRow.Fields, cell)
-			case "Restarts":
+			case "restarts":
 				if eventType != watch.Deleted && cellStr != "0" {
 					cell = table.StyledColumn{
 						Value: cell,
