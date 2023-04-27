@@ -69,12 +69,14 @@ type Model struct {
 	spinner     spinner.Model
 	showSpinner bool
 
-	headers      []string
-	maxHeight    int
-	rows         []Row
-	filteredRows []Row
-	columnWidths []int
-	quitting     bool
+	headers            []string
+	maxHeight          int
+	rows               []Row
+	filteredRows       []Row
+	columnWidths       []int
+	windowTooShort     bool
+	fullscreenOverride bool
+	quitting           bool
 }
 
 const (
@@ -118,7 +120,7 @@ func (m *Model) AddRow(row Row) tea.Cmd {
 	m.updateFilteredRows()
 	m.updateColumnWidths()
 	m.updatePagination()
-	return m.updateHeight()
+	return m.updateFullscreenCmd()
 }
 
 func (m *Model) SetRows(rows []Row) tea.Cmd {
@@ -127,7 +129,7 @@ func (m *Model) SetRows(rows []Row) tea.Cmd {
 	m.updateFilteredRows()
 	m.updateColumnWidths()
 	m.updatePagination()
-	return m.updateHeight()
+	return m.updateFullscreenCmd()
 }
 
 func (m *Model) updateFilteredRows() {
@@ -144,8 +146,9 @@ func (m *Model) updateFilteredRows() {
 	}
 }
 
-func (m *Model) updateHeight() tea.Cmd {
-	if m.paginatorVisible() {
+func (m *Model) updateFullscreenCmd() tea.Cmd {
+	m.windowTooShort = m.paginatorVisible()
+	if m.fullscreenOverride || m.windowTooShort {
 		return tea.EnterAltScreen
 	}
 	return tea.ExitAltScreen
@@ -229,6 +232,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.updatePagination()
 			m.updateColumnWidths()
 			return m, nil
+		case key.Matches(msg, m.KeyMap.ToggleFullscreen):
+			m.fullscreenOverride = !m.fullscreenOverride
+			return m, m.updateFullscreenCmd()
 		case !m.ShowHelp && key.Matches(msg, m.KeyMap.ShowFullHelp):
 			m.ShowHelp = true
 			return m, nil
@@ -243,16 +249,18 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.showSpinner {
 			return m, cmd
 		}
-	case tea.WindowSizeMsg:
-		m.maxHeight = msg.Height
-		m.help.Width = msg.Width
-		m.updatePagination()
 	case TickMsg:
 		for i := range m.rows {
 			m.rows[i].ReRenderFields()
 		}
 		m.updateColumnWidths()
 		return m, doTick()
+
+	case tea.WindowSizeMsg:
+		m.maxHeight = msg.Height
+		m.help.Width = msg.Width
+		m.updatePagination()
+		return m, m.updateFullscreenCmd()
 	}
 	return m, nil
 }

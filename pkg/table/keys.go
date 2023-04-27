@@ -23,13 +23,16 @@ import "github.com/charmbracelet/bubbles/key"
 // is used to render the menu menu.
 type KeyMap struct {
 	// Keybindings used when browsing the list.
-	NextPage      key.Binding
-	PrevPage      key.Binding
-	GoToStart     key.Binding
-	GoToEnd       key.Binding
-	Filter        key.Binding
-	ClearFilter   key.Binding
-	ToggleDeleted key.Binding
+	NextPage  key.Binding
+	PrevPage  key.Binding
+	GoToStart key.Binding
+	GoToEnd   key.Binding
+
+	// Keybindings for view settings
+	Filter           key.Binding
+	ClearFilter      key.Binding
+	ToggleDeleted    key.Binding
+	ToggleFullscreen key.Binding
 
 	// Keybindings used when setting a filter.
 	CancelWhileFiltering key.Binding
@@ -47,11 +50,11 @@ type KeyMap struct {
 var DefaultKeyMap = KeyMap{
 	// Browsing.
 	PrevPage: key.NewBinding(
-		key.WithKeys("left", "h", "pgup", "b"),
+		key.WithKeys("left", "h", "pgup"),
 		key.WithHelp("←/h/pgup", "prev page"),
 	),
 	NextPage: key.NewBinding(
-		key.WithKeys("right", "l", "pgdown", "f"),
+		key.WithKeys("right", "l", "pgdown"),
 		key.WithHelp("→/l/pgdn", "next page"),
 	),
 	GoToStart: key.NewBinding(
@@ -61,6 +64,10 @@ var DefaultKeyMap = KeyMap{
 	GoToEnd: key.NewBinding(
 		key.WithKeys("end", "G"),
 		key.WithHelp("G/end", "go to end"),
+	),
+	ToggleFullscreen: key.NewBinding(
+		key.WithKeys("f"),
+		key.WithHelp("f", "toggle fullscreen"),
 	),
 	Filter: key.NewBinding(
 		key.WithKeys("/"),
@@ -124,6 +131,7 @@ func (m Model) FullHelp() [][]key.Binding {
 
 	listLevelBindings := []key.Binding{
 		m.KeyMap.ToggleDeleted,
+		m.KeyMap.ToggleFullscreen,
 		//m.KeyMap.Filter,
 		//m.KeyMap.ClearFilter,
 		//m.KeyMap.AcceptWhileFiltering,
