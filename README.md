@@ -47,6 +47,8 @@ kubectl klock cronjobs
 kubectl klock deployments
 kubectl klock statefulsets
 kubectl klock nodes
+
+kubectl klock pods --watch-kubeconfig
 ```
 
 There's also some hotkeys available:
@@ -70,3 +72,6 @@ There's also some hotkeys available:
 
 - Colors on statuses (e.g `Running`) and fractions (e.g `1/1`) to make
   them stand out more.
+
+- Restart watch when kubeconfig file changes (flag: `--watch-kubeconfig`, `-W`),
+  such as when changed by [kubectx](https://github.com/ahmetb/kubectx).

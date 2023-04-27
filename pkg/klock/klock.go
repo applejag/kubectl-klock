@@ -25,6 +25,7 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/fsnotify/fsnotify"
 	"github.com/jilleJr/kubectl-klock/pkg/table"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -40,9 +41,10 @@ import (
 type Options struct {
 	ConfigFlags *genericclioptions.ConfigFlags
 
-	LabelSelector string
-	FieldSelector string
-	AllNamespaces bool
+	LabelSelector   string
+	FieldSelector   string
+	AllNamespaces   bool
+	WatchKubeconfig bool
 
 	Output string
 }
@@ -67,20 +69,22 @@ func Execute(o Options, args []string) error {
 	if err := o.Validate(); err != nil {
 		return err
 	}
-	configLoader := o.ConfigFlags.ToRawKubeConfigLoader()
-	//kubeconfigFiles := configLoader.ConfigAccess().GetLoadingPrecedence()
-
-	ns, _, err := configLoader.Namespace()
-	if err != nil {
-		return fmt.Errorf("read namespace: %w", err)
-	}
-	if ns == "" {
-		return fmt.Errorf("no namespace selected")
+	var fileEvents chan fsnotify.Event
+	if o.WatchKubeconfig {
+		if fileWatcher, err := fsnotify.NewWatcher(); err == nil {
+			configLoader := o.ConfigFlags.ToRawKubeConfigLoader()
+			kubeconfigFiles := configLoader.ConfigAccess().GetLoadingPrecedence()
+			for _, file := range kubeconfigFiles {
+				fileWatcher.Add(file)
+			}
+			fileEvents = fileWatcher.Events
+			defer fileWatcher.Close()
+		}
 	}
 
 	t := table.New()
 	printer := Printer{Table: t, WideOutput: o.Output == "wide"}
-	w := NewWatcher(o, ns, printer)
+	w := NewWatcher(o, printer, args)
 	p := tea.NewProgram(t)
 	t.StartSpinner()
 
@@ -88,23 +92,26 @@ func Execute(o Options, args []string) error {
 	defer cancel()
 
 	watchAndPrint := func() error {
-		if err := w.Watch(ctx, args...); err != nil {
+		if err := w.Watch(ctx); err != nil {
 			return err
 		}
 		for {
 			select {
-			case event, ok := <-w.EventsChan():
+			case event, ok := <-fileEvents:
 				if !ok {
-					return nil
+					fileEvents = nil
+					continue
 				}
-				cmd, err := printer.PrintObj(event.Object, event.Type)
-				if err != nil {
-					return err
+				if event.Op != fsnotify.Write {
+					continue
 				}
-				p.Send(cmd())
+				go w.RestartActiveWatch(ctx)
+
 			case err := <-w.ErrorChan():
 				t.SetError(err)
 				p.Send(nil)
+			case <-ctx.Done():
+				return nil
 			}
 		}
 	}
@@ -116,47 +123,79 @@ func Execute(o Options, args []string) error {
 		}
 	}()
 
-	_, err = p.Run()
+	_, err := p.Run()
 	return err
 }
 
-func NewWatcher(options Options, namespace string, printer Printer) *Watcher {
+func NewWatcher(options Options, printer Printer, args []string) *Watcher {
 	return &Watcher{
-		Options:   options,
-		Namespace: namespace,
-		Printer:   printer,
+		Options: options,
+		Printer: printer,
+		Args:    args,
 
-		eventChan: make(chan watch.Event, 3),
 		errorChan: make(chan error, 3),
 	}
 }
 
 type Watcher struct {
 	Options
-	Namespace string
-	Printer   Printer
+	Printer Printer
+	Args    []string
 
-	eventChan chan watch.Event
+	cancel    func()
 	errorChan chan error
-}
-
-func (w *Watcher) EventsChan() <-chan watch.Event {
-	return w.eventChan
 }
 
 func (w *Watcher) ErrorChan() <-chan error {
 	return w.errorChan
 }
 
-func (w *Watcher) Watch(ctx context.Context, args ...string) error {
+func (w *Watcher) Watch(ctx context.Context) error {
+	return w.startWatch(ctx, false)
+}
+
+func (w *Watcher) RestartActiveWatch(ctx context.Context) {
+	if w.cancel != nil {
+		w.cancel()
+	}
+	w.cancel = nil
+
+	for {
+		err := w.startWatch(ctx, true)
+		if ctx.Err() != nil {
+			return
+		}
+		if err != nil {
+			w.errorChan <- fmt.Errorf("retry in 5s: restart watch: %w", err)
+		}
+		select {
+		case <-time.After(5 * time.Second):
+			continue
+		case <-ctx.Done():
+			return
+		}
+	}
+}
+
+func (w *Watcher) startWatch(ctx context.Context, clearBeforePrinting bool) error {
+	ctx, w.cancel = context.WithCancel(ctx)
+
+	ns, _, err := w.ConfigFlags.ToRawKubeConfigLoader().Namespace()
+	if err != nil {
+		return fmt.Errorf("read namespace: %w", err)
+	}
+	if ns == "" {
+		return fmt.Errorf("no namespace selected")
+	}
+
 	r := resource.NewBuilder(w.ConfigFlags).
 		Unstructured().
-		NamespaceParam(w.Namespace).DefaultNamespace().AllNamespaces(w.AllNamespaces).
+		NamespaceParam(ns).DefaultNamespace().AllNamespaces(w.AllNamespaces).
 		//FilenameParam(o.ExplicitNamespace, &o.FilenameOptions).
 		LabelSelectorParam(w.LabelSelector).
 		FieldSelectorParam(w.FieldSelector).
 		//RequestChunksOf(o.ChunkSize).
-		ResourceTypeOrNameArgs(true, args...).
+		ResourceTypeOrNameArgs(true, w.Args...).
 		SingleResourceType().
 		Latest().
 		TransformRequests(transformRequests).
@@ -189,6 +228,10 @@ func (w *Watcher) Watch(ctx context.Context, args ...string) error {
 		objsToPrint = []runtime.Object{obj}
 	}
 
+	if clearBeforePrinting {
+		w.Printer.Clear()
+	}
+
 	for _, objToPrint := range objsToPrint {
 		if _, err := w.Printer.PrintObj(objToPrint, watch.Added); err != nil {
 			return err
@@ -203,13 +246,17 @@ func (w *Watcher) watchLoop(ctx context.Context, r *resource.Result, resVersion 
 	for {
 		err := w.pipeEvents(ctx, r, resVersion)
 		if ctx.Err() != nil {
-			close(w.eventChan)
 			return
 		}
 		if err != nil {
 			w.errorChan <- fmt.Errorf("retry in 5s: %w", err)
 		}
-		time.Sleep(5 * time.Second)
+		select {
+		case <-time.After(5 * time.Second):
+			continue
+		case <-ctx.Done():
+			return
+		}
 	}
 }
 
@@ -227,7 +274,9 @@ func (w *Watcher) pipeEvents(ctx context.Context, r *resource.Result, resVersion
 			if !ok {
 				return fmt.Errorf("watch channel closed")
 			}
-			w.eventChan <- event
+			if _, err := w.Printer.PrintObj(event.Object, event.Type); err != nil {
+				return err
+			}
 		}
 	}
 }
@@ -236,6 +285,10 @@ type Printer struct {
 	Table      *table.Model
 	WideOutput bool
 	colDefs    []metav1.TableColumnDefinition
+}
+
+func (p *Printer) Clear() {
+	p.Table.SetRows(nil)
 }
 
 func (p *Printer) PrintObj(obj runtime.Object, eventType watch.EventType) (tea.Cmd, error) {

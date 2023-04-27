@@ -57,6 +57,7 @@ func RootCmd() *cobra.Command {
 	cmd.Flags().BoolVarP(&o.AllNamespaces, "all-namespaces", "A", o.AllNamespaces, "If present, list the requested object(s) across all namespaces. Namespace in current context is ignored even if specified with --namespace.")
 	cmd.Flags().StringVar(&o.FieldSelector, "field-selector", o.FieldSelector, "Selector (field query) to filter on, supports '=', '==', and '!='.(e.g. --field-selector key1=value1,key2=value2). The server only supports a limited number of field queries per type.")
 	cmd.Flags().StringVarP(&o.Output, "output", "o", o.Output, "Output format. Only a small subset of formats found in 'kubectl get' are supported by kubectl-klock.")
+	cmd.Flags().BoolVarP(&o.WatchKubeconfig, "watch-kubeconfig", "W", o.WatchKubeconfig, "Restart the watch when the kubeconfig file changes.")
 	cmdutil.AddLabelSelectorFlagVar(cmd, &o.LabelSelector)
 
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
