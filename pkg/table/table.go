@@ -39,6 +39,7 @@ type Styles struct {
 	Title    lipgloss.Style
 	Row      RowStyles
 
+	Error      lipgloss.Style
 	Pagination lipgloss.Style
 }
 
@@ -50,6 +51,9 @@ var DefaultStyles = Styles{
 	Title:    lipgloss.NewStyle(),
 	Row:      DefaultRowStyle,
 
+	Error: lipgloss.NewStyle().
+		Foreground(lipgloss.ANSIColor(9)).
+		SetString("ERROR:"),
 	Pagination: lipgloss.NewStyle().
 		Foreground(subduedColor).
 		SetString("PAGE:"),
@@ -69,12 +73,12 @@ type Model struct {
 	spinner     spinner.Model
 	showSpinner bool
 
+	err                error
 	headers            []string
 	maxHeight          int
 	rows               []Row
 	filteredRows       []Row
 	columnWidths       []int
-	windowTooShort     bool
 	fullscreenOverride bool
 	quitting           bool
 }
@@ -117,6 +121,7 @@ func (m *Model) AddRow(row Row) tea.Cmd {
 	}
 
 	m.sortItems()
+	m.StopSpinner()
 	m.updateFilteredRows()
 	m.updateColumnWidths()
 	m.updatePagination()
@@ -126,6 +131,9 @@ func (m *Model) AddRow(row Row) tea.Cmd {
 func (m *Model) SetRows(rows []Row) tea.Cmd {
 	m.rows = slices.Clone(rows)
 	m.sortItems()
+	if len(m.rows) > 0 {
+		m.StopSpinner()
+	}
 	m.updateFilteredRows()
 	m.updateColumnWidths()
 	m.updatePagination()
@@ -146,9 +154,12 @@ func (m *Model) updateFilteredRows() {
 	}
 }
 
+func (m *Model) SetError(err error) {
+	m.err = err
+}
+
 func (m *Model) updateFullscreenCmd() tea.Cmd {
-	m.windowTooShort = m.paginatorVisible()
-	if m.fullscreenOverride || m.windowTooShort {
+	if m.fullscreenOverride || m.windowTooShort() {
 		return tea.EnterAltScreen
 	}
 	return tea.ExitAltScreen
@@ -158,7 +169,14 @@ func (m *Model) paginatorVisible() bool {
 	if m.maxHeight <= 2 {
 		return false
 	}
+	return m.windowTooShort()
+}
+
+func (m *Model) windowTooShort() bool {
 	height := len(m.filteredRows) + 1 // +1 for header
+	if m.err != nil {
+		height++
+	}
 	return height > m.maxHeight
 }
 
@@ -183,7 +201,11 @@ func (m *Model) updatePagination() {
 }
 
 func (m Model) Init() tea.Cmd {
-	return doTick()
+	cmd := doTick()
+	if m.showSpinner {
+		cmd = tea.Batch(cmd, m.spinner.Tick)
+	}
+	return cmd
 }
 
 func (m *Model) SetHeaders(headers []string) {
@@ -269,10 +291,10 @@ func (m Model) View() string {
 	if m.ShowHelp {
 		return m.help.FullHelpView(m.FullHelp())
 	}
-	if m.showSpinner {
-		return m.spinner.View()
-	}
 	if len(m.rows) == 0 {
+		if m.showSpinner {
+			return m.spinner.View()
+		}
 		return "No resources found"
 	}
 	if len(m.filteredRows) == 0 {
@@ -292,12 +314,22 @@ func (m Model) View() string {
 		m.rowView(&buf, row)
 	}
 
-	if m.paginatorVisible() {
+	paginatorVisible := m.paginatorVisible()
+	if paginatorVisible {
 		for i := len(currentPage); i < m.Paginator.PerPage; i++ {
 			buf.WriteByte('\n')
 		}
 		buf.WriteByte('\n')
 		buf.WriteString(m.Styles.Pagination.Render(m.Paginator.View()))
+	}
+
+	if m.err != nil {
+		if paginatorVisible {
+			buf.WriteString("  ")
+		} else {
+			buf.WriteByte('\n')
+		}
+		buf.WriteString(m.Styles.Error.Render(m.err.Error()))
 	}
 
 	if m.quitting {

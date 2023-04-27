@@ -67,7 +67,10 @@ func Execute(o Options, args []string) error {
 	if err := o.Validate(); err != nil {
 		return err
 	}
-	ns, _, err := o.ConfigFlags.ToRawKubeConfigLoader().Namespace()
+	configLoader := o.ConfigFlags.ToRawKubeConfigLoader()
+	//kubeconfigFiles := configLoader.ConfigAccess().GetLoadingPrecedence()
+
+	ns, _, err := configLoader.Namespace()
 	if err != nil {
 		return fmt.Errorf("read namespace: %w", err)
 	}
@@ -75,87 +78,33 @@ func Execute(o Options, args []string) error {
 		return fmt.Errorf("no namespace selected")
 	}
 
-	r := resource.NewBuilder(o.ConfigFlags).
-		Unstructured().
-		NamespaceParam(ns).DefaultNamespace().AllNamespaces(o.AllNamespaces).
-		//FilenameParam(o.ExplicitNamespace, &o.FilenameOptions).
-		LabelSelectorParam(o.LabelSelector).
-		FieldSelectorParam(o.FieldSelector).
-		//RequestChunksOf(o.ChunkSize).
-		ResourceTypeOrNameArgs(true, args...).
-		SingleResourceType().
-		Latest().
-		TransformRequests(transformRequests).
-		Do()
-	if err := r.Err(); err != nil {
-		return err
-	}
-
 	t := table.New()
-	p := tea.NewProgram(t)
-	go p.Send(t.StartSpinner()())
 	printer := Printer{Table: t, WideOutput: o.Output == "wide"}
+	w := NewWatcher(o, ns, printer)
+	p := tea.NewProgram(t)
+	t.StartSpinner()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	watchAndPrint := func() error {
-		obj, err := r.Object()
-		if err != nil {
+		if err := w.Watch(ctx, args...); err != nil {
 			return err
 		}
-
-		// watching from resourceVersion 0, starts the watch at ~now and
-		// will return an initial watch event.  Starting form ~now, rather
-		// the rv of the object will insure that we start the watch from
-		// inside the watch window, which the rv of the object might not be.
-		rv := "0"
-		isList := meta.IsListType(obj)
-		var objsToPrint []runtime.Object
-		if isList {
-			// the resourceVersion of list objects is ~now but won't return
-			// an initial watch event
-			rv, err = meta.NewAccessor().ResourceVersion(obj)
-			if err != nil {
-				return err
-			}
-			objsToPrint, _ = meta.ExtractList(obj)
-		} else {
-			objsToPrint = []runtime.Object{obj}
-		}
-
-		var cmd tea.Cmd
-		for _, objToPrint := range objsToPrint {
-			var err error
-			cmd, err = printer.PrintObj(objToPrint, watch.Added)
-			if err != nil {
-				return err
-			}
-		}
-		t.StopSpinner()
-		if cmd != nil {
-			p.Send(cmd())
-		}
-
-		watch, err := r.Watch(rv)
-		if err != nil {
-			return err
-		}
-
 		for {
 			select {
-			case <-ctx.Done():
-				watch.Stop()
-				return nil
-			case event, ok := <-watch.ResultChan():
+			case event, ok := <-w.EventsChan():
 				if !ok {
-					return fmt.Errorf("watch channel closed")
+					return nil
 				}
 				cmd, err := printer.PrintObj(event.Object, event.Type)
 				if err != nil {
 					return err
 				}
 				p.Send(cmd())
+			case err := <-w.ErrorChan():
+				t.SetError(err)
+				p.Send(nil)
 			}
 		}
 	}
@@ -166,8 +115,121 @@ func Execute(o Options, args []string) error {
 			fmt.Fprintf(os.Stderr, "err: %s\n", err)
 		}
 	}()
+
 	_, err = p.Run()
 	return err
+}
+
+func NewWatcher(options Options, namespace string, printer Printer) *Watcher {
+	return &Watcher{
+		Options:   options,
+		Namespace: namespace,
+		Printer:   printer,
+
+		eventChan: make(chan watch.Event, 3),
+		errorChan: make(chan error, 3),
+	}
+}
+
+type Watcher struct {
+	Options
+	Namespace string
+	Printer   Printer
+
+	eventChan chan watch.Event
+	errorChan chan error
+}
+
+func (w *Watcher) EventsChan() <-chan watch.Event {
+	return w.eventChan
+}
+
+func (w *Watcher) ErrorChan() <-chan error {
+	return w.errorChan
+}
+
+func (w *Watcher) Watch(ctx context.Context, args ...string) error {
+	r := resource.NewBuilder(w.ConfigFlags).
+		Unstructured().
+		NamespaceParam(w.Namespace).DefaultNamespace().AllNamespaces(w.AllNamespaces).
+		//FilenameParam(o.ExplicitNamespace, &o.FilenameOptions).
+		LabelSelectorParam(w.LabelSelector).
+		FieldSelectorParam(w.FieldSelector).
+		//RequestChunksOf(o.ChunkSize).
+		ResourceTypeOrNameArgs(true, args...).
+		SingleResourceType().
+		Latest().
+		TransformRequests(transformRequests).
+		Do()
+	if err := r.Err(); err != nil {
+		return err
+	}
+
+	obj, err := r.Object()
+	if err != nil {
+		return err
+	}
+
+	// watching from resourceVersion 0, starts the watch at ~now and
+	// will return an initial watch event.  Starting form ~now, rather
+	// the resVersion of the object will insure that we start the watch from
+	// inside the watch window, which the resVersion of the object might not be.
+	resVersion := "0"
+	isList := meta.IsListType(obj)
+	var objsToPrint []runtime.Object
+	if isList {
+		// the resourceVersion of list objects is ~now but won't return
+		// an initial watch event
+		resVersion, err = meta.NewAccessor().ResourceVersion(obj)
+		if err != nil {
+			return err
+		}
+		objsToPrint, _ = meta.ExtractList(obj)
+	} else {
+		objsToPrint = []runtime.Object{obj}
+	}
+
+	for _, objToPrint := range objsToPrint {
+		if _, err := w.Printer.PrintObj(objToPrint, watch.Added); err != nil {
+			return err
+		}
+	}
+
+	go w.watchLoop(ctx, r, resVersion)
+	return nil
+}
+
+func (w *Watcher) watchLoop(ctx context.Context, r *resource.Result, resVersion string) {
+	for {
+		err := w.pipeEvents(ctx, r, resVersion)
+		if ctx.Err() != nil {
+			close(w.eventChan)
+			return
+		}
+		if err != nil {
+			w.errorChan <- fmt.Errorf("retry in 5s: %w", err)
+		}
+		time.Sleep(5 * time.Second)
+	}
+}
+
+func (w *Watcher) pipeEvents(ctx context.Context, r *resource.Result, resVersion string) error {
+	watch, err := r.Watch(resVersion)
+	if err != nil {
+		return err
+	}
+	defer watch.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
+		case event, ok := <-watch.ResultChan():
+			if !ok {
+				return fmt.Errorf("watch channel closed")
+			}
+			w.eventChan <- event
+		}
+	}
 }
 
 type Printer struct {
