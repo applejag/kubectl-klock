@@ -147,7 +147,10 @@ func Execute(o Options, args []string) error {
 			case <-ctx.Done():
 				watch.Stop()
 				return nil
-			case event := <-watch.ResultChan():
+			case event, ok := <-watch.ResultChan():
+				if !ok {
+					return fmt.Errorf("watch channel closed")
+				}
 				cmd, err := printer.PrintObj(event.Object, event.Type)
 				if err != nil {
 					return err
