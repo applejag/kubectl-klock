@@ -54,10 +54,10 @@ kubectl klock pods --watch-kubeconfig
 There's also some hotkeys available:
 
 ```text
-  →/l/pgdn  next page      d  show/hide deleted    ctrl+c  quit
-  ←/h/pgup  prev page                              ?       show help
-  g/home    go to start
-  G/end     go to end
+  →/l/pgdn next page      d show/hide deleted    ctrl+c quit
+  ←/h/pgup prev page      f toggle fullscreen    ?/esc  close help
+  g/home   go to start
+  G/end    go to end
 ```
 
 ## Features
