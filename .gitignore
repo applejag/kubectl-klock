@@ -15,4 +15,9 @@
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
-bin/
+# goreleaser
+dist/
+
+# Node/NPM
+node_modules/
+package-lock.json
