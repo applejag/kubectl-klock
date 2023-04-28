@@ -36,9 +36,33 @@ spec:
 
   - selector:
       matchLabels:
+        os: linux
+        arch: "arm64"
+    {{addURIAndSha "https://github.com/jilleJr/kubectl-klock/releases/download/{{ .TagName }}/klock_linux_arm64.tar.gz" .TagName }}
+    files:
+    - from: "./klock"
+      to: "."
+    - from: LICENSE
+      to: "."
+    bin: "klock"
+
+  - selector:
+      matchLabels:
         os: darwin
         arch: amd64
     {{addURIAndSha "https://github.com/jilleJr/kubectl-klock/releases/download/{{ .TagName }}/klock_darwin_amd64.tar.gz" .TagName }}
+    files:
+    - from: "./klock"
+      to: "."
+    - from: LICENSE
+      to: "."
+    bin: "klock"
+
+  - selector:
+      matchLabels:
+        os: darwin
+        arch: arm64
+    {{addURIAndSha "https://github.com/jilleJr/kubectl-klock/releases/download/{{ .TagName }}/klock_darwin_arm64.tar.gz" .TagName }}
     files:
     - from: "./klock"
       to: "."
@@ -63,6 +87,18 @@ spec:
         os: windows
         arch: "386"
     {{addURIAndSha "https://github.com/jilleJr/kubectl-klock/releases/download/{{ .TagName }}/klock_windows_386.zip" .TagName }}
+    files:
+    - from: "/klock.exe"
+      to: "."
+    - from: LICENSE
+      to: "."
+    bin: "klock.exe"
+
+  - selector:
+      matchLabels:
+        os: windows
+        arch: arm64
+    {{addURIAndSha "https://github.com/jilleJr/kubectl-klock/releases/download/{{ .TagName }}/klock_windows_arm64.zip" .TagName }}
     files:
     - from: "/klock.exe"
       to: "."
