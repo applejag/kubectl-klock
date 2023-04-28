@@ -16,11 +16,10 @@ it uses the regular watch feature to stream updates as soon as they occur.
 
 ## Quick Start
 
-Requires Go 1.20 (or later) installed.
+Requires krew, the kubectl plugin manager: <https://krew.sigs.k8s.io/>
 
 ```sh
-go install github.com/jilleJr/kubectl-klock@latest
-
+kubectl krew install klock
 kubectl klock pods
 ```
 
@@ -30,25 +29,38 @@ Supports a wide range of flags
 
 ```sh
 kubectl klock <resource> [name(s)] [flags]
+```
 
-# Examples:
+### Examples
 
+```sh
+# Watch all pods
 kubectl klock pods
 
+# Watch all pods with more information (such as node name)
+kubectl klock pods -o wide
+
+# Watch a specific pod
 kubectl klock pods my-pod-7d68885db5-6dfst
 
+# Watch a subset of pods, filtering on labels
 kubectl klock pods --selector app=my-app
 kubectl klock pods -l app=my-app
 
+# Watch all pods in all namespaces
 kubectl klock pods --all-namespaces
 kubectl klock pods -A
 
+# Watch other resource types
 kubectl klock cronjobs
 kubectl klock deployments
 kubectl klock statefulsets
 kubectl klock nodes
 
+# Watch all pods, but restart the watch when your ~/.kube/config file changes,
+# such as when using "kubectl config use-context NAME"
 kubectl klock pods --watch-kubeconfig
+kubectl klock pods -W
 ```
 
 There's also some hotkeys available:

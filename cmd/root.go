@@ -32,9 +32,51 @@ import (
 func RootCmd() *cobra.Command {
 	var o klock.Options
 	cmd := &cobra.Command{
-		Use:           "klock",
-		Short:         "",
-		Long:          `.`,
+		Use:   "klock",
+		Short: "Watches resources",
+		Long: `Watches resources.
+
+ Prints a table of the most important information about the specified resource.
+
+ Supports a lot of the flags that regular "kubectl get" supports,
+ such as using the label selector (--selector, -l),
+ show results of all namespaces (--all-namespaces, -A),
+ as well as settings output format (--output, -o).
+
+ Performs the equivalent to running "watch kubectl get pods", but using
+ the same protocol as "kubectl get pods --watch".
+
+Use "kubectl api-resources" for a complete list of supported resources.
+
+Examples:
+  # Watch all pods
+  kubectl klock pods
+
+  # Watch all pods with more information (such as node name)
+  kubectl klock pods -o wide
+
+  # Watch a specific pod
+  kubectl klock pods my-pod-7d68885db5-6dfst
+
+  # Watch a subset of pods, filtering on labels
+  kubectl klock pods --selector app=my-app
+  kubectl klock pods -l app=my-app
+
+  # Watch all pods in all namespaces
+  kubectl klock pods --all-namespaces
+  kubectl klock pods -A
+
+  # Watch other resource types
+  kubectl klock cronjobs
+  kubectl klock deployments
+  kubectl klock statefulsets
+  kubectl klock nodes
+
+  # Watch all pods, but restart the watch when your ~/.kube/config file changes,
+  # such as when using "kubectl config use-context NAME"
+  kubectl klock pods --watch-kubeconfig
+  kubectl klock pods -W
+`,
 		SilenceErrors: true,
 		SilenceUsage:  true,
 		Args:          cobra.MinimumNArgs(1),
