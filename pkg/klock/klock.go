@@ -240,6 +240,8 @@ func (w *Watcher) startWatch(ctx context.Context, clearBeforePrinting bool) erro
 		}
 	}
 
+	w.Printer.Table.StopSpinner()
+
 	go w.watchLoop(ctx, r, resVersion)
 	return nil
 }
