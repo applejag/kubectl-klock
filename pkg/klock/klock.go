@@ -389,7 +389,7 @@ func (p *Printer) addObjectToTable(objTable *metav1.Table, printNamespace bool, 
 			}
 			cellStr := fmt.Sprint(cell)
 			switch strings.ToLower(colDef.Name) {
-			case "age":
+			case "age", "created at":
 				tableRow.Fields = append(tableRow.Fields, creationTime)
 			case "status":
 				if eventType == watch.Deleted {
