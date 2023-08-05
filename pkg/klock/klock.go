@@ -84,8 +84,8 @@ func Execute(o Options, args []string) error {
 
 	t := table.New()
 	printer := Printer{Table: t, WideOutput: o.Output == "wide"}
-	w := NewWatcher(o, printer, args)
 	p := tea.NewProgram(t)
+	w := NewWatcher(o, p, printer, args)
 	t.StartSpinner()
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -127,9 +127,10 @@ func Execute(o Options, args []string) error {
 	return err
 }
 
-func NewWatcher(options Options, printer Printer, args []string) *Watcher {
+func NewWatcher(options Options, program *tea.Program, printer Printer, args []string) *Watcher {
 	return &Watcher{
 		Options: options,
+		Program: program,
 		Printer: printer,
 		Args:    args,
 
@@ -139,6 +140,7 @@ func NewWatcher(options Options, printer Printer, args []string) *Watcher {
 
 type Watcher struct {
 	Options
+	Program *tea.Program
 	Printer Printer
 	Args    []string
 
@@ -274,9 +276,11 @@ func (w *Watcher) pipeEvents(ctx context.Context, r *resource.Result, resVersion
 			if !ok {
 				return fmt.Errorf("watch channel closed")
 			}
-			if _, err := w.Printer.PrintObj(event.Object, event.Type); err != nil {
+			cmd, err := w.Printer.PrintObj(event.Object, event.Type)
+			if err != nil {
 				return err
 			}
+			w.Program.Send(cmd())
 		}
 	}
 }

@@ -125,7 +125,8 @@ func (m *Model) AddRow(row Row) tea.Cmd {
 	m.updateFilteredRows()
 	m.updateColumnWidths()
 	m.updatePagination()
-	return m.updateFullscreenCmd()
+	fullscreenCmd := m.updateFullscreenCmd()
+	return fullscreenCmd
 }
 
 func (m *Model) SetRows(rows []Row) tea.Cmd {
