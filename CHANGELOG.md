@@ -16,6 +16,11 @@ This project tries to follow [SemVer 2.0.0](https://semver.org/).
 	https://changelog.md/
 -->
 
+## v0.3.1 (2023-08-05)
+
+- Fixed namespace column when using `--all-namespaces` not rendering or
+  sorting properly (fd3b165)
+
 ## v0.3.0 (2023-08-05)
 
 - Added support for `exec` auth plugin. (5f122fa, #13)
