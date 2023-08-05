@@ -18,10 +18,16 @@ This project tries to follow [SemVer 2.0.0](https://semver.org/).
 
 ## v0.2.1 (WIP)
 
-- Fixed spinner still showing when there's no results. (#18)
+- Fixed spinner still showing when there's no results. (edec13c, #18)
 
 - Fixed not redrawing on update, but instead only on age timer tick.
-  Now it redraws immediately. (#20)
+  Now it redraws immediately. (f65ef48, #20)
+
+- Fixed namespace column not showing when using `--all-namespaces`.
+  (8b5a172, #21)
+
+- Fixed non-namespaced resources' `CREATED AT` column not showing as duration.
+  (d1323de)
 
 ## v0.2.0 (2023-04-28)
 
