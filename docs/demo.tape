@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2023 Kalle Fagerberg
+#
+# SPDX-License-Identifier: CC-BY-4.0
+
 Output docs/demo.gif
 
 Require echo
