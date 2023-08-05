@@ -6,6 +6,8 @@ SPDX-License-Identifier: CC-BY-4.0
 
 # klock kubectl
 
+![demonstration animation](docs/demo.gif)
+
 [![REUSE status](https://api.reuse.software/badge/github.com/jilleJr/kubectl-klock)](https://api.reuse.software/info/github.com/jilleJr/kubectl-klock)
 
 A `kubectl` plugin to render the `kubectl get pods --watch` output in a
