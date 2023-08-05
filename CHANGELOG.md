@@ -16,7 +16,7 @@ This project tries to follow [SemVer 2.0.0](https://semver.org/).
 	https://changelog.md/
 -->
 
-## v0.2.1 (WIP)
+## v0.3.0 (2023-08-05)
 
 - Added support for `exec` auth plugin. (5f122fa, #13)
 
