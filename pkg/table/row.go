@@ -43,9 +43,10 @@ type StyledColumn struct {
 }
 
 type Row struct {
-	ID     string
-	Fields []any
-	Status Status
+	ID        string
+	Fields    []any
+	Status    Status
+	SortField string
 
 	renderedFields []string
 }
@@ -61,6 +62,9 @@ const (
 
 // SortValue value is the value we use when sorting the list.
 func (r Row) SortValue() string {
+	if r.SortField != "" {
+		return r.SortField
+	}
 	if len(r.Fields) == 0 {
 		return ""
 	}

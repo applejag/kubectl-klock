@@ -137,6 +137,7 @@ func NewWatcher(options Options, program *tea.Program, printer Printer, printNam
 		Printer: printer,
 		Args:    args,
 
+		printNamespace: printNamespace,
 		errorChan: make(chan error, 3),
 	}
 }
@@ -361,6 +362,10 @@ func (p *Printer) addObjectToTable(objTable *metav1.Table, printNamespace bool, 
 		if !ok {
 			return nil, fmt.Errorf("metadata.uid: want string, got %T", metadata["uid"])
 		}
+		name, ok := metadata["name"].(string)
+		if !ok {
+			return nil, fmt.Errorf("metadata.name: want string, got %T", metadata["name"])
+		}
 		creationTimestamp, ok := metadata["creationTimestamp"].(string)
 		if !ok {
 			return nil, fmt.Errorf("metadata.creationTimestamp: want string, got %T", metadata["creationTimestamp"])
@@ -370,20 +375,20 @@ func (p *Printer) addObjectToTable(objTable *metav1.Table, printNamespace bool, 
 			return nil, fmt.Errorf("metadata.creationTimestamp: %w", err)
 		}
 		tableRow := table.Row{
-			ID:     uid,
-			Fields: make([]any, 0, len(p.colDefs)),
+			ID:        uid,
+			Fields:    make([]any, 0, len(p.colDefs)),
+			SortField: name,
 		}
 		if printNamespace {
-			tableRow.Fields = append(tableRow.Fields, metadata["namespace"])
+			namespace := metadata["namespace"]
+			tableRow.Fields = append(tableRow.Fields, namespace)
+			tableRow.SortField = fmt.Sprintf("%s/%s", namespace, name)
 		}
 		for i, cell := range row.Cells {
 			if i >= len(p.colDefs) {
 				return nil, fmt.Errorf("cant find index %d (%v) in column defs: %v", i, cell, p.colDefs)
 			}
 			colDef := p.colDefs[i]
-			if printNamespace {
-				colDef = p.colDefs[i+1]
-			}
 			if colDef.Priority != 0 && !p.WideOutput {
 				continue
 			}
