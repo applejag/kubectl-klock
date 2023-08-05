@@ -16,6 +16,13 @@ This project tries to follow [SemVer 2.0.0](https://semver.org/).
 	https://changelog.md/
 -->
 
+## v0.2.1 (WIP)
+
+- Fixed spinner still showing when there's no results. (#18)
+
+- Fixed not redrawing on update, but instead only on age timer tick.
+  Now it redraws immediately. (#20)
+
 ## v0.2.0 (2023-04-28)
 
 - Now available on krew index!
@@ -25,7 +32,7 @@ This project tries to follow [SemVer 2.0.0](https://semver.org/).
   kubectl klock pods
   ```
 
-- Added warning color on pod restarts when &gt;0. (7f7a1b9)
+- Added warning color on pod restarts when >0. (7f7a1b9)
 
 - Added flag `--watch-kubeconfig` / `-W` to restart the watch when your
   kubeconfig (e.g `~/.kube/config`) file was changed. Such as when changing
