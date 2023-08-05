@@ -19,7 +19,10 @@ package main
 
 import (
 	"github.com/jilleJr/kubectl-klock/cmd"
-	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp" // required for GKE
+
+	// Initiate client auth plugins
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
+	_ "k8s.io/client-go/plugin/pkg/client/auth/exec"
 )
 
 func main() {
