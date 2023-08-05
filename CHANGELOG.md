@@ -18,7 +18,7 @@ This project tries to follow [SemVer 2.0.0](https://semver.org/).
 
 ## v0.2.1 (WIP)
 
-- Added more auth plugins. Now also supports `exec` auth plugin. (5f122fa, #13)
+- Added support for `exec` auth plugin. (5f122fa, #13)
 
 - Fixed spinner still showing when there's no results. (edec13c, #18)
 
