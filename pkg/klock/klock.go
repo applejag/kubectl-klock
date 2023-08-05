@@ -83,9 +83,12 @@ func Execute(o Options, args []string) error {
 	}
 
 	t := table.New()
-	printer := Printer{Table: t, WideOutput: o.Output == "wide"}
+	printer := Printer{
+		Table: t,
+		WideOutput: o.Output == "wide",
+	}
 	p := tea.NewProgram(t)
-	w := NewWatcher(o, p, printer, args)
+	w := NewWatcher(o, p, printer, o.AllNamespaces, args)
 	t.StartSpinner()
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -127,7 +130,7 @@ func Execute(o Options, args []string) error {
 	return err
 }
 
-func NewWatcher(options Options, program *tea.Program, printer Printer, args []string) *Watcher {
+func NewWatcher(options Options, program *tea.Program, printer Printer, printNamespace bool, args []string) *Watcher {
 	return &Watcher{
 		Options: options,
 		Program: program,
@@ -144,8 +147,9 @@ type Watcher struct {
 	Printer Printer
 	Args    []string
 
-	cancel    func()
-	errorChan chan error
+	printNamespace bool
+	cancel         func()
+	errorChan      chan error
 }
 
 func (w *Watcher) ErrorChan() <-chan error {
@@ -206,9 +210,21 @@ func (w *Watcher) startWatch(ctx context.Context, clearBeforePrinting bool) erro
 		return err
 	}
 
-	obj, err := r.Object()
+	infos, err := r.Infos()
 	if err != nil {
 		return err
+	}
+
+	if len(infos) != 1 {
+		return fmt.Errorf("expected a single resource info, but got %d", len(infos))
+	}
+	info := infos[0]
+	obj := info.Object
+	mapping := info.Mapping
+
+	if mapping != nil && mapping.Scope.Name() == meta.RESTScopeNameRoot {
+		// Resource isn't namespaced
+		w.printNamespace = false
 	}
 
 	// watching from resourceVersion 0, starts the watch at ~now and
@@ -235,7 +251,7 @@ func (w *Watcher) startWatch(ctx context.Context, clearBeforePrinting bool) erro
 	}
 
 	for _, objToPrint := range objsToPrint {
-		if _, err := w.Printer.PrintObj(objToPrint, watch.Added); err != nil {
+		if _, err := w.Printer.PrintObj(objToPrint, w.printNamespace, watch.Added); err != nil {
 			return err
 		}
 	}
@@ -278,7 +294,7 @@ func (w *Watcher) pipeEvents(ctx context.Context, r *resource.Result, resVersion
 			if !ok {
 				return fmt.Errorf("watch channel closed")
 			}
-			cmd, err := w.Printer.PrintObj(event.Object, event.Type)
+			cmd, err := w.Printer.PrintObj(event.Object, w.printNamespace, event.Type)
 			if err != nil {
 				return err
 			}
@@ -288,30 +304,39 @@ func (w *Watcher) pipeEvents(ctx context.Context, r *resource.Result, resVersion
 }
 
 type Printer struct {
-	Table      *table.Model
-	WideOutput bool
-	colDefs    []metav1.TableColumnDefinition
+	Table         *table.Model
+	WideOutput    bool
+	colDefs       []metav1.TableColumnDefinition
 }
 
 func (p *Printer) Clear() {
 	p.Table.SetRows(nil)
 }
 
-func (p *Printer) PrintObj(obj runtime.Object, eventType watch.EventType) (tea.Cmd, error) {
+func (p *Printer) PrintObj(obj runtime.Object, printNamespace bool, eventType watch.EventType) (tea.Cmd, error) {
 	objTable, err := decodeIntoTable(obj)
 	if err != nil {
 		return nil, err
 	}
-	p.updateColDefHeaders(objTable)
-	return p.addObjectToTable(objTable, eventType)
+	p.updateColDefHeaders(objTable, printNamespace)
+	return p.addObjectToTable(objTable, printNamespace, eventType)
 }
 
-func (p *Printer) updateColDefHeaders(objTable *metav1.Table) {
+func (p *Printer) updateColDefHeaders(objTable *metav1.Table, printNamespace bool) {
 	if len(objTable.ColumnDefinitions) == 0 {
 		return
 	}
 
-	headers := make([]string, 0, len(objTable.ColumnDefinitions))
+	numColumns := len(objTable.ColumnDefinitions)
+	if printNamespace {
+		numColumns++
+	}
+
+	headers := make([]string, 0, numColumns)
+
+	if printNamespace {
+		headers = append(headers, "NAMESPACE")
+	}
 	for _, colDef := range objTable.ColumnDefinitions {
 		if colDef.Priority == 0 || p.WideOutput {
 			headers = append(headers, strings.ToUpper(colDef.Name))
@@ -321,7 +346,7 @@ func (p *Printer) updateColDefHeaders(objTable *metav1.Table) {
 	p.colDefs = objTable.ColumnDefinitions
 }
 
-func (p *Printer) addObjectToTable(objTable *metav1.Table, eventType watch.EventType) (tea.Cmd, error) {
+func (p *Printer) addObjectToTable(objTable *metav1.Table, printNamespace bool, eventType watch.EventType) (tea.Cmd, error) {
 	var cmd tea.Cmd
 	for _, row := range objTable.Rows {
 		unstrucObj, ok := row.Object.Object.(*unstructured.Unstructured)
@@ -348,11 +373,17 @@ func (p *Printer) addObjectToTable(objTable *metav1.Table, eventType watch.Event
 			ID:     uid,
 			Fields: make([]any, 0, len(p.colDefs)),
 		}
+		if printNamespace {
+			tableRow.Fields = append(tableRow.Fields, metadata["namespace"])
+		}
 		for i, cell := range row.Cells {
 			if i >= len(p.colDefs) {
 				return nil, fmt.Errorf("cant find index %d (%v) in column defs: %v", i, cell, p.colDefs)
 			}
 			colDef := p.colDefs[i]
+			if printNamespace {
+				colDef = p.colDefs[i+1]
+			}
 			if colDef.Priority != 0 && !p.WideOutput {
 				continue
 			}
