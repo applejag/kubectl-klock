@@ -99,6 +99,9 @@ func renderColumn(value any) string {
 		dur := time.Since(value)
 		return duration.HumanDuration(dur)
 	default:
+		if value == nil {
+			return ""
+		}
 		return fmt.Sprint(value)
 	}
 }
