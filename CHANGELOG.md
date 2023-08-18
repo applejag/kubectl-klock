@@ -16,6 +16,11 @@ This project tries to follow [SemVer 2.0.0](https://semver.org/).
 	https://changelog.md/
 -->
 
+## v0.3.2 (2023-09-19)
+
+- Fixed some cells being printed as `<nil>`. Now they are printed as empty
+  cells instead. (#23, thanks @semihbkgr!)
+
 ## v0.3.1 (2023-08-05)
 
 - Fixed namespace column when using `--all-namespaces` not rendering or
