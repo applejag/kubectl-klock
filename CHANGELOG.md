@@ -16,6 +16,11 @@ This project tries to follow [SemVer 2.0.0](https://semver.org/).
 	https://changelog.md/
 -->
 
+## v0.3.3 (WIP)
+
+- Updated Go from v1.20 to v1.21. (c71519b)
+- Updated k8s.io dependencies from v0.27.4 to v0.28.0. (514a851) 
+
 ## v0.3.2 (2023-09-19)
 
 - Fixed some cells being printed as `<nil>`. Now they are printed as empty
