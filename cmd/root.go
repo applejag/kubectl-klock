@@ -84,10 +84,7 @@ Examples:
 			viper.BindPFlags(cmd.Flags())
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := klock.Execute(o, args); err != nil {
-				return err
-			}
-			return nil
+			return klock.Execute(o, args)
 		},
 	}
 
