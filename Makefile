@@ -8,6 +8,8 @@ else
 BINARY := klock
 endif
 
+GO_FILES=$(shell git ls-files '*.go')
+
 .PHONY: build
 build: bin/${BINARY}
 
