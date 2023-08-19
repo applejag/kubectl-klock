@@ -378,13 +378,10 @@ func (m *Model) updateColumnWidths() {
 	m.columnWidths = lengths
 }
 
-func expandToMaxLengths(lengths []int, strs []string) []int {
-	lengths = expandSlice(lengths, len(strs))
-	for i, f := range strs {
-		strLen := ansi.PrintableRuneWidth(f)
-		if strLen > lengths[i] {
-			lengths[i] = strLen
-		}
+func expandToMaxLengths(lengths []int, row []string) []int {
+	lengths = expandSlice(lengths, len(row))
+	for i, f := range row {
+		lengths[i] = max(ansi.PrintableRuneWidth(f), lengths[i])
 	}
 	return lengths
 }
