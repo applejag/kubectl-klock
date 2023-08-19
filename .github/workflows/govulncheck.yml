@@ -1,0 +1,15 @@
+# SPDX-FileCopyrightText: 2009 The Go Authors
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
+on: [push]
+
+jobs:
+  govulncheck:
+    runs-on: ubuntu-latest
+    name: Run govulncheck
+    steps:
+      - id: govulncheck
+        uses: golang/govulncheck-action@v1
+        with:
+           go-version-input: ">=1.21.0"
