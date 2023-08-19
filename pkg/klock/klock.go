@@ -84,7 +84,7 @@ func Execute(o Options, args []string) error {
 
 	t := table.New()
 	printer := Printer{
-		Table: t,
+		Table:      t,
 		WideOutput: o.Output == "wide",
 	}
 	p := tea.NewProgram(t)
@@ -138,7 +138,7 @@ func NewWatcher(options Options, program *tea.Program, printer Printer, printNam
 		Args:    args,
 
 		printNamespace: printNamespace,
-		errorChan: make(chan error, 3),
+		errorChan:      make(chan error, 3),
 	}
 }
 
@@ -305,9 +305,9 @@ func (w *Watcher) pipeEvents(ctx context.Context, r *resource.Result, resVersion
 }
 
 type Printer struct {
-	Table         *table.Model
-	WideOutput    bool
-	colDefs       []metav1.TableColumnDefinition
+	Table      *table.Model
+	WideOutput bool
+	colDefs    []metav1.TableColumnDefinition
 }
 
 func (p *Printer) Clear() {
