@@ -19,8 +19,10 @@ package table
 
 import (
 	"bytes"
+	"cmp"
 	"fmt"
 	"io"
+	"slices"
 	"strings"
 	"time"
 
@@ -31,7 +33,6 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/muesli/reflow/ansi"
-	"gopkg.in/typ.v4/slices"
 )
 
 type Styles struct {
@@ -43,7 +44,6 @@ type Styles struct {
 	Pagination lipgloss.Style
 }
 
-var verySubduedColor = lipgloss.AdaptiveColor{Light: "#DDDADA", Dark: "#3C3C3C"}
 var subduedColor = lipgloss.AdaptiveColor{Light: "#9B9B9B", Dark: "#5C5C5C"}
 
 var DefaultStyles = Styles{
@@ -82,10 +82,6 @@ type Model struct {
 	fullscreenOverride bool
 	quitting           bool
 }
-
-const (
-	ellipsis = "…"
-)
 
 func New() *Model {
 	return &Model{
@@ -182,8 +178,8 @@ func (m *Model) windowTooShort() bool {
 }
 
 func (m *Model) sortItems() {
-	slices.SortStableFunc(m.rows, func(a, b Row) bool {
-		return a.SortValue() < b.SortValue()
+	slices.SortStableFunc(m.rows, func(a, b Row) int {
+		return cmp.Compare(a.SortValue(), b.SortValue())
 	})
 }
 
@@ -370,7 +366,7 @@ func (m Model) columnsView(w io.Writer, columns []string, style lipgloss.Style) 
 				fmt.Fprint(w, lotsOfSpaces[:spacing])
 			}
 		}
-		fmt.Fprintf(w, style.Render(col))
+		fmt.Fprint(w, style.Render(col))
 	}
 }
 
