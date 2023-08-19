@@ -14,7 +14,7 @@ permissions:
   contents: read
 
 jobs:
-  goimports_diff:
+  goimports:
     runs-on: ubuntu-latest
 
     steps:
@@ -35,6 +35,6 @@ jobs:
           find . -name '*.go' -not -path './api/**'
           goimports -w $(find . -name '*.go' -not -path './api/**')
 
-      - name: Git diff
-        run: git diff --exit-code
-
+      - uses: reviewdog/action-suggester@v1
+        with:
+          tool_name: goimports

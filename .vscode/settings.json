@@ -7,6 +7,8 @@
         "bubbletea",
         "charmbracelet",
         "Fagerberg",
+        "gofmt",
+        "goimports",
         "govulncheck",
         "jille",
         "jillejr",
@@ -14,6 +16,7 @@
         "klock",
         "krew",
         "kubectx",
-        "lipgloss"
+        "lipgloss",
+        "reviewdog"
     ]
 }
