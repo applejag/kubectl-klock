@@ -20,7 +20,7 @@ package table
 import "github.com/charmbracelet/bubbles/key"
 
 // KeyMap defines keybindings. It satisfies to the help.KeyMap interface, which
-// is used to render the menu menu.
+// is used to render the menu.
 type KeyMap struct {
 	// Keybindings used when browsing the list.
 	NextPage  key.Binding
@@ -132,7 +132,7 @@ func (m Model) FullHelp() [][]key.Binding {
 	listLevelBindings := []key.Binding{
 		m.KeyMap.ToggleDeleted,
 		m.KeyMap.ToggleFullscreen,
-		//m.KeyMap.Filter,
+		m.KeyMap.Filter,
 		//m.KeyMap.ClearFilter,
 		//m.KeyMap.AcceptWhileFiltering,
 		//m.KeyMap.CancelWhileFiltering,

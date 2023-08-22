@@ -30,6 +30,7 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/paginator"
 	"github.com/charmbracelet/bubbles/spinner"
+	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/muesli/reflow/ansi"
@@ -71,6 +72,7 @@ type Model struct {
 	help        help.Model
 	Paginator   paginator.Model
 	spinner     spinner.Model
+	filterInput textinput.Model
 	showSpinner bool
 
 	err                error
@@ -81,6 +83,8 @@ type Model struct {
 	columnWidths       []int
 	fullscreenOverride bool
 	quitting           bool
+
+	filterInputEnabled bool
 }
 
 func New() *Model {
@@ -92,6 +96,9 @@ func New() *Model {
 
 		help:    help.New(),
 		spinner: spinner.New(spinner.WithSpinner(spinner.Dot)),
+
+		filterInput:        textinput.New(),
+		filterInputEnabled: false,
 
 		headers:   nil,
 		maxHeight: 30,
@@ -138,12 +145,24 @@ func (m *Model) SetRows(rows []Row) tea.Cmd {
 }
 
 func (m *Model) updateFilteredRows() {
+	rows := m.rows
+	if filterText := m.filterText(); filterText != "" {
+		rows = make([]Row, 0)
+		for _, row := range m.rows {
+			for _, field := range row.Fields {
+				if s, ok := field.(string); ok && strings.Contains(s, filterText) {
+					rows = append(rows, row)
+				}
+			}
+		}
+	}
+
 	if !m.HideDeleted {
-		m.filteredRows = m.rows
+		m.filteredRows = rows
 		return
 	}
-	m.filteredRows = make([]Row, 0, len(m.rows))
-	for _, row := range m.rows {
+	m.filteredRows = make([]Row, 0, len(rows))
+	for _, row := range rows {
 		if m.HideDeleted && row.Status == StatusDeleted {
 			continue
 		}
@@ -233,6 +252,14 @@ func (m *Model) StopSpinner() {
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
+		if m.filterInputEnabled && !key.Matches(msg, m.KeyMap.ForceQuit, m.KeyMap.Filter) {
+			i, cmd := m.filterInput.Update(msg)
+			m.filterInput = i
+			m.updateFilteredRows()
+			m.updatePagination()
+			m.updateColumnWidths()
+			return m, cmd
+		}
 		switch {
 		case key.Matches(msg, m.KeyMap.ForceQuit):
 			m.quitting = true
@@ -260,6 +287,16 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case m.ShowHelp && key.Matches(msg, m.KeyMap.CloseFullHelp):
 			m.ShowHelp = false
 			return m, nil
+		case key.Matches(msg, m.KeyMap.Filter):
+			m.filterInputEnabled = !m.filterInputEnabled
+			m.updateFilteredRows()
+			m.updatePagination()
+			m.updateColumnWidths()
+			cmd := tea.Cmd(nil)
+			if m.filterInputEnabled {
+				cmd = m.filterInput.Focus()
+			}
+			return m, cmd
 		}
 
 	case spinner.TickMsg:
@@ -295,7 +332,11 @@ func (m Model) View() string {
 		return "No resources found"
 	}
 	if len(m.filteredRows) == 0 {
-		return "No resources visible"
+		r := "No resources visible"
+		if m.filterInputEnabled {
+			r += "\n" + m.filterInput.View()
+		}
+		return r
 	}
 	var buf bytes.Buffer
 	if m.maxHeight > 1 {
@@ -329,8 +370,10 @@ func (m Model) View() string {
 		buf.WriteString(m.Styles.Error.Render(m.err.Error()))
 	}
 
-	if m.quitting {
-		buf.WriteByte('\n')
+	buf.WriteByte('\n')
+
+	if m.filterInputEnabled {
+		buf.WriteString(m.filterInput.View())
 	}
 
 	return buf.String()
@@ -376,6 +419,13 @@ func (m *Model) updateColumnWidths() {
 		lengths = expandToMaxLengths(lengths, row.RenderedFields())
 	}
 	m.columnWidths = lengths
+}
+
+func (m *Model) filterText() string {
+	if !m.filterInputEnabled {
+		return ""
+	}
+	return m.filterInput.Value()
 }
 
 func expandToMaxLengths(lengths []int, row []string) []int {
