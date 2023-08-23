@@ -3,7 +3,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 name: govulncheck
-on: [push]
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
   govulncheck:
