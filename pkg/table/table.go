@@ -149,9 +149,10 @@ func (m *Model) updateFilteredRows() {
 	if filterText := m.filterText(); filterText != "" {
 		rows = make([]Row, 0)
 		for _, row := range m.rows {
-			for _, field := range row.Fields {
-				if s, ok := field.(string); ok && strings.Contains(s, filterText) {
+			for _, field := range row.RenderedFields() {
+				if strings.Contains(field, filterText) {
 					rows = append(rows, row)
+					break
 				}
 			}
 		}
@@ -332,15 +333,19 @@ func (m Model) View() string {
 		return "No resources found"
 	}
 	if len(m.filteredRows) == 0 {
-		r := "No resources visible"
 		if m.filterInputEnabled {
-			r += "\n" + m.filterInput.View()
+			return m.filterInput.View()
+		} else {
+			return "No resources visible"
 		}
-		return r
 	}
 	var buf bytes.Buffer
 	if m.maxHeight > 1 {
-		m.columnsView(&buf, m.headers, lipgloss.Style{})
+		if m.filterInputEnabled {
+			buf.WriteString(m.filterInput.View())
+		} else {
+			m.columnsView(&buf, m.headers, lipgloss.Style{})
+		}
 		buf.WriteByte('\n')
 	}
 
@@ -371,10 +376,6 @@ func (m Model) View() string {
 	}
 
 	buf.WriteByte('\n')
-
-	if m.filterInputEnabled {
-		buf.WriteString(m.filterInput.View())
-	}
 
 	return buf.String()
 }
