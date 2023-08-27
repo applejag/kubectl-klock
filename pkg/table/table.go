@@ -292,7 +292,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.updateFilteredRows()
 			m.updatePagination()
 			m.updateColumnWidths()
-			cmd := tea.Cmd(nil)
+			var cmd tea.Cmd
 			if m.filterInputEnabled {
 				cmd = m.filterInput.Focus()
 			}
