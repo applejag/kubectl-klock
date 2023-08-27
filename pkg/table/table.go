@@ -43,6 +43,7 @@ type Styles struct {
 
 	Error      lipgloss.Style
 	Pagination lipgloss.Style
+	FilterInfo lipgloss.Style
 }
 
 var subduedColor = lipgloss.AdaptiveColor{Light: "#9B9B9B", Dark: "#5C5C5C"}
@@ -58,6 +59,9 @@ var DefaultStyles = Styles{
 	Pagination: lipgloss.NewStyle().
 		Foreground(subduedColor).
 		SetString("PAGE:"),
+	FilterInfo: lipgloss.NewStyle().
+		Foreground(lipgloss.ANSIColor(37)).
+		SetString("filtering"),
 }
 
 type Model struct {
@@ -377,7 +381,14 @@ func (m Model) View() string {
 		buf.WriteString(m.Styles.Error.Render(m.err.Error()))
 	}
 
-	buf.WriteByte('\n')
+	if len(m.filteredRows) != len(m.rows) {
+		buf.WriteByte('\n')
+		buf.WriteString(m.Styles.FilterInfo.Render(fmt.Sprintf("%d/%d rows", len(m.filteredRows), len(m.rows))))
+	}
+
+	if m.quitting {
+		buf.WriteByte('\n')
+	}
 
 	return buf.String()
 }
