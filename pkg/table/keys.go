@@ -17,7 +17,10 @@
 
 package table
 
-import "github.com/charmbracelet/bubbles/key"
+import (
+	"github.com/charmbracelet/bubbles/key"
+	tea "github.com/charmbracelet/bubbletea"
+)
 
 // KeyMap defines keybindings. It satisfies to the help.KeyMap interface, which
 // is used to render the menu.
@@ -30,13 +33,12 @@ type KeyMap struct {
 
 	// Keybindings for view settings
 	Filter           key.Binding
-	ClearFilter      key.Binding
 	ToggleDeleted    key.Binding
 	ToggleFullscreen key.Binding
 
-	// Keybindings used when setting a filter.
-	CancelWhileFiltering key.Binding
-	AcceptWhileFiltering key.Binding
+	// Keybindings used while the text-filter is enabled.
+	CloseFilter key.Binding
+	ClearFilter key.Binding
 
 	// Help toggle keybindings.
 	ShowFullHelp  key.Binding
@@ -44,6 +46,10 @@ type KeyMap struct {
 
 	// The quit-no-matter-what keybinding. This will be caught when filtering.
 	ForceQuit key.Binding
+}
+
+func (k KeyMap) EscapeFilterText(keyMsg tea.KeyMsg) bool {
+	return key.Matches(keyMsg, k.ForceQuit, k.ClearFilter, k.CloseFilter, k.NextPage, k.PrevPage)
 }
 
 // DefaultKeyMap is a default set of keybindings.
@@ -69,13 +75,10 @@ var DefaultKeyMap = KeyMap{
 		key.WithKeys("f"),
 		key.WithHelp("f", "toggle fullscreen"),
 	),
+
 	Filter: key.NewBinding(
 		key.WithKeys("/"),
-		key.WithHelp("/", "filter"),
-	),
-	ClearFilter: key.NewBinding(
-		key.WithKeys("esc"),
-		key.WithHelp("esc", "clear filter"),
+		key.WithHelp("/", "filter by text"),
 	),
 	ToggleDeleted: key.NewBinding(
 		key.WithKeys("d"),
@@ -83,13 +86,13 @@ var DefaultKeyMap = KeyMap{
 	),
 
 	// Filtering.
-	CancelWhileFiltering: key.NewBinding(
-		key.WithKeys("esc"),
-		key.WithHelp("esc", "cancel"),
+	CloseFilter: key.NewBinding(
+		key.WithKeys("enter"),
+		key.WithHelp("enter", "close the filter input field"),
 	),
-	AcceptWhileFiltering: key.NewBinding(
-		key.WithKeys("enter", "tab", "shift+tab", "ctrl+k", "up", "ctrl+j", "down"),
-		key.WithHelp("enter", "apply filter"),
+	ClearFilter: key.NewBinding(
+		key.WithKeys("esc"),
+		key.WithHelp("esc", "clear the applied filter"),
 	),
 
 	// Toggle help.
@@ -133,9 +136,8 @@ func (m Model) FullHelp() [][]key.Binding {
 		m.KeyMap.ToggleDeleted,
 		m.KeyMap.ToggleFullscreen,
 		m.KeyMap.Filter,
-		//m.KeyMap.ClearFilter,
-		//m.KeyMap.AcceptWhileFiltering,
-		//m.KeyMap.CancelWhileFiltering,
+		m.KeyMap.CloseFilter,
+		m.KeyMap.ClearFilter,
 	}
 
 	return append(kb,

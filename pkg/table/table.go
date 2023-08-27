@@ -253,15 +253,14 @@ func (m *Model) StopSpinner() {
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		if m.filterInputEnabled && !key.Matches(msg, m.KeyMap.ForceQuit, m.KeyMap.Filter) {
+		switch {
+		case m.filterInputEnabled && !m.KeyMap.EscapeFilterText(msg):
 			i, cmd := m.filterInput.Update(msg)
 			m.filterInput = i
 			m.updateFilteredRows()
 			m.updatePagination()
 			m.updateColumnWidths()
 			return m, cmd
-		}
-		switch {
 		case key.Matches(msg, m.KeyMap.ForceQuit):
 			m.quitting = true
 			return m, tea.Quit
@@ -288,18 +287,21 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case m.ShowHelp && key.Matches(msg, m.KeyMap.CloseFullHelp):
 			m.ShowHelp = false
 			return m, nil
-		case key.Matches(msg, m.KeyMap.Filter):
-			m.filterInputEnabled = !m.filterInputEnabled
+		case key.Matches(msg, m.KeyMap.CloseFilter):
+			m.filterInputEnabled = false
+		case key.Matches(msg, m.KeyMap.ClearFilter):
+			m.filterInputEnabled = false
+			m.filterInput.SetValue("")
 			m.updateFilteredRows()
 			m.updatePagination()
 			m.updateColumnWidths()
-			var cmd tea.Cmd
-			if m.filterInputEnabled {
-				cmd = m.filterInput.Focus()
-			}
-			return m, cmd
+		case key.Matches(msg, m.KeyMap.Filter):
+			m.filterInputEnabled = true
+			m.updateFilteredRows()
+			m.updatePagination()
+			m.updateColumnWidths()
+			return m, m.filterInput.Focus()
 		}
-
 	case spinner.TickMsg:
 		s, cmd := m.spinner.Update(msg)
 		m.spinner = s
@@ -423,9 +425,6 @@ func (m *Model) updateColumnWidths() {
 }
 
 func (m *Model) filterText() string {
-	if !m.filterInputEnabled {
-		return ""
-	}
 	return m.filterInput.Value()
 }
 
