@@ -16,7 +16,7 @@ This project tries to follow [SemVer 2.0.0](https://semver.org/).
 	https://changelog.md/
 -->
 
-## v0.4.0 (WIP)
+## v0.4.0 (2023-09-03)
 
 - Added text filtering. (#32, thanks @semihbkgr!)
 
