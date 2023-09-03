@@ -52,11 +52,11 @@ lint-fix: lint-md-fix lint-go-fix
 
 .PHONY: lint-md
 lint-md: node_modules
-	npx remark . .github
+	npx markdownlint-cli2
 
 .PHONY: lint-md-fix
 lint-md-fix: node_modules
-	npx remark . .github -o
+	npx markdownlint-cli2 --fix
 
 .PHONY: lint-go
 lint-go:

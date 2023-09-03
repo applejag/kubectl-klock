@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: 2021 Kalle Fagerberg
+#
+# SPDX-License-Identifier: CC0-1.0
+
+globs:
+  - "**/*.md"
+
+ignores:
+  - node_modules

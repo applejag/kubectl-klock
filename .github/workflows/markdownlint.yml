@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: MIT
 
-name: remark-lint
+name: markdownlint
 
 on:
   push:
@@ -10,22 +10,14 @@ on:
   pull_request:
     branches: [main]
 
-permissions:
-  contents: read
-
 jobs:
-  remark-lint:
+  markdownlint:
     name: remark-lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 18
-      - name: install remark presets
-        run: npm install
-      - name: remark-lint
-        uses: reviewdog/action-remark-lint@v5
+      - name: markdownlint
+        uses: reviewdog/action-markdownlint@v0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          reporter: github-pr-check
+          reporter: github-pr-review

@@ -75,13 +75,13 @@ This project tries to follow [SemVer 2.0.0](https://semver.org/).
 
   - darwin/386
   - darwin/amd64
-  - darwin/arm64 _(new!)_
+  - darwin/arm64 *(new!)*
   - linux/386
   - linux/amd64
-  - linux/arm64 _(new!)_
+  - linux/arm64 *(new!)*
   - windows/386
   - windows/amd64
-  - windows/arm64 _(new!)_
+  - windows/arm64 *(new!)*
 
 ## v0.1.1 (2023-04-17)
 
