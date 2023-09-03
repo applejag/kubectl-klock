@@ -47,6 +47,8 @@ type Styles struct {
 	FilterInfo        lipgloss.Style
 	FilterNoneVisible lipgloss.Style
 	StatusDelim       lipgloss.Style
+
+	Toggles lipgloss.Style
 }
 
 var subduedColor = lipgloss.AdaptiveColor{Light: "#9B9B9B", Dark: "#5C5C5C"}
@@ -78,6 +80,9 @@ var DefaultStyles = Styles{
 		Foreground(subduedColor).
 		Bold(true).
 		SetString(" | "),
+
+	Toggles: lipgloss.NewStyle().
+		Foreground(subduedColor),
 }
 
 type Model struct {
@@ -370,7 +375,8 @@ func (m Model) View() string {
 	}
 
 	if m.filterText() != "" {
-		status = append(status, m.Styles.FilterInfo.Render(fmt.Sprintf("%d/%d rows", len(m.filteredRows), len(m.rows))))
+		filterInfo := fmt.Sprintf(`"%s" (%d/%d rows)`, m.filterText(), len(m.filteredRows), len(m.rows))
+		status = append(status, m.Styles.FilterInfo.Render(filterInfo))
 	}
 
 	if len(m.rows) == 0 {
@@ -381,6 +387,14 @@ func (m Model) View() string {
 
 	if m.err != nil {
 		status = append(status, m.Styles.Error.Render(m.err.Error()))
+	}
+
+	if m.fullscreenOverride {
+		status = append(status, m.Styles.Toggles.Render("force fullscreen"))
+	}
+
+	if m.HideDeleted {
+		status = append(status, m.Styles.Toggles.Render("hide deleted"))
 	}
 
 	if len(status) > 0 {
