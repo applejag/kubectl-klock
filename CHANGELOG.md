@@ -20,6 +20,8 @@ This project tries to follow [SemVer 2.0.0](https://semver.org/).
 
 - Added text filtering. (#32, thanks @semihbkgr!)
 
+- Added toggles info to status bar. (7298803)
+
 - Updated Go from v1.20 to v1.21. (c71519b)
 
 - Updated k8s.io dependencies from v0.27.4 to v0.28.0. (514a851)
