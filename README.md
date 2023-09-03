@@ -69,10 +69,11 @@ kubectl klock pods -W
 There's also some hotkeys available:
 
 ```text
-  →/l/pgdn next page      d show/hide deleted    ctrl+c quit
-  ←/h/pgup prev page      f toggle fullscreen    ?/esc  close help
-  g/home   go to start
-  G/end    go to end
+  →/l/pgdn next page      d     show/hide deleted               ctrl+c quit
+  ←/h/pgup prev page      f     toggle fullscreen               ?/esc  close help
+  g/home   go to start    /     filter by text
+  G/end    go to end      enter close the filter input field
+                          esc   clear the applied filter
 ```
 
 ## Features
@@ -82,6 +83,8 @@ There's also some hotkeys available:
 - Same output format as `kubectl get`
 
 - Watch arbitrary resources, just like `kubectl get <resource> [name]`
+
+- Filter results
 
 - Auto updating age column.
 

@@ -11,15 +11,18 @@ This project tries to follow [SemVer 2.0.0](https://semver.org/).
 <!--
 	When composing new changes to this list, try to follow convention.
 	The WIP release shall be updated just before adding the Git tag.
-	Replace (WIP) by (YYYY-MM-DD), e.g. (2021-02-09) for 9th of Febuary, 2021
+	Replace (WIP) by (YYYY-MM-DD), e.g. (2021-02-09) for 9th of February, 2021
 	A good source on conventions can be found here:
 	https://changelog.md/
 -->
 
-## v0.3.3 (WIP)
+## v0.4.0 (WIP)
+
+- Added text filtering. (#32, thanks @semihbkgr!)
 
 - Updated Go from v1.20 to v1.21. (c71519b)
-- Updated k8s.io dependencies from v0.27.4 to v0.28.0. (514a851) 
+
+- Updated k8s.io dependencies from v0.27.4 to v0.28.0. (514a851)
 
 ## v0.3.2 (2023-09-19)
 
