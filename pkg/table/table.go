@@ -21,7 +21,6 @@ import (
 	"bytes"
 	"cmp"
 	"fmt"
-	"io"
 	"slices"
 	"strings"
 	"time"
@@ -41,9 +40,13 @@ type Styles struct {
 	Title    lipgloss.Style
 	Row      RowStyles
 
-	Error      lipgloss.Style
-	Pagination lipgloss.Style
-	FilterInfo lipgloss.Style
+	NoneFound         lipgloss.Style
+	Error             lipgloss.Style
+	Pagination        lipgloss.Style
+	FilterPrompt      lipgloss.Style
+	FilterInfo        lipgloss.Style
+	FilterNoneVisible lipgloss.Style
+	StatusDelim       lipgloss.Style
 }
 
 var subduedColor = lipgloss.AdaptiveColor{Light: "#9B9B9B", Dark: "#5C5C5C"}
@@ -53,15 +56,28 @@ var DefaultStyles = Styles{
 	Title:    lipgloss.NewStyle(),
 	Row:      DefaultRowStyle,
 
+	NoneFound: lipgloss.NewStyle().
+		Foreground(lipgloss.ANSIColor(3)).
+		SetString("No resources found"),
 	Error: lipgloss.NewStyle().
 		Foreground(lipgloss.ANSIColor(9)).
 		SetString("ERROR:"),
 	Pagination: lipgloss.NewStyle().
 		Foreground(subduedColor).
 		SetString("PAGE:"),
+	FilterPrompt: lipgloss.NewStyle().
+		Foreground(lipgloss.ANSIColor(11)).
+		SetString("FILTER:"),
 	FilterInfo: lipgloss.NewStyle().
-		Foreground(lipgloss.ANSIColor(37)).
-		SetString("filtering"),
+		Foreground(subduedColor).
+		SetString("FILTERING:"),
+	FilterNoneVisible: lipgloss.NewStyle().
+		Foreground(lipgloss.ANSIColor(3)).
+		SetString("No resources visible"),
+	StatusDelim: lipgloss.NewStyle().
+		Foreground(subduedColor).
+		Bold(true).
+		SetString(" | "),
 }
 
 type Model struct {
@@ -332,58 +348,56 @@ func (m Model) View() string {
 	if m.ShowHelp {
 		return m.help.FullHelpView(m.FullHelp())
 	}
-	if len(m.rows) == 0 {
-		if m.showSpinner {
-			return m.spinner.View()
-		}
-		return "No resources found"
-	}
-	if len(m.filteredRows) == 0 {
-		if m.filterInputEnabled {
-			return m.filterInput.View()
-		} else {
-			return "No resources visible"
-		}
+	if m.showSpinner {
+		return m.spinner.View()
 	}
 	var buf bytes.Buffer
-	if m.maxHeight > 1 {
-		if m.filterInputEnabled {
-			buf.WriteString(m.filterInput.View())
-		} else {
-			m.columnsView(&buf, m.headers, lipgloss.Style{})
-		}
-		buf.WriteByte('\n')
-	}
 
 	currentPage := m.currentPaginatedPage()
-	for i, row := range currentPage {
-		if i > 0 {
+
+	if m.maxHeight > 1 {
+		if m.filterInputEnabled {
+			m.filterInput.Prompt = ""
+			m.filterInput.PromptStyle = m.Styles.FilterPrompt
+			buf.WriteString(m.filterInput.View())
+			buf.WriteByte('\n')
+		} else if len(currentPage) > 0 {
+			m.columnsView(&buf, m.headers, lipgloss.Style{})
 			buf.WriteByte('\n')
 		}
-		m.rowView(&buf, row)
 	}
+
+	var status []string
+	m.viewWriteRows(&buf, currentPage)
 
 	paginatorVisible := m.paginatorVisible()
 	if paginatorVisible {
+		// Add padding below empty lines
 		for i := len(currentPage); i < m.Paginator.PerPage; i++ {
 			buf.WriteByte('\n')
 		}
-		buf.WriteByte('\n')
-		buf.WriteString(m.Styles.Pagination.Render(m.Paginator.View()))
+		status = append(status, m.Styles.Pagination.Render(m.Paginator.View()))
+	}
+
+	if m.filterText() != "" {
+		status = append(status, m.Styles.FilterInfo.Render(fmt.Sprintf("%d/%d rows", len(m.filteredRows), len(m.rows))))
+	}
+
+	if len(m.rows) == 0 {
+		status = append(status, m.Styles.NoneFound.String())
+	} else if len(m.filteredRows) == 0 {
+		status = append(status, m.Styles.FilterNoneVisible.String())
 	}
 
 	if m.err != nil {
-		if paginatorVisible {
-			buf.WriteString("  ")
-		} else {
-			buf.WriteByte('\n')
-		}
-		buf.WriteString(m.Styles.Error.Render(m.err.Error()))
+		status = append(status, m.Styles.Error.Render(m.err.Error()))
 	}
 
-	if len(m.filteredRows) != len(m.rows) {
-		buf.WriteByte('\n')
-		buf.WriteString(m.Styles.FilterInfo.Render(fmt.Sprintf("%d/%d rows", len(m.filteredRows), len(m.rows))))
+	if len(status) > 0 {
+		if len(currentPage) > 0 {
+			buf.WriteByte('\n')
+		}
+		buf.WriteString(strings.Join(status, m.Styles.StatusDelim.String()))
 	}
 
 	if m.quitting {
@@ -401,7 +415,16 @@ func (m Model) currentPaginatedPage() []Row {
 	return m.filteredRows[start:end]
 }
 
-func (m Model) rowView(w io.Writer, row Row) {
+func (m Model) viewWriteRows(buf *bytes.Buffer, currentPage []Row) {
+	for i, row := range currentPage {
+		if i > 0 {
+			buf.WriteByte('\n')
+		}
+		m.rowView(buf, row)
+	}
+}
+
+func (m Model) rowView(buf *bytes.Buffer, row Row) {
 	style := m.Styles.Row.Cell
 	switch row.Status {
 	case StatusError:
@@ -409,21 +432,21 @@ func (m Model) rowView(w io.Writer, row Row) {
 	case StatusDeleted:
 		style = m.Styles.Row.Deleted
 	}
-	m.columnsView(w, row.RenderedFields(), style)
+	m.columnsView(buf, row.RenderedFields(), style)
 }
 
 var lotsOfSpaces = strings.Repeat(" ", 200)
 
-func (m Model) columnsView(w io.Writer, columns []string, style lipgloss.Style) {
+func (m Model) columnsView(buf *bytes.Buffer, columns []string, style lipgloss.Style) {
 	for i, col := range columns {
 		if i > 0 {
 			//TODO: test style.Width()
 			spacing := m.CellSpacing + m.columnWidths[i-1] - ansi.PrintableRuneWidth(columns[i-1])
 			if spacing > 0 {
-				fmt.Fprint(w, lotsOfSpaces[:spacing])
+				fmt.Fprint(buf, lotsOfSpaces[:spacing])
 			}
 		}
-		fmt.Fprint(w, style.Render(col))
+		fmt.Fprint(buf, style.Render(col))
 	}
 }
 
