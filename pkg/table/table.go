@@ -145,9 +145,7 @@ func (m *Model) AddRow(row Row) tea.Cmd {
 
 	m.sortItems()
 	m.StopSpinner()
-	m.updateFilteredRows()
-	m.updateColumnWidths()
-	m.updatePagination()
+	m.updateRows()
 	fullscreenCmd := m.updateFullscreenCmd()
 	return fullscreenCmd
 }
@@ -158,37 +156,37 @@ func (m *Model) SetRows(rows []Row) tea.Cmd {
 	if len(m.rows) > 0 {
 		m.StopSpinner()
 	}
-	m.updateFilteredRows()
-	m.updateColumnWidths()
-	m.updatePagination()
+	m.updateRows()
 	return m.updateFullscreenCmd()
 }
 
-func (m *Model) updateFilteredRows() {
-	rows := m.rows
-	if filterText := m.filterText(); filterText != "" {
-		rows = make([]Row, 0)
-		for _, row := range m.rows {
-			for _, field := range row.RenderedFields() {
-				if strings.Contains(field, filterText) {
-					rows = append(rows, row)
-					break
-				}
-			}
-		}
-	}
+func (m *Model) updateRows() {
+	m.updateFilteredRows()
+	m.updateColumnWidths()
+	m.updatePagination()
+}
 
-	if !m.HideDeleted {
-		m.filteredRows = rows
-		return
-	}
-	m.filteredRows = make([]Row, 0, len(rows))
-	for _, row := range rows {
+func (m *Model) updateFilteredRows() {
+	filterText := m.filterText()
+	m.filteredRows = make([]Row, 0, len(m.rows))
+	for _, row := range m.rows {
 		if m.HideDeleted && row.Status == StatusDeleted {
+			continue
+		}
+		if filterText != "" && !rowMatchesText(row, filterText) {
 			continue
 		}
 		m.filteredRows = append(m.filteredRows, row)
 	}
+}
+
+func rowMatchesText(row Row, needle string) bool {
+	for _, field := range row.RenderedFields() {
+		if strings.Contains(field, needle) {
+			return true
+		}
+	}
+	return false
 }
 
 func (m *Model) SetError(err error) {
@@ -277,9 +275,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case m.filterInputEnabled && !m.KeyMap.EscapeFilterText(msg):
 			i, cmd := m.filterInput.Update(msg)
 			m.filterInput = i
-			m.updateFilteredRows()
-			m.updatePagination()
-			m.updateColumnWidths()
+			m.updateRows()
 			return m, cmd
 		case key.Matches(msg, m.KeyMap.ForceQuit):
 			m.quitting = true
@@ -294,9 +290,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		case key.Matches(msg, m.KeyMap.ToggleDeleted):
 			m.HideDeleted = !m.HideDeleted
-			m.updateFilteredRows()
-			m.updatePagination()
-			m.updateColumnWidths()
+			m.updateRows()
 			return m, nil
 		case key.Matches(msg, m.KeyMap.ToggleFullscreen):
 			m.fullscreenOverride = !m.fullscreenOverride
@@ -312,14 +306,10 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, m.KeyMap.ClearFilter):
 			m.filterInputEnabled = false
 			m.filterInput.SetValue("")
-			m.updateFilteredRows()
-			m.updatePagination()
-			m.updateColumnWidths()
+			m.updateRows()
 		case key.Matches(msg, m.KeyMap.Filter):
 			m.filterInputEnabled = true
-			m.updateFilteredRows()
-			m.updatePagination()
-			m.updateColumnWidths()
+			m.updateRows()
 			return m, m.filterInput.Focus()
 		}
 	case spinner.TickMsg:
