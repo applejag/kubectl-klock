@@ -49,7 +49,7 @@ type KeyMap struct {
 }
 
 func (k KeyMap) EscapeFilterText(keyMsg tea.KeyMsg) bool {
-	return key.Matches(keyMsg, k.ForceQuit, k.ClearFilter, k.CloseFilter, k.NextPage, k.PrevPage)
+	return key.Matches(keyMsg, k.ForceQuit, k.ClearFilter, k.CloseFilter)
 }
 
 // DefaultKeyMap is a default set of keybindings.
