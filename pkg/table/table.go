@@ -30,6 +30,7 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/paginator"
 	"github.com/charmbracelet/bubbles/spinner"
+	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/muesli/reflow/ansi"
@@ -42,6 +43,7 @@ type Styles struct {
 
 	Error      lipgloss.Style
 	Pagination lipgloss.Style
+	FilterInfo lipgloss.Style
 }
 
 var subduedColor = lipgloss.AdaptiveColor{Light: "#9B9B9B", Dark: "#5C5C5C"}
@@ -57,6 +59,9 @@ var DefaultStyles = Styles{
 	Pagination: lipgloss.NewStyle().
 		Foreground(subduedColor).
 		SetString("PAGE:"),
+	FilterInfo: lipgloss.NewStyle().
+		Foreground(lipgloss.ANSIColor(37)).
+		SetString("filtering"),
 }
 
 type Model struct {
@@ -71,6 +76,7 @@ type Model struct {
 	help        help.Model
 	Paginator   paginator.Model
 	spinner     spinner.Model
+	filterInput textinput.Model
 	showSpinner bool
 
 	err                error
@@ -81,6 +87,8 @@ type Model struct {
 	columnWidths       []int
 	fullscreenOverride bool
 	quitting           bool
+
+	filterInputEnabled bool
 }
 
 func New() *Model {
@@ -92,6 +100,9 @@ func New() *Model {
 
 		help:    help.New(),
 		spinner: spinner.New(spinner.WithSpinner(spinner.Dot)),
+
+		filterInput:        textinput.New(),
+		filterInputEnabled: false,
 
 		headers:   nil,
 		maxHeight: 30,
@@ -138,12 +149,25 @@ func (m *Model) SetRows(rows []Row) tea.Cmd {
 }
 
 func (m *Model) updateFilteredRows() {
+	rows := m.rows
+	if filterText := m.filterText(); filterText != "" {
+		rows = make([]Row, 0)
+		for _, row := range m.rows {
+			for _, field := range row.RenderedFields() {
+				if strings.Contains(field, filterText) {
+					rows = append(rows, row)
+					break
+				}
+			}
+		}
+	}
+
 	if !m.HideDeleted {
-		m.filteredRows = m.rows
+		m.filteredRows = rows
 		return
 	}
-	m.filteredRows = make([]Row, 0, len(m.rows))
-	for _, row := range m.rows {
+	m.filteredRows = make([]Row, 0, len(rows))
+	for _, row := range rows {
 		if m.HideDeleted && row.Status == StatusDeleted {
 			continue
 		}
@@ -234,6 +258,13 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch {
+		case m.filterInputEnabled && !m.KeyMap.EscapeFilterText(msg):
+			i, cmd := m.filterInput.Update(msg)
+			m.filterInput = i
+			m.updateFilteredRows()
+			m.updatePagination()
+			m.updateColumnWidths()
+			return m, cmd
 		case key.Matches(msg, m.KeyMap.ForceQuit):
 			m.quitting = true
 			return m, tea.Quit
@@ -260,8 +291,21 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case m.ShowHelp && key.Matches(msg, m.KeyMap.CloseFullHelp):
 			m.ShowHelp = false
 			return m, nil
+		case key.Matches(msg, m.KeyMap.CloseFilter):
+			m.filterInputEnabled = false
+		case key.Matches(msg, m.KeyMap.ClearFilter):
+			m.filterInputEnabled = false
+			m.filterInput.SetValue("")
+			m.updateFilteredRows()
+			m.updatePagination()
+			m.updateColumnWidths()
+		case key.Matches(msg, m.KeyMap.Filter):
+			m.filterInputEnabled = true
+			m.updateFilteredRows()
+			m.updatePagination()
+			m.updateColumnWidths()
+			return m, m.filterInput.Focus()
 		}
-
 	case spinner.TickMsg:
 		s, cmd := m.spinner.Update(msg)
 		m.spinner = s
@@ -295,11 +339,19 @@ func (m Model) View() string {
 		return "No resources found"
 	}
 	if len(m.filteredRows) == 0 {
-		return "No resources visible"
+		if m.filterInputEnabled {
+			return m.filterInput.View()
+		} else {
+			return "No resources visible"
+		}
 	}
 	var buf bytes.Buffer
 	if m.maxHeight > 1 {
-		m.columnsView(&buf, m.headers, lipgloss.Style{})
+		if m.filterInputEnabled {
+			buf.WriteString(m.filterInput.View())
+		} else {
+			m.columnsView(&buf, m.headers, lipgloss.Style{})
+		}
 		buf.WriteByte('\n')
 	}
 
@@ -327,6 +379,11 @@ func (m Model) View() string {
 			buf.WriteByte('\n')
 		}
 		buf.WriteString(m.Styles.Error.Render(m.err.Error()))
+	}
+
+	if len(m.filteredRows) != len(m.rows) {
+		buf.WriteByte('\n')
+		buf.WriteString(m.Styles.FilterInfo.Render(fmt.Sprintf("%d/%d rows", len(m.filteredRows), len(m.rows))))
 	}
 
 	if m.quitting {
@@ -376,6 +433,10 @@ func (m *Model) updateColumnWidths() {
 		lengths = expandToMaxLengths(lengths, row.RenderedFields())
 	}
 	m.columnWidths = lengths
+}
+
+func (m *Model) filterText() string {
+	return m.filterInput.Value()
 }
 
 func expandToMaxLengths(lengths []int, row []string) []int {

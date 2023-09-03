@@ -26,7 +26,6 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/fsnotify/fsnotify"
-	"github.com/jilleJr/kubectl-klock/pkg/table"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -36,6 +35,8 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/cli-runtime/pkg/resource"
 	"k8s.io/client-go/rest"
+
+	"github.com/jilleJr/kubectl-klock/pkg/table"
 )
 
 type Options struct {
@@ -436,6 +437,7 @@ func (p *Printer) addObjectToTable(objTable *metav1.Table, printNamespace bool, 
 		}
 		// it's fine to only use the latest returned cmd, because of how
 		// [table.AddRow] is implemented
+
 		cmd = p.Table.AddRow(tableRow)
 	}
 	return cmd, nil
