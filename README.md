@@ -19,6 +19,8 @@ it uses the regular watch feature to stream updates as soon as they occur.
 
 ## Installation
 
+[![Packaging status](https://repology.org/badge/vertical-allrepos/kubectl-klock.svg)](https://repology.org/project/kubectl-klock/versions)
+
 <details open>
 <summary><h3>Krew</h3></summary>
 
