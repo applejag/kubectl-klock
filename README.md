@@ -19,7 +19,8 @@ it uses the regular watch feature to stream updates as soon as they occur.
 
 ## Installation
 
-### Krew
+<details open>
+<summary><h3>Krew</h3></summary>
 
 Can be installed using the krew kubectl plugin manager: <https://krew.sigs.k8s.io/>
 
@@ -28,7 +29,10 @@ kubectl krew install klock
 kubectl klock pods
 ```
 
-### Nix
+</details>
+
+<details>
+<summary><h3>Nix</h3></summary>
 
 Also packaged as a Nix package: <https://search.nixos.org/packages?channel=unstable&show=kubectl-klock>
 
@@ -43,30 +47,35 @@ kubectl klock pods
 > It has not reached the stable channel yet, so requires using the unstable
 > Nixpkgs channel.
 
-### Nix Home Manager
+</details>
 
-```nix
-{ pkgs, config, ... }:
+<details>
+<summary><h3>Prebuilt binaries</h3></summary>
 
-let
-  pkgsUnstable = import <nixpkgs-unstable> {};
-in
-{
-  home.packages = [
-    # …
+You can download prebuilt binaries from the latest GitHub release: <https://github.com/jilleJr/kubectl-klock/releases/latest>
 
-    pkgsUnstable.kubectl-klock
+Download the one that fits your OS and architecture, extract the
+tarball/zip file, and move the `klock` binary to somewhere in your PATH.
+For example:
 
-    # …
-  ];
-
-  # …
-}
+```sh
+tar -xzf klock_linux_amd64.tar.gz
+sudo mv ./klock /usr/local/bin
+klock pods
 ```
 
-<https://github.com/nix-community/home-manager>
+For it to work as a subcommand to `kubectl`, it must be called `kubectl-klock`
+instead. If you want that, then rename it.
 
-### From source
+```sh
+sudo mv /usr/local/bin/klock /usr/local/bin/kubectl-klock
+kubectl klock pods
+```
+
+</details>
+
+<details>
+<summary><h3>From source</h3></summary>
 
 If you have Go installed, then you can use `go install` to let Go download
 and build kubectl-klock for you:
@@ -75,6 +84,10 @@ and build kubectl-klock for you:
 go install github.com/jilleJr/kubectl-klock@latest
 kubectl klock pods
 ```
+
+Requires Go 1.21 (or later)
+
+</details>
 
 ## Usage
 
