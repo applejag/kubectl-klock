@@ -27,9 +27,13 @@ import (
 	"github.com/spf13/viper"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
+	"k8s.io/kubectl/pkg/util/completion"
 )
 
 func RootCmd() *cobra.Command {
+	kubeConfigFlags := genericclioptions.NewConfigFlags(false)
+	f := cmdutil.NewFactory(kubeConfigFlags)
+
 	var o klock.Options
 	cmd := &cobra.Command{
 		Use:   "klock",
@@ -86,11 +90,12 @@ Examples:
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return klock.Execute(o, args)
 		},
+		ValidArgsFunction: completion.ResourceTypeAndNameCompletionFunc(f),
 	}
 
 	cobra.OnInitialize(initConfig)
 
-	o.ConfigFlags = genericclioptions.NewConfigFlags(false)
+	o.ConfigFlags = kubeConfigFlags
 	o.ConfigFlags.AddFlags(cmd.Flags())
 
 	cmd.Flags().BoolVarP(&o.AllNamespaces, "all-namespaces", "A", o.AllNamespaces, "If present, list the requested object(s) across all namespaces. Namespace in current context is ignored even if specified with --namespace.")
@@ -98,6 +103,13 @@ Examples:
 	cmd.Flags().StringVarP(&o.Output, "output", "o", o.Output, "Output format. Only a small subset of formats found in 'kubectl get' are supported by kubectl-klock.")
 	cmd.Flags().BoolVarP(&o.WatchKubeconfig, "watch-kubeconfig", "W", o.WatchKubeconfig, "Restart the watch when the kubeconfig file changes.")
 	cmdutil.AddLabelSelectorFlagVar(cmd, &o.LabelSelector)
+
+	// Must add temporary subcommand, as Cobra won't add completion commands
+	// if the command doesn't have any subcommands.
+	tmpChild := &cobra.Command{Use: "tmp", Hidden: true}
+	cmd.AddCommand(tmpChild)
+	cmd.InitDefaultCompletionCmd()
+	cmd.RemoveCommand(tmpChild)
 
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	return cmd
