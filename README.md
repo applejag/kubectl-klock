@@ -17,12 +17,62 @@ much more readable fashion.
 Think of it as running `watch kubectl get pods`, but instead of polling,
 it uses the regular watch feature to stream updates as soon as they occur.
 
-## Quick Start
+## Installation
 
-Requires krew, the kubectl plugin manager: <https://krew.sigs.k8s.io/>
+### Krew
+
+Can be installed using the krew kubectl plugin manager: <https://krew.sigs.k8s.io/>
 
 ```sh
 kubectl krew install klock
+kubectl klock pods
+```
+
+### Nix
+
+Also packaged as a Nix package: <https://search.nixos.org/packages?channel=unstable&show=kubectl-klock>
+
+Try it out with nix-shell:
+
+```sh
+nix-shell -p kubectl-klock
+kubectl klock pods
+```
+
+> [!IMPORTANT]
+> It has not reached the stable channel yet, so requires using the unstable
+> Nixpkgs channel.
+
+### Nix Home Manager
+
+```nix
+{ pkgs, config, ... }:
+
+let
+  pkgsUnstable = import <nixpkgs-unstable> {};
+in
+{
+  home.packages = [
+    # …
+
+    pkgsUnstable.kubectl-klock
+
+    # …
+  ];
+
+  # …
+}
+```
+
+<https://github.com/nix-community/home-manager>
+
+### From source
+
+If you have Go installed, then you can use `go install` to let Go download
+and build kubectl-klock for you:
+
+```sh
+go install github.com/jilleJr/kubectl-klock@latest
 kubectl klock pods
 ```
 
