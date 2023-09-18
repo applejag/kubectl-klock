@@ -16,6 +16,12 @@ This project tries to follow [SemVer 2.0.0](https://semver.org/).
 	https://changelog.md/
 -->
 
+## v0.5.0 (WIP)
+
+- Added `completion` subcommand. (#34)
+
+- Added completion to resource type and name. (#34)
+
 ## v0.4.0 (2023-09-03)
 
 - Added text filtering. (#32, thanks @semihbkgr!)
