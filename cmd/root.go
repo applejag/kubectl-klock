@@ -104,6 +104,12 @@ Examples:
 	cmd.Flags().BoolVarP(&o.WatchKubeconfig, "watch-kubeconfig", "W", o.WatchKubeconfig, "Restart the watch when the kubeconfig file changes.")
 	cmdutil.AddLabelSelectorFlagVar(cmd, &o.LabelSelector)
 
+	cmd.RegisterFlagCompletionFunc("output", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return []string{"wide"}, cobra.ShellCompDirectiveNoFileComp
+	})
+
+	registerCompletionFuncForGlobalFlags(cmd, f)
+
 	// Must add temporary subcommand, as Cobra won't add completion commands
 	// if the command doesn't have any subcommands.
 	tmpChild := &cobra.Command{Use: "tmp", Hidden: true}
