@@ -158,3 +158,19 @@ There's also some hotkeys available:
 
 - Restart watch when kubeconfig file changes (flag: `--watch-kubeconfig`, `-W`),
   such as when changed by [kubectx](https://github.com/ahmetb/kubectx).
+
+## Completion
+
+To get completion when writing `kubectl klock`, you need to create an
+executable file named `kubectl_complete-klock`
+(or `kubectl_complete-klock.exe` for Windows) and add it to your `PATH`.
+
+For example:
+
+```sh
+cat <<END | sudo tee /usr/local/bin/kubectl_complete-klock
+#!/usr/bin/env bash
+kubectl-klock __complete "$@" 
+END
+sudo chmod +x /usr/local/bin/kubectl_complete-klock
+```
