@@ -162,12 +162,8 @@ There's also some hotkeys available:
 ## Completion
 
 To get completion when writing `kubectl klock`, you need to create an
-executable file that `kubectl` can call to get completions, named:
-
-- `kubectl_complete-klock` (Linux/Mac)
-- `kubectl_complete-klock.exe` (Windows)
-
-And make sure to add it to your `PATH`.
+executable file that `kubectl` can call to get completions, named
+`kubectl_complete-klock`. Make sure to add it to your `PATH`.
 
 For example:
 
