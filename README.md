@@ -168,7 +168,7 @@ executable file named `kubectl_complete-klock`
 For example:
 
 ```sh
-cat <<END | sudo tee /usr/local/bin/kubectl_complete-klock
+cat <<'END' | sudo tee /usr/local/bin/kubectl_complete-klock
 #!/usr/bin/env bash
 kubectl-klock __complete "$@" 
 END
