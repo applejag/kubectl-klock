@@ -30,6 +30,9 @@ import (
 	"k8s.io/kubectl/pkg/util/completion"
 )
 
+// set by ldflags
+var version string
+
 func RootCmd() *cobra.Command {
 	kubeConfigFlags := genericclioptions.NewConfigFlags(false)
 	f := cmdutil.NewFactory(kubeConfigFlags)
@@ -87,6 +90,7 @@ Examples:
 		PreRun: func(cmd *cobra.Command, args []string) {
 			viper.BindPFlags(cmd.Flags())
 		},
+		Version: version,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return klock.Execute(o, args)
 		},

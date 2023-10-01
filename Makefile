@@ -10,11 +10,13 @@ endif
 
 GO_FILES=$(shell git ls-files '*.go')
 
+VERSION = v0.4.0
+
 .PHONY: build
 build: bin/${BINARY}
 
 bin/${BINARY}: bin cmd/*.go pkg/*/*.go
-	go build -o bin/${BINARY}
+	go build -o bin/${BINARY} --ldflags='-X github.com/jilleJr/kubectl-klock/cmd.version=${VERSION}'
 
 bin:
 	mkdir bin
