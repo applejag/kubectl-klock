@@ -57,10 +57,10 @@ snapcrafts:
 
       # Special program that kubectl looks for to do completion from
       # when running "kubectl klock <TAB>"
-      kubectl_complete:
+      kubectl-complete:
         command: kubectl_complete-klock
         aliases:
-          - kubectl_complete-klock # instead of klock.kubectl_complete
+          - kubectl_complete-klock # instead of klock.kubectl-complete
 
 archives:
   - builds:
