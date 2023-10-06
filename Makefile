@@ -13,7 +13,7 @@ GO_FILES=$(shell git ls-files '*.go')
 .PHONY: build
 build: bin/${BINARY}
 
-bin/${BINARY}: bin cmd/*.go pkg/*/*.go
+bin/${BINARY}: bin cmd/*.go pkg/*/*.go VERSION
 	go build -o bin/${BINARY}
 
 bin:

@@ -25,3 +25,5 @@ package-lock.json
 # Editor/IDE
 .vscode
 .idea
+
+bin
