@@ -33,6 +33,21 @@ snapcrafts:
 
     grade: devel # stable | devel
     confinement: strict # strict | devmode | classic
+
+    extra_files:
+      - source: bin/kubectl-klock.completion.bash
+        destination: klock.kubectl-klock.completion.bash
+        mode: 0755
+      - source: bin/kubectl-klock.completion.bash.license
+        destination: klock.kubectl-klock.completion.bash.license
+        mode: 0644
+      - source: bin/kubectl_complete-klock
+        destination: kubectl_complete-klock
+        mode: 0755
+      - source: LICENSES
+        destination: LICENSES
+        mode: 0644
+
     apps:
       kubectl-klock:
         command: kubectl-klock
@@ -41,6 +56,14 @@ snapcrafts:
         plugs:
           - home
           - network
+        completer: klock.kubectl-klock.completion.bash
+
+      # Special program that kubectl looks for to do completion from
+      # when running "kubectl klock <TAB>"
+      kubectl_complete:
+        command: kubectl-klock
+        aliases:
+          - kubectl_complete-klock # instead of klock.kubectl_complete
 
 archives:
   - builds:
