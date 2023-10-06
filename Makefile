@@ -11,17 +11,17 @@ endif
 GO_FILES=$(shell git ls-files '*.go')
 
 .PHONY: build
-build: bin/${BINARY}
+build: dist/${BINARY}
 
-bin/${BINARY}: bin cmd/*.go pkg/*/*.go VERSION
-	go build -o bin/${BINARY}
+dist/${BINARY}: dist cmd/*.go pkg/*/*.go VERSION
+	go build -o dist/${BINARY}
 
-bin:
-	mkdir bin
+dist:
+	mkdir dist
 
 .PHONY: clean
 clean:
-	rm -fv bin/${BINARY}
+	rm -fv dist/${BINARY}
 
 .PHONY: check
 check:
