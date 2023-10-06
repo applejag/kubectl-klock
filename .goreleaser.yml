@@ -24,6 +24,25 @@ builds:
     main: main.go
     ldflags: -s -w
       -X github.com/jilleJr/kubectl-klock/pkg/version.version=
+
+snapcrafts:
+  - id: klock
+    name: klock
+    license: GPL-3.0-or-later
+    description: |
+      Kubectl plugin that watches resources and prints them in a human-readable manner.
+      Very similar to `kubectl get`, but with live updates.
+    summary: Kubectl plugin that watches resources
+
+    grade: devel # stable | devel
+    confinement: strict # strict | devmode | classic
+    apps:
+      kubectl-klock:
+        command: bin/kubectl-klock
+        plugs:
+          - home
+          - network
+
 archives:
   - id: klock
     builds:
