@@ -22,7 +22,7 @@ builds:
       - CGO_ENABLED=0
       - GO111MODULE=on
     main: main.go
-    ldflags: -s -w
+    ldflags: -s -w -X main.version={{ .Version }}
 archives:
   - id: klock
     builds:
