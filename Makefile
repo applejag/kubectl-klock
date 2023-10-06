@@ -65,7 +65,7 @@ lint-go:
 	revive -formatter stylish -config revive.toml ./...
 
 .PHONY: lint-go-fix
-lint-fix-go:
+lint-go-fix:
 	@echo goimports -d -w '**/*.go'
 	@goimports -d -w $(GO_FILES)
 
