@@ -35,7 +35,10 @@ snapcrafts:
     confinement: strict # strict | devmode | classic
 
     extra_files:
-      - source: bin/klock.kubectl-klock.completion.bash.license
+      - source: bin/kubectl-klock.completion.bash
+        destination: klock.kubectl-klock.completion.bash
+        mode: 0755
+      - source: bin/kubectl-klock.completion.bash.license
         destination: klock.kubectl-klock.completion.bash.license
         mode: 0644
       - source: bin/kubectl_complete-klock
