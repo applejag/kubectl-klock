@@ -18,6 +18,9 @@ This project tries to follow [SemVer 2.0.0](https://semver.org/).
 
 ## v0.5.0 (WIP)
 
+- BREAKING: Changed binary name from `klock` to `kubectl-klock`.
+  Any automated tooling downloading from GitHub release assets may break. (#41)
+
 - Added `completion` subcommand. (#34)
 
 - Added completion to resource type and name. (#34)
