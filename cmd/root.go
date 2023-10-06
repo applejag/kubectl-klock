@@ -134,4 +134,3 @@ func InitAndExecute() {
 func initConfig() {
 	viper.AutomaticEnv()
 }
-
