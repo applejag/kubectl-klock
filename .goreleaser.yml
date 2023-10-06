@@ -23,7 +23,6 @@ builds:
       - GO111MODULE=on
     main: main.go
     ldflags: -s -w
-      -X github.com/jilleJr/kubectl-klock/cmd.version=v0.4.0
 archives:
   - id: klock
     builds:
