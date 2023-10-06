@@ -18,6 +18,9 @@
 package main
 
 import (
+	_ "embed"
+	"strings"
+
 	"github.com/jilleJr/kubectl-klock/cmd"
 
 	// Initiate client auth plugins
@@ -25,6 +28,10 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/exec"
 )
 
+//go:embed VERSION
+var version string
+
 func main() {
+	cmd.Version = strings.TrimSpace(version)
 	cmd.InitAndExecute()
 }
