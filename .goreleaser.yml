@@ -35,7 +35,7 @@ snapcrafts:
     confinement: strict # strict | devmode | classic
 
     extra_files:
-      - source: bin/kubectl-klock.completion.bash.license
+      - source: bin/klock.kubectl-klock.completion.bash.license
         destination: bin/klock.kubectl-klock.completion.bash.license
         mode: 0644
       - source: bin/kubectl_complete-klock
@@ -53,7 +53,7 @@ snapcrafts:
         plugs:
           - home
           - network
-        completer: bin/kubectl-klock.completion.bash
+        completer: bin/klock.kubectl-klock.completion.bash
 
       # Special program that kubectl looks for to do completion from
       # when running "kubectl klock <TAB>"

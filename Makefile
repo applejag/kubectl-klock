@@ -11,7 +11,10 @@ endif
 GO_FILES=$(shell git ls-files '*.go')
 
 .PHONY: build
-build: dist/${BINARY}
+build: dist/${BINARY} bin/klock.kubectl-klock.completion.bash
+
+bin/klock.kubectl-klock.completion.bash: dist/${BINARY} go.mod go.sum
+	KLOCK_USAGE_NAME=klock.kubectl-klock dist/${BINARY} completion bash > bin/klock.kubectl-klock.completion.bash
 
 dist/${BINARY}: dist cmd/*.go pkg/*/*.go VERSION
 	go build -o dist/${BINARY}
