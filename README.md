@@ -8,8 +8,8 @@ SPDX-License-Identifier: CC-BY-4.0
 
 ![demonstration animation](docs/demo.gif)
 
-[![Latest Release](https://img.shields.io/github/release/jilleJr/kubectl-klock.svg)](https://github.com/jilleJr/kubectl-klock/releases)
-[![REUSE status](https://api.reuse.software/badge/github.com/jilleJr/kubectl-klock)](https://api.reuse.software/info/github.com/jilleJr/kubectl-klock)
+[![Latest Release](https://img.shields.io/github/release/applejag/kubectl-klock.svg)](https://github.com/applejag/kubectl-klock/releases)
+[![REUSE status](https://api.reuse.software/badge/github.com/applejag/kubectl-klock)](https://api.reuse.software/info/github.com/applejag/kubectl-klock)
 
 A `kubectl` plugin to render the `kubectl get pods --watch` output in a
 much more readable fashion.
@@ -41,7 +41,7 @@ nix-shell -p kubectl-klock
 
 ### Pre-built binaries
 
-You can download pre-built binaries from the latest GitHub release: <https://github.com/jilleJr/kubectl-klock/releases/latest>
+You can download pre-built binaries from the latest GitHub release: <https://github.com/applejag/kubectl-klock/releases/latest>
 
 Download the one that fits your OS and architecture, extract the
 tarball/zip file, and move the `kubectl-klock` binary to somewhere in your PATH.
@@ -57,7 +57,7 @@ sudo mv ./kubectl-klock /usr/local/bin
 Requires Go 1.21 (or later).
 
 ```sh
-go install github.com/jilleJr/kubectl-klock@latest
+go install github.com/applejag/kubectl-klock@latest
 ```
 
 ## Usage

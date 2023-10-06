@@ -21,7 +21,7 @@ import (
 	_ "embed"
 	"strings"
 
-	"github.com/jilleJr/kubectl-klock/cmd"
+	"github.com/applejag/kubectl-klock/cmd"
 
 	// Initiate client auth plugins
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
