@@ -21,6 +21,9 @@ This project tries to follow [SemVer 2.0.0](https://semver.org/).
 - BREAKING: Changed binary name from `klock` to `kubectl-klock`.
   Any automated tooling downloading from GitHub release assets may break. (#41)
 
+- BREAKING: Changed my username from `jilleJr` to `applejag`.
+  Any automated tooling may break from this. (#42)
+
 - Added `completion` subcommand. (#34)
 
 - Added completion to resource type and name. (#34)
