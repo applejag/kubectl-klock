@@ -21,38 +21,26 @@ it uses the regular watch feature to stream updates as soon as they occur.
 
 [![Packaging status](https://repology.org/badge/vertical-allrepos/kubectl-klock.svg)](https://repology.org/project/kubectl-klock/versions)
 
-<details open>
-<summary><h3>Krew</h3></summary>
+### Krew
 
-Can be installed using the krew kubectl plugin manager: <https://krew.sigs.k8s.io/>
+Requires Krew: <https://krew.sigs.k8s.io/>
 
 ```sh
 kubectl krew install klock
 kubectl klock pods
 ```
 
-</details>
-
-<details>
-<summary><h3>Nix</h3></summary>
-
-Also packaged as a Nix package: <https://search.nixos.org/packages?channel=unstable&show=kubectl-klock>
-
-Try it out with nix-shell:
-
-```sh
-nix-shell -p kubectl-klock
-kubectl klock pods
-```
+### Nix
 
 > [!IMPORTANT]
 > It has not reached the stable channel yet, so requires using the unstable
 > Nixpkgs channel.
 
-</details>
+```sh
+nix-shell -p kubectl-klock
+```
 
-<details>
-<summary><h3>Prebuilt binaries</h3></summary>
+### Pre-built binaries
 
 You can download prebuilt binaries from the latest GitHub release: <https://github.com/jilleJr/kubectl-klock/releases/latest>
 
@@ -66,30 +54,20 @@ sudo mv ./klock /usr/local/bin
 klock pods
 ```
 
-For it to work as a subcommand to `kubectl`, it must be called `kubectl-klock`
-instead. If you want that, then rename it.
+For it to work as a subcommand to `kubectl`, rename it to `kubectl-klock`.
 
 ```sh
 sudo mv /usr/local/bin/klock /usr/local/bin/kubectl-klock
 kubectl klock pods
 ```
 
-</details>
+### From source
 
-<details>
-<summary><h3>From source</h3></summary>
-
-If you have Go installed, then you can use `go install` to let Go download
-and build kubectl-klock for you:
+Requires Go 1.21 (or later).
 
 ```sh
 go install github.com/jilleJr/kubectl-klock@latest
-kubectl klock pods
 ```
-
-Requires Go 1.21 (or later)
-
-</details>
 
 ## Usage
 
