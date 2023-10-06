@@ -18,12 +18,9 @@
 package cmd
 
 import (
-	"bytes"
 	"fmt"
 	"os"
-	"runtime/debug"
 	"strings"
-	"time"
 
 	"github.com/jilleJr/kubectl-klock/pkg/klock"
 	"github.com/spf13/cobra"
@@ -92,7 +89,7 @@ Examples:
 		PreRun: func(cmd *cobra.Command, args []string) {
 			viper.BindPFlags(cmd.Flags())
 		},
-		Version: getVersion(),
+		Version: Version,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return klock.Execute(o, args)
 		},
@@ -138,48 +135,3 @@ func initConfig() {
 	viper.AutomaticEnv()
 }
 
-func getVersion() string {
-	if vcs, ok := GetVCSInfo(); ok {
-		var buf bytes.Buffer
-		buf.WriteString(Version)
-		buf.WriteByte('+')
-		buf.WriteString(vcs.Revision[:min(len(vcs.Revision), 8)])
-		if vcs.Modified {
-			buf.WriteString("-dirty")
-		}
-		return buf.String()
-	}
-
-	return Version
-}
-
-type VCSInfo struct {
-	Revision string
-	Time     time.Time
-	Modified bool
-}
-
-func GetVCSInfo() (VCSInfo, bool) {
-	build, ok := debug.ReadBuildInfo()
-	if !ok {
-		return VCSInfo{}, false
-	}
-	var vcs VCSInfo
-	for _, setting := range build.Settings {
-		switch setting.Key {
-		case "vcs.revision":
-			vcs.Revision = setting.Value
-		case "vcs.time":
-			t, err := time.Parse(time.RFC3339, setting.Value)
-			if err == nil {
-				vcs.Time = t
-			}
-		case "vcs.modified":
-			vcs.Modified = setting.Value == "true"
-		}
-	}
-	if vcs.Revision == "" {
-		return VCSInfo{}, false
-	}
-	return vcs, true
-}

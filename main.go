@@ -28,6 +28,7 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/exec"
 )
 
+// set via ldflags or from VERSION file
 //go:embed VERSION
 var version string
 
