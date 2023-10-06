@@ -25,7 +25,7 @@ builds:
     ldflags: -s -w -X main.version={{ .Version }}
 
 snapcrafts:
-  - id: klock
+  - id: kubectl-klock
     name: klock
     license: GPL-3.0-or-later
     description: |
@@ -37,7 +37,9 @@ snapcrafts:
     confinement: strict # strict | devmode | classic
     apps:
       kubectl-klock:
-        command: bin/kubectl-klock
+        command: kubectl-klock
+        aliases:
+          - kubectl-klock # instead of klock.kubectl-klock
         plugs:
           - home
           - network
