@@ -3,13 +3,13 @@
 # SPDX-License-Identifier: CC0-1.0
 
 # yaml-language-server: $schema=https://goreleaser.com/static/schema.json
-project_name: klock
+project_name: kubectl-klock
 release:
   github:
     owner: jilleJr
     name: kubectl-klock
 builds:
-  - id: klock
+  - id: kubectl-klock
     goos:
     - linux
     - windows
@@ -43,9 +43,9 @@ snapcrafts:
           - network
 
 archives:
-  - id: klock
+  - id: kubectl-klock
     builds:
-    - klock
+    - kubectl-klock
     name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
     format_overrides:
     - goos: windows

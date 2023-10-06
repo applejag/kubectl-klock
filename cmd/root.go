@@ -22,7 +22,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/jilleJr/kubectl-klock/pkg/klock"
+	"github.com/applejag/kubectl-klock/pkg/klock"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
