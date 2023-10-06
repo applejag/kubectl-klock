@@ -3,9 +3,9 @@
 # SPDX-License-Identifier: CC0-1.0
 
 ifeq ($(OS),Windows_NT)
-BINARY := klock.exe
+BINARY := kubectl-klock.exe
 else
-BINARY := klock
+BINARY := kubectl-klock
 endif
 
 GO_FILES=$(shell git ls-files '*.go')

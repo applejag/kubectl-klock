@@ -27,7 +27,6 @@ Requires Krew: <https://krew.sigs.k8s.io/>
 
 ```sh
 kubectl krew install klock
-kubectl klock pods
 ```
 
 ### Nix
@@ -42,23 +41,15 @@ nix-shell -p kubectl-klock
 
 ### Pre-built binaries
 
-You can download prebuilt binaries from the latest GitHub release: <https://github.com/jilleJr/kubectl-klock/releases/latest>
+You can download pre-built binaries from the latest GitHub release: <https://github.com/jilleJr/kubectl-klock/releases/latest>
 
 Download the one that fits your OS and architecture, extract the
-tarball/zip file, and move the `klock` binary to somewhere in your PATH.
+tarball/zip file, and move the `kubectl-klock` binary to somewhere in your PATH.
 For example:
 
 ```sh
-tar -xzf klock_linux_amd64.tar.gz
-sudo mv ./klock /usr/local/bin
-klock pods
-```
-
-For it to work as a subcommand to `kubectl`, rename it to `kubectl-klock`.
-
-```sh
-sudo mv /usr/local/bin/klock /usr/local/bin/kubectl-klock
-kubectl klock pods
+tar -xzf kubectl-klock_linux_amd64.tar.gz
+sudo mv ./kubectl-klock /usr/local/bin
 ```
 
 ### From source

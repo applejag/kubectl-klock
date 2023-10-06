@@ -14,97 +14,97 @@ spec:
       matchLabels:
         os: linux
         arch: amd64
-    {{addURIAndSha "https://github.com/jilleJr/kubectl-klock/releases/download/{{ .TagName }}/klock_linux_amd64.tar.gz" .TagName }}
+    {{addURIAndSha "https://github.com/jilleJr/kubectl-klock/releases/download/{{ .TagName }}/kubectl-klock_linux_amd64.tar.gz" .TagName }}
     files:
-    - from: "./klock"
+    - from: "./kubectl-klock"
       to: "."
     - from: LICENSE
       to: "."
-    bin: "klock"
+    bin: "kubectl-klock"
 
   - selector:
       matchLabels:
         os: linux
         arch: "386"
-    {{addURIAndSha "https://github.com/jilleJr/kubectl-klock/releases/download/{{ .TagName }}/klock_linux_386.tar.gz" .TagName }}
+    {{addURIAndSha "https://github.com/jilleJr/kubectl-klock/releases/download/{{ .TagName }}/kubectl-klock_linux_386.tar.gz" .TagName }}
     files:
-    - from: "./klock"
+    - from: "./kubectl-klock"
       to: "."
     - from: LICENSE
       to: "."
-    bin: "klock"
+    bin: "kubectl-klock"
 
   - selector:
       matchLabels:
         os: linux
         arch: "arm64"
-    {{addURIAndSha "https://github.com/jilleJr/kubectl-klock/releases/download/{{ .TagName }}/klock_linux_arm64.tar.gz" .TagName }}
+    {{addURIAndSha "https://github.com/jilleJr/kubectl-klock/releases/download/{{ .TagName }}/kubectl-klock_linux_arm64.tar.gz" .TagName }}
     files:
-    - from: "./klock"
+    - from: "./kubectl-klock"
       to: "."
     - from: LICENSE
       to: "."
-    bin: "klock"
+    bin: "kubectl-klock"
 
   - selector:
       matchLabels:
         os: darwin
         arch: amd64
-    {{addURIAndSha "https://github.com/jilleJr/kubectl-klock/releases/download/{{ .TagName }}/klock_darwin_amd64.tar.gz" .TagName }}
+    {{addURIAndSha "https://github.com/jilleJr/kubectl-klock/releases/download/{{ .TagName }}/kubectl-klock_darwin_amd64.tar.gz" .TagName }}
     files:
-    - from: "./klock"
+    - from: "./kubectl-klock"
       to: "."
     - from: LICENSE
       to: "."
-    bin: "klock"
+    bin: "kubectl-klock"
 
   - selector:
       matchLabels:
         os: darwin
         arch: arm64
-    {{addURIAndSha "https://github.com/jilleJr/kubectl-klock/releases/download/{{ .TagName }}/klock_darwin_arm64.tar.gz" .TagName }}
+    {{addURIAndSha "https://github.com/jilleJr/kubectl-klock/releases/download/{{ .TagName }}/kubectl-klock_darwin_arm64.tar.gz" .TagName }}
     files:
-    - from: "./klock"
+    - from: "./kubectl-klock"
       to: "."
     - from: LICENSE
       to: "."
-    bin: "klock"
+    bin: "kubectl-klock"
 
   - selector:
       matchLabels:
         os: windows
         arch: amd64
-    {{addURIAndSha "https://github.com/jilleJr/kubectl-klock/releases/download/{{ .TagName }}/klock_windows_amd64.zip" .TagName }}
+    {{addURIAndSha "https://github.com/jilleJr/kubectl-klock/releases/download/{{ .TagName }}/kubectl-klock_windows_amd64.zip" .TagName }}
     files:
-    - from: "/klock.exe"
+    - from: "/kubectl-klock.exe"
       to: "."
     - from: LICENSE
       to: "."
-    bin: "klock.exe"
+    bin: "kubectl-klock.exe"
 
   - selector:
       matchLabels:
         os: windows
         arch: "386"
-    {{addURIAndSha "https://github.com/jilleJr/kubectl-klock/releases/download/{{ .TagName }}/klock_windows_386.zip" .TagName }}
+    {{addURIAndSha "https://github.com/jilleJr/kubectl-klock/releases/download/{{ .TagName }}/kubectl-klock_windows_386.zip" .TagName }}
     files:
-    - from: "/klock.exe"
+    - from: "/kubectl-klock.exe"
       to: "."
     - from: LICENSE
       to: "."
-    bin: "klock.exe"
+    bin: "kubectl-klock.exe"
 
   - selector:
       matchLabels:
         os: windows
         arch: arm64
-    {{addURIAndSha "https://github.com/jilleJr/kubectl-klock/releases/download/{{ .TagName }}/klock_windows_arm64.zip" .TagName }}
+    {{addURIAndSha "https://github.com/jilleJr/kubectl-klock/releases/download/{{ .TagName }}/kubectl-klock_windows_arm64.zip" .TagName }}
     files:
-    - from: "/klock.exe"
+    - from: "/kubectl-klock.exe"
       to: "."
     - from: LICENSE
       to: "."
-    bin: "klock.exe"
+    bin: "kubectl-klock.exe"
 
   shortDescription: Watches resources
   description: |
