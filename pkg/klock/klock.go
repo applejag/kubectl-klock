@@ -36,7 +36,7 @@ import (
 	"k8s.io/cli-runtime/pkg/resource"
 	"k8s.io/client-go/rest"
 
-	"github.com/jilleJr/kubectl-klock/pkg/table"
+	"github.com/applejag/kubectl-klock/pkg/table"
 )
 
 type Options struct {

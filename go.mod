@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: CC0-1.0
 
-module github.com/jilleJr/kubectl-klock
+module github.com/applejag/kubectl-klock
 
 go 1.21
 
