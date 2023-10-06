@@ -30,6 +30,9 @@ This project tries to follow [SemVer 2.0.0](https://semver.org/).
   - `--context`
   - `--user`
 
+- Added `--version` flag to print the command's version.
+  (#40, thanks @semihbkgr!)
+
 ## v0.4.0 (2023-09-03)
 
 - Added text filtering. (#32, thanks @semihbkgr!)

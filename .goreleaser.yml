@@ -22,8 +22,7 @@ builds:
       - CGO_ENABLED=0
       - GO111MODULE=on
     main: main.go
-    ldflags: -s -w
-      -X github.com/jilleJr/kubectl-klock/pkg/version.version=
+    ldflags: -s -w -X main.version={{ .Version }}
 
 snapcrafts:
   - id: klock
