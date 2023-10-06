@@ -9,8 +9,7 @@ release:
     owner: jilleJr
     name: kubectl-klock
 builds:
-  - id: kubectl-klock
-    goos:
+  - goos:
     - linux
     - windows
     - darwin
@@ -25,8 +24,7 @@ builds:
     ldflags: -s -w -X main.version={{ .Version }}
 
 snapcrafts:
-  - id: kubectl-klock
-    name: klock
+  - name: klock
     license: GPL-3.0-or-later
     description: |
       Kubectl plugin that watches resources and prints them in a human-readable manner.
@@ -45,8 +43,7 @@ snapcrafts:
           - network
 
 archives:
-  - id: kubectl-klock
-    builds:
+  - builds:
     - kubectl-klock
     name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
     format_overrides:
