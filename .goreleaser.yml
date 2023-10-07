@@ -64,9 +64,10 @@ snapcrafts:
         command: kubectl-klock
         aliases:
           - kubectl-klock # instead of klock.kubectl-klock
-        plugs:
-          - home
-          - network
+        # Can't use plugs with "classic" confinement
+        #plugs:
+        #  - home
+        #  - network
         completer: bin/klock.kubectl-klock.completion.bash
 
       # Special program that kubectl looks for to do completion from
