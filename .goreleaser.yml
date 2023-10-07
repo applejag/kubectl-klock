@@ -31,6 +31,7 @@ snapcrafts:
       Very similar to `kubectl get`, but with live updates.
     summary: Kubectl plugin that watches resources
     grade: devel # stable | devel
+    base: core22
 
     # Have to use classic for completions to work.
     #
