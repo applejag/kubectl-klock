@@ -36,9 +36,14 @@ func RootCmd() *cobra.Command {
 	kubeConfigFlags := genericclioptions.NewConfigFlags(false)
 	f := cmdutil.NewFactory(kubeConfigFlags)
 
+	use := "kubectl-klock"
+	if useEnv := os.Getenv("KLOCK_USAGE_NAME"); useEnv != "" {
+		use = useEnv
+	}
+
 	var o klock.Options
 	cmd := &cobra.Command{
-		Use:   "klock",
+		Use:   use,
 		Short: "Watches resources",
 		Long: `Watches resources.
 
@@ -134,4 +139,3 @@ func InitAndExecute() {
 func initConfig() {
 	viper.AutomaticEnv()
 }
-

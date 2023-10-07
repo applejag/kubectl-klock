@@ -1,0 +1,9 @@
+#!/bin/sh
+# SPDX-FileCopyrightText: 2023 Kalle Fagerberg
+#
+# SPDX-License-Identifier: CC0-1.0
+
+# This is a special file that the official kubectl will look for in your $PATH
+# when completing command on the plugin, such as "kubectl klock <TAB>"
+
+kubectl-klock __complete "$@" 

@@ -29,6 +29,7 @@ import (
 )
 
 // set via ldflags or from VERSION file
+//
 //go:embed VERSION
 var version string
 

@@ -9,8 +9,7 @@ release:
     owner: jilleJr
     name: kubectl-klock
 builds:
-  - id: kubectl-klock
-    goos:
+  - goos:
     - linux
     - windows
     - darwin
@@ -23,9 +22,48 @@ builds:
       - GO111MODULE=on
     main: main.go
     ldflags: -s -w -X main.version={{ .Version }}
+
+snapcrafts:
+  - name: klock
+    license: GPL-3.0-or-later
+    description: |
+      Kubectl plugin that watches resources and prints them in a human-readable manner.
+      Very similar to `kubectl get`, but with live updates.
+    summary: Kubectl plugin that watches resources
+    grade: stable # stable | devel
+    base: core22
+    confinement: strict # strict | devmode | classic
+
+    extra_files:
+      - source: bin/klock.kubectl-klock.completion.bash.license
+        destination: bin/klock.kubectl-klock.completion.bash.license
+        mode: 0644
+      - source: bin/kubectl_complete-klock
+        destination: kubectl_complete-klock
+        mode: 0755
+      - source: LICENSES
+        destination: LICENSES
+        mode: 0644
+
+    apps:
+      kubectl-klock:
+        command: kubectl-klock
+        aliases:
+          - kubectl-klock # instead of klock.kubectl-klock
+        plugs:
+          - home
+          - network
+        completer: bin/klock.kubectl-klock.completion.bash
+
+      # Special program that kubectl looks for to do completion from
+      # when running "kubectl klock <TAB>"
+      kubectl-complete:
+        command: kubectl_complete-klock
+        aliases:
+          - kubectl_complete-klock # instead of klock.kubectl-complete
+
 archives:
-  - id: kubectl-klock
-    builds:
+  - builds:
     - kubectl-klock
     name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
     format_overrides:

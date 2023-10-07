@@ -11,17 +11,20 @@ endif
 GO_FILES=$(shell git ls-files '*.go')
 
 .PHONY: build
-build: bin/${BINARY}
+build: dist/${BINARY} bin/klock.kubectl-klock.completion.bash
 
-bin/${BINARY}: bin cmd/*.go pkg/*/*.go VERSION
-	go build -o bin/${BINARY}
+bin/klock.kubectl-klock.completion.bash: dist/${BINARY} go.mod go.sum
+	KLOCK_USAGE_NAME=klock.kubectl-klock dist/${BINARY} completion bash > bin/klock.kubectl-klock.completion.bash
 
-bin:
-	mkdir bin
+dist/${BINARY}: dist cmd/*.go pkg/*/*.go VERSION
+	go build -o dist/${BINARY}
+
+dist:
+	mkdir dist
 
 .PHONY: clean
 clean:
-	rm -fv bin/${BINARY}
+	rm -fv dist/${BINARY}
 
 .PHONY: check
 check:
@@ -65,7 +68,7 @@ lint-go:
 	revive -formatter stylish -config revive.toml ./...
 
 .PHONY: lint-go-fix
-lint-fix-go:
+lint-go-fix:
 	@echo goimports -d -w '**/*.go'
 	@goimports -d -w $(GO_FILES)
 
