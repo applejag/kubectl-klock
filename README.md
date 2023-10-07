@@ -33,6 +33,10 @@ kubectl krew install klock
 
 [![klock](https://snapcraft.io/klock/badge.svg)](https://snapcraft.io/klock)
 
+```sh
+sudo snap install klock --edge
+```
+
 > [!IMPORTANT]
 > The snap's default aliases are still in review, so for now you must use:
 >
@@ -40,19 +44,15 @@ kubectl krew install klock
 > $ klock.kubectl-klock pods
 > ```
 
-```sh
-sudo snap install klock --edge
-```
-
 ### Nix
-
-> [!IMPORTANT]
-> It has not reached the stable channel yet, so requires using the unstable
-> Nixpkgs channel.
 
 ```sh
 nix-shell -p kubectl-klock
 ```
+
+> [!IMPORTANT]
+> It has not reached the stable channel yet, so requires using the unstable
+> Nixpkgs channel.
 
 ### Pre-built binaries
 
