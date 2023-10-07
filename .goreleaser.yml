@@ -32,21 +32,7 @@ snapcrafts:
     summary: Kubectl plugin that watches resources
     grade: stable # stable | devel
     base: core22
-
-    # Have to use classic for completions to work.
-    #
-    # The completion goes:
-    # + snap run --command=complete klock.kubectl-klock ...
-    # which runs:
-    #   + __start_klock.kubectl-klock completion func
-    #   from klock.kubectl-klock.completion.bash
-    #   which runs:
-    #     + klock.kubectl-klock __complete
-    #
-    # And it then for some reason fails. Maybe because the bash script
-    # can't find the klock.kubectl-klock snap executable?
-    # Maybe because of Apparmor? I don't know.
-    confinement: classic # strict | devmode | classic
+    confinement: strict # strict | devmode | classic
 
     extra_files:
       - source: bin/klock.kubectl-klock.completion.bash.license
@@ -64,10 +50,9 @@ snapcrafts:
         command: kubectl-klock
         aliases:
           - kubectl-klock # instead of klock.kubectl-klock
-        # Can't use plugs with "classic" confinement
-        #plugs:
-        #  - home
-        #  - network
+        plugs:
+          - home
+          - network
         completer: bin/klock.kubectl-klock.completion.bash
 
       # Special program that kubectl looks for to do completion from
