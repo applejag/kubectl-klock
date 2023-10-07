@@ -40,8 +40,8 @@ sudo snap install klock --edge
 > [!IMPORTANT]
 > The snap's default aliases are still in review, so for now you must use:
 >
-> ```console
-> $ klock.kubectl-klock pods
+> ```sh
+> klock.kubectl-klock pods
 > ```
 
 ### Nix
@@ -145,16 +145,13 @@ There's also some hotkeys available:
 
 ## Completion
 
-To get completion when writing `kubectl klock`, you need to create an
-executable file that `kubectl` can call to get completions, named
-`kubectl_complete-klock`. Make sure to add it to your `PATH`.
+To get completion when writing `kubectl klock`, you need to add
+[`./bin/kubectl_complete-klock`](./bin/kubectl_complete-klock)
+to your `PATH`.
 
 For example:
 
 ```sh
-cat <<'END' | sudo tee /usr/local/bin/kubectl_complete-klock
-#!/usr/bin/env bash
-kubectl-klock __complete "$@" 
-END
+sudo curl https://github.com/applejag/kubectl-klock/raw/main/bin/kubectl_complete-klock -o /usr/local/bin/kubectl_complete-klock
 sudo chmod +x /usr/local/bin/kubectl_complete-klock
 ```
