@@ -36,7 +36,7 @@ func RootCmd() *cobra.Command {
 	kubeConfigFlags := genericclioptions.NewConfigFlags(false)
 	f := cmdutil.NewFactory(kubeConfigFlags)
 
-	use := "klock"
+	use := "kubectl-klock"
 	if useEnv := os.Getenv("KLOCK_USAGE_NAME"); useEnv != "" {
 		use = useEnv
 	}
