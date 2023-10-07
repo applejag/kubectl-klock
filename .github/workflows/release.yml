@@ -23,8 +23,8 @@ jobs:
         uses: samuelmeuli/action-snapcraft@v2
       - name: Create Snapcraft cache dirs
         run: |
-          mkdir -p $HOME/.cache/snapcraft/download
-          mkdir -p $HOME/.cache/snapcraft/stage-packages
+          mkdir -pv $HOME/.cache/snapcraft/download
+          mkdir -pv $HOME/.cache/snapcraft/stage-packages
 
       - name: GoReleaser
         uses: goreleaser/goreleaser-action@v5
