@@ -29,6 +29,12 @@ Requires Krew: <https://krew.sigs.k8s.io/>
 kubectl krew install klock
 ```
 
+### Snap
+
+```sh
+sudo snap install klock --edge
+```
+
 ### Nix
 
 > [!IMPORTANT]
