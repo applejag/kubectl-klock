@@ -39,6 +39,8 @@ This project tries to follow [SemVer 2.0.0](https://semver.org/).
 - Added `--version` flag to print the command's version.
   (#40, thanks @semihbkgr!)
 
+- Added Snap: `sudo snap install klock --edge` (#43)
+
 ## v0.4.0 (2023-09-03)
 
 - Added text filtering. (#32, thanks @semihbkgr!)
