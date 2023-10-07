@@ -31,6 +31,8 @@ kubectl krew install klock
 
 ### Snap
 
+[![klock](https://snapcraft.io/klock/badge.svg)](https://snapcraft.io/klock)
+
 ```sh
 sudo snap install klock --edge
 ```
