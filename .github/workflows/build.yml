@@ -2,13 +2,12 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-name: release
+name: build
 on:
-  push:
-    tags:
-      - 'v*.*.*'
+  pull_request:
+    branches: [main]
 jobs:
-  goreleaser:
+  goreleaser-build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -30,15 +29,4 @@ jobs:
         uses: goreleaser/goreleaser-action@v5
         with:
           version: latest
-          args: release --clean
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Update new version in krew-index
-        uses: rajatjindal/krew-release-bot@v0.0.46
-          
-      - name: Publish Snaps to the Snap Store (stable channel)
-        run: for snap in $(ls dist/*.snap); do snapcraft upload --release=stable $snap; done
-        env:
-          SNAPCRAFT_STORE_AUTH: candid
-          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
+          args: release --clean --skip=publish --snapshot
