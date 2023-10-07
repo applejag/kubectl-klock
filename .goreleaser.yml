@@ -32,6 +32,8 @@ snapcrafts:
     summary: Kubectl plugin that watches resources
     grade: devel # stable | devel
     base: core22
+    assumes:
+      - snap2.30 # due to completions
 
     # Have to use classic for completions to work.
     #
