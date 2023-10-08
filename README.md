@@ -19,8 +19,6 @@ it uses the regular watch feature to stream updates as soon as they occur.
 
 ## Installation
 
-[![Packaging status](https://repology.org/badge/vertical-allrepos/kubectl-klock.svg)](https://repology.org/project/kubectl-klock/versions)
-
 ### Krew
 
 Requires Krew: <https://krew.sigs.k8s.io/>
@@ -46,13 +44,11 @@ sudo snap install klock --edge
 
 ### Nix
 
+[![Packaging status](https://repology.org/badge/vertical-allrepos/kubectl-klock.svg?header=)](https://repology.org/project/kubectl-klock/versions)
+
 ```sh
 nix-shell -p kubectl-klock
 ```
-
-> [!IMPORTANT]
-> It has not reached the stable channel yet, so requires using the unstable
-> Nixpkgs channel.
 
 ### Pre-built binaries
 
