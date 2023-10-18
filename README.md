@@ -35,13 +35,6 @@ kubectl krew install klock
 sudo snap install klock --edge
 ```
 
-> [!IMPORTANT]
-> The snap's default aliases are still in review, so for now you must use:
->
-> ```sh
-> klock.kubectl-klock pods
-> ```
-
 ### Nix
 
 [![Packaging status](https://repology.org/badge/vertical-allrepos/kubectl-klock.svg?header=)](https://repology.org/project/kubectl-klock/versions)
