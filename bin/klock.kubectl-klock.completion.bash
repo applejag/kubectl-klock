@@ -25,6 +25,16 @@ __klock.kubectl-klock_get_completion_results() {
     args=("${words[@]:1}")
     requestComp="${words[0]} __complete ${args[*]}"
 
+    ##########################
+    ## Custom fix for snap  ##
+    ##########################
+    if [[ -x "$SNAP/kubectl-klock" ]]; then
+        requestComp="$SNAP/kubectl-klock __complete ${args[*]}"
+    fi
+    ##########################
+    ##  End of custom fix   ##
+    ##########################
+
     lastParam=${words[$((${#words[@]}-1))]}
     lastChar=${lastParam:$((${#lastParam}-1)):1}
     __klock.kubectl-klock_debug "lastParam ${lastParam}, lastChar ${lastChar}"

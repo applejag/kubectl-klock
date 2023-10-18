@@ -38,9 +38,6 @@ snapcrafts:
       - source: bin/klock.kubectl-klock.completion.bash.license
         destination: bin/klock.kubectl-klock.completion.bash.license
         mode: 0644
-      - source: bin/kubectl_complete-klock
-        destination: kubectl_complete-klock
-        mode: 0755
       - source: LICENSES
         destination: LICENSES
         mode: 0644
@@ -58,9 +55,12 @@ snapcrafts:
       # Special program that kubectl looks for to do completion from
       # when running "kubectl klock <TAB>"
       kubectl-complete:
-        command: kubectl_complete-klock
+        command: kubectl-klock __complete
         aliases:
           - kubectl_complete-klock # instead of klock.kubectl-complete
+        plugs:
+          - home
+          - network
 
 archives:
   - builds:
