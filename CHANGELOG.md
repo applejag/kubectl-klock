@@ -41,6 +41,9 @@ This project tries to follow [SemVer 2.0.0](https://semver.org/).
 
 - Added Snap: `sudo snap install klock --edge` (#43)
 
+- Added parsing of a pod's "RESTART" column (e.g `5 (3m ago)`)
+  so it auto updates, similarly to the "AGE" column. (#56)
+
 ## v0.4.0 (2023-09-03)
 
 - Added text filtering. (#32, thanks @semihbkgr!)
