@@ -21,6 +21,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path"
 	"strings"
 	"time"
 
@@ -47,6 +48,7 @@ type Options struct {
 	FieldSelector   string
 	AllNamespaces   bool
 	WatchKubeconfig bool
+	LabelColumns    []string
 
 	Output string
 }
@@ -88,6 +90,7 @@ func Execute(o Options, args []string) error {
 	printer := Printer{
 		Table:      t,
 		WideOutput: o.Output == "wide",
+		LabelCols:  o.LabelColumns,
 	}
 	p := tea.NewProgram(t)
 	w := NewWatcher(o, p, printer, args)
@@ -310,6 +313,7 @@ type Printer struct {
 	Table      *table.Model
 	WideOutput bool
 	colDefs    []metav1.TableColumnDefinition
+	LabelCols  []string
 
 	info           schema.GroupVersionKind
 	apiVersion     string
@@ -355,6 +359,9 @@ func (p *Printer) updateColDefHeaders(objTable *metav1.Table) {
 		if colDef.Priority == 0 || p.WideOutput {
 			headers = append(headers, strings.ToUpper(colDef.Name))
 		}
+	}
+	for _, label := range p.LabelCols {
+		headers = append(headers, strings.ToUpper(path.Base(label)))
 	}
 	p.Table.SetHeaders(headers)
 	p.colDefs = objTable.ColumnDefinitions
@@ -406,6 +413,10 @@ func (p *Printer) addObjectToTable(objTable *metav1.Table, eventType watch.Event
 				continue
 			}
 			tableRow.Fields = append(tableRow.Fields, p.parseCell(cell, eventType, colDef, creationTime))
+		}
+		for _, label := range p.LabelCols {
+			labelValue := unstrucObj.GetLabels()[label]
+			tableRow.Fields = append(tableRow.Fields, labelValue)
 		}
 		switch eventType {
 		case watch.Error:
