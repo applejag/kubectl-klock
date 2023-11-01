@@ -38,7 +38,6 @@ jobs:
         uses: rajatjindal/krew-release-bot@v0.0.46
           
       - name: Publish Snaps to the Snap Store (stable channel)
-        run: for snap in $(ls dist/*.snap); do snapcraft upload --release=stable $snap; done
+        run: for snap in $(ls dist/*.snap); do snapcraft upload --release=edge $snap; done
         env:
-          SNAPCRAFT_STORE_AUTH: candid
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
