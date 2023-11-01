@@ -50,6 +50,10 @@ This project tries to follow [SemVer 2.0.0](https://semver.org/).
 - Added timer on pod's "STATUS" column when a pod is deleted
   (e.g `Deleted (3m ago)`). (#56)
 
+- Added auto updating on event's "LAST SEEN" column. (#58)
+
+- Added coloring on event's "REASON" column. (#58)
+
 - Fixed glitches when using flag `--watch-kubeconfig` / `-W`.
   The watch was not properly restarting, but works great now. (#57)
 
