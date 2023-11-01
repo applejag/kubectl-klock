@@ -20,8 +20,8 @@ package klock
 import (
 	"context"
 	"fmt"
-	"os"
 	"strings"
+	"sync"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -94,11 +94,10 @@ func Execute(o Options, args []string) error {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	restartChan := make(chan struct{})
+	defer close(restartChan)
 
-	watchAndPrint := func() error {
-		if err := w.Watch(ctx); err != nil {
-			return err
-		}
+	go func() {
 		for {
 			select {
 			case event, ok := <-fileEvents:
@@ -109,22 +108,19 @@ func Execute(o Options, args []string) error {
 				if event.Op != fsnotify.Write {
 					continue
 				}
-				go w.RestartActiveWatch(ctx)
+				restartChan <- struct{}{}
 
 			case err := <-w.ErrorChan():
 				t.SetError(err)
 				p.Send(nil)
 			case <-ctx.Done():
-				return nil
+				return
 			}
 		}
-	}
+	}()
 
 	go func() {
-		if err := watchAndPrint(); err != nil {
-			p.Quit()
-			fmt.Fprintf(os.Stderr, "err: %s\n", err)
-		}
+		w.WatchLoop(ctx, restartChan)
 	}()
 
 	_, err := p.Run()
@@ -149,45 +145,47 @@ type Watcher struct {
 	Printer Printer
 	Args    []string
 
-	printNamespace bool
-	cancel         func()
-	errorChan      chan error
+	errorChan chan error
 }
 
 func (w *Watcher) ErrorChan() <-chan error {
 	return w.errorChan
 }
 
-func (w *Watcher) Watch(ctx context.Context) error {
-	return w.startWatch(ctx, false)
-}
-
-func (w *Watcher) RestartActiveWatch(ctx context.Context) {
-	if w.cancel != nil {
-		w.cancel()
-	}
-	w.cancel = nil
-
+func (w *Watcher) WatchLoop(ctx context.Context, restartChan <-chan struct{}) error {
+	clearBeforePrinting := false
+	watchErrChan := make(chan error, 1)
 	for {
-		err := w.startWatch(ctx, true)
-		if ctx.Err() != nil {
-			return
-		}
-		if err != nil {
-			w.errorChan <- fmt.Errorf("retry in 5s: restart watch: %w", err)
-		}
+		var wg sync.WaitGroup
+		wg.Add(1)
+		watchCtx, cancel := context.WithCancel(ctx)
+		go func(clearBeforePrinting bool) {
+			defer wg.Done()
+			err := w.watch(watchCtx, clearBeforePrinting)
+			if watchCtx.Err() == nil {
+				watchErrChan <- err
+			}
+		}(clearBeforePrinting)
+		clearBeforePrinting = true
 		select {
-		case <-time.After(5 * time.Second):
-			continue
+		case err := <-watchErrChan:
+			w.errorChan <- fmt.Errorf("restart in 5s: %w", err)
+			time.Sleep(5 * time.Second)
+		case <-restartChan:
+			cancel()
 		case <-ctx.Done():
-			return
+			cancel()
+			return ctx.Err()
 		}
+		wg.Wait()
 	}
 }
 
-func (w *Watcher) startWatch(ctx context.Context, clearBeforePrinting bool) error {
-	ctx, w.cancel = context.WithCancel(ctx)
+func (w *Watcher) Watch(ctx context.Context) error {
+	return w.watch(ctx, false)
+}
 
+func (w *Watcher) watch(ctx context.Context, clearBeforePrinting bool) error {
 	ns, _, err := w.ConfigFlags.ToRawKubeConfigLoader().Namespace()
 	if err != nil {
 		return fmt.Errorf("read namespace: %w", err)
@@ -260,26 +258,7 @@ func (w *Watcher) startWatch(ctx context.Context, clearBeforePrinting bool) erro
 
 	w.Printer.Table.StopSpinner()
 
-	go w.watchLoop(ctx, r, resVersion)
-	return nil
-}
-
-func (w *Watcher) watchLoop(ctx context.Context, r *resource.Result, resVersion string) {
-	for {
-		err := w.pipeEvents(ctx, r, resVersion)
-		if ctx.Err() != nil {
-			return
-		}
-		if err != nil {
-			w.errorChan <- fmt.Errorf("retry in 5s: %w", err)
-		}
-		select {
-		case <-time.After(5 * time.Second):
-			continue
-		case <-ctx.Done():
-			return
-		}
-	}
+	return w.pipeEvents(ctx, r, resVersion)
 }
 
 func (w *Watcher) pipeEvents(ctx context.Context, r *resource.Result, resVersion string) error {
