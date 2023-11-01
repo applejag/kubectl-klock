@@ -1,0 +1,23 @@
+# SPDX-FileCopyrightText: 2019 Replicated, Inc.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+name: test
+on:
+  pull_request:
+    branches: [main]
+jobs:
+  go-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version-file: go.mod
+
+      - name: Run tests
+        run: |
+          go test -v ./...
