@@ -6,7 +6,7 @@
 project_name: kubectl-klock
 release:
   github:
-    owner: jilleJr
+    owner: applejag
     name: kubectl-klock
 builds:
   - goos:
