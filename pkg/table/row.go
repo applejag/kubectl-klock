@@ -42,6 +42,16 @@ type StyledColumn struct {
 	Style lipgloss.Style
 }
 
+type CountAgeColumn struct {
+	Count int
+	Time  time.Time
+}
+
+func (c CountAgeColumn) String() string {
+	dur := time.Since(c.Time)
+	return fmt.Sprintf("%d (%s ago)", c.Count, duration.HumanDuration(dur))
+}
+
 type Row struct {
 	ID        string
 	Fields    []any
@@ -98,6 +108,8 @@ func renderColumn(value any) string {
 	case time.Time:
 		dur := time.Since(value)
 		return duration.HumanDuration(dur)
+	case fmt.Stringer:
+		return value.String()
 	default:
 		if value == nil {
 			return ""
