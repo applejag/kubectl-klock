@@ -67,19 +67,6 @@ func (o Options) Validate() error {
 	}
 }
 
-func (o Options) NormalizedLabelColumns() []string {
-	labelCols := []string{}
-	for _, labels := range o.LabelColumns {
-		for _, label := range strings.Split(labels, ",") {
-			label = strings.TrimSpace(label)
-			if len(label) > 0 {
-				labelCols = append(labelCols, label)
-			}
-		}
-	}
-	return labelCols
-}
-
 func Execute(o Options, args []string) error {
 	if err := o.Validate(); err != nil {
 		return err
@@ -267,7 +254,7 @@ func (w *Watcher) startWatch(ctx context.Context, clearBeforePrinting bool) erro
 	}
 
 	for _, objToPrint := range objsToPrint {
-		if _, err := w.Printer.PrintObj(objToPrint, w.printNamespace, w.NormalizedLabelColumns(), watch.Added); err != nil {
+		if _, err := w.Printer.PrintObj(objToPrint, w.printNamespace, w.LabelColumns, watch.Added); err != nil {
 			return err
 		}
 	}
@@ -310,7 +297,7 @@ func (w *Watcher) pipeEvents(ctx context.Context, r *resource.Result, resVersion
 			if !ok {
 				return fmt.Errorf("watch channel closed")
 			}
-			cmd, err := w.Printer.PrintObj(event.Object, w.printNamespace, w.NormalizedLabelColumns(), event.Type)
+			cmd, err := w.Printer.PrintObj(event.Object, w.printNamespace, w.LabelColumns, event.Type)
 			if err != nil {
 				return err
 			}

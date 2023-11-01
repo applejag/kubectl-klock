@@ -111,7 +111,7 @@ Examples:
 	cmd.Flags().StringVar(&o.FieldSelector, "field-selector", o.FieldSelector, "Selector (field query) to filter on, supports '=', '==', and '!='.(e.g. --field-selector key1=value1,key2=value2). The server only supports a limited number of field queries per type.")
 	cmd.Flags().StringVarP(&o.Output, "output", "o", o.Output, "Output format. Only a small subset of formats found in 'kubectl get' are supported by kubectl-klock.")
 	cmd.Flags().BoolVarP(&o.WatchKubeconfig, "watch-kubeconfig", "W", o.WatchKubeconfig, "Restart the watch when the kubeconfig file changes.")
-	cmd.Flags().StringArrayVarP(&o.LabelColumns, "label-columns", "L", o.LabelColumns, "Accepts a comma separated list of labels that are going to be presented as columns.")
+	cmd.Flags().StringSliceVarP(&o.LabelColumns, "label-columns", "L", o.LabelColumns, "Accepts a comma separated list of labels that are going to be presented as columns.")
 	cmdutil.AddLabelSelectorFlagVar(cmd, &o.LabelSelector)
 
 	cmd.RegisterFlagCompletionFunc("output", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
