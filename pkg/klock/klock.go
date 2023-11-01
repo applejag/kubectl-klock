@@ -145,7 +145,8 @@ type Watcher struct {
 	Printer Printer
 	Args    []string
 
-	errorChan chan error
+	printNamespace bool
+	errorChan      chan error
 }
 
 func (w *Watcher) ErrorChan() <-chan error {
