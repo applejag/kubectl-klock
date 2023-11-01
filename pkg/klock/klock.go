@@ -68,7 +68,7 @@ func (o Options) Validate() error {
 }
 
 func (o Options) NormalizedLabelColumns() []string {
-	var labelCols []string
+	labelCols := []string{}
 	for _, labels := range o.LabelColumns {
 		for _, label := range strings.Split(labels, ",") {
 			label = strings.TrimSpace(label)
