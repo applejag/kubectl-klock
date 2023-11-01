@@ -21,33 +21,28 @@ import (
 	"fmt"
 	"io"
 	"regexp"
-	"strconv"
 	"time"
 )
 
 var podRestartsRegex = regexp.MustCompile(`^(\d+)(?: \((\S+) ago\))$`)
 
-func parsePodRestarts(s string) (int, time.Duration, bool) {
+func parsePodRestarts(s string) (string, time.Duration, bool) {
 	// 0, the most common case
 	if s == "0" {
-		return 0, 0, false
+		return s, 0, false
 	}
 	groups := podRestartsRegex.FindStringSubmatch(s)
 	if groups == nil {
 		// No match
-		return 0, 0, false
+		return s, 0, false
 	}
 	groupCount := groups[1]
 	groupDur := groups[2]
 	dur, ok := parseHumanDuration(groupDur)
 	if !ok {
-		return 0, 0, false
+		return s, 0, false
 	}
-	count, err := strconv.Atoi(groupCount)
-	if err != nil {
-		return 0, 0, false
-	}
-	return count, dur, true
+	return groupCount, dur, true
 }
 
 func parseHumanDuration(s string) (time.Duration, bool) {

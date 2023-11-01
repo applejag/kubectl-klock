@@ -431,7 +431,10 @@ func (p *Printer) parseCell(cell any, eventType watch.EventType, colDef metav1.T
 		return creationTime
 	case columnNameLower == "status":
 		if eventType == watch.Deleted {
-			cell = "Deleted"
+			cell = table.AgoColumn{
+				Value: "Deleted",
+				Time:  time.Now(),
+			}
 		} else {
 			style := ParseStatusStyle(cellStr)
 			cell = table.StyledColumn{
@@ -445,10 +448,10 @@ func (p *Printer) parseCell(cell any, eventType watch.EventType, colDef metav1.T
 		if cellStr == "0" {
 			return cell
 		}
-		count, dur, ok := parsePodRestarts(cellStr)
+		countStr, dur, ok := parsePodRestarts(cellStr)
 		if ok {
-			cell = table.CountAgeColumn{
-				Count: count,
+			cell = table.AgoColumn{
+				Value: countStr,
 				Time:  time.Now().Add(-dur),
 			}
 		}

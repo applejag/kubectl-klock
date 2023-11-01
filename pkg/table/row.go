@@ -42,14 +42,14 @@ type StyledColumn struct {
 	Style lipgloss.Style
 }
 
-type CountAgeColumn struct {
-	Count int
+type AgoColumn struct {
+	Value string
 	Time  time.Time
 }
 
-func (c CountAgeColumn) String() string {
+func (c AgoColumn) String() string {
 	dur := time.Since(c.Time)
-	return fmt.Sprintf("%d (%s ago)", c.Count, duration.HumanDuration(dur))
+	return fmt.Sprintf("%s (%s ago)", c.Value, duration.HumanDuration(dur))
 }
 
 type Row struct {
