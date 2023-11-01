@@ -21,7 +21,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"path"
 	"strings"
 	"time"
 
@@ -361,10 +360,19 @@ func (p *Printer) updateColDefHeaders(objTable *metav1.Table) {
 		}
 	}
 	for _, label := range p.LabelCols {
-		headers = append(headers, strings.ToUpper(path.Base(label)))
+		headers = append(headers, labelColumnHeader(label))
 	}
 	p.Table.SetHeaders(headers)
 	p.colDefs = objTable.ColumnDefinitions
+}
+
+func labelColumnHeader(label string) string {
+	label = strings.ToUpper(label)
+	index := strings.LastIndexByte(label, '/')
+	if index == -1 {
+		return label
+	}
+	return label[index+1:]
 }
 
 func (p *Printer) addObjectToTable(objTable *metav1.Table, eventType watch.EventType) (tea.Cmd, error) {
