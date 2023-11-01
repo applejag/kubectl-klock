@@ -41,6 +41,15 @@ This project tries to follow [SemVer 2.0.0](https://semver.org/).
 
 - Added Snap: `sudo snap install klock --edge` (#43)
 
+- Added `--label-columns` / `-L` flag to present labels as columns.
+  (#55, thanks @semihbkgr!)
+
+- Added parsing of a pod's "RESTART" column (e.g `5 (3m ago)`)
+  so it auto updates, similarly to the "AGE" column. (#56)
+
+- Added timer on pod's "STATUS" column when a pod is deleted
+  (e.g `Deleted (3m ago)`). (#56)
+
 - Fixed glitches when using flag `--watch-kubeconfig` / `-W`.
   The watch was not properly restarting, but works great now. (#57)
 

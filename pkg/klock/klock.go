@@ -31,6 +31,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	metav1beta1 "k8s.io/apimachinery/pkg/apis/meta/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/cli-runtime/pkg/resource"
@@ -46,6 +47,7 @@ type Options struct {
 	FieldSelector   string
 	AllNamespaces   bool
 	WatchKubeconfig bool
+	LabelColumns    []string
 
 	Output string
 }
@@ -87,9 +89,10 @@ func Execute(o Options, args []string) error {
 	printer := Printer{
 		Table:      t,
 		WideOutput: o.Output == "wide",
+		LabelCols:  o.LabelColumns,
 	}
 	p := tea.NewProgram(t)
-	w := NewWatcher(o, p, printer, o.AllNamespaces, args)
+	w := NewWatcher(o, p, printer, args)
 	t.StartSpinner()
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -127,15 +130,14 @@ func Execute(o Options, args []string) error {
 	return err
 }
 
-func NewWatcher(options Options, program *tea.Program, printer Printer, printNamespace bool, args []string) *Watcher {
+func NewWatcher(options Options, program *tea.Program, printer Printer, args []string) *Watcher {
 	return &Watcher{
 		Options: options,
 		Program: program,
 		Printer: printer,
 		Args:    args,
 
-		printNamespace: printNamespace,
-		errorChan:      make(chan error, 3),
+		errorChan: make(chan error, 3),
 	}
 }
 
@@ -145,8 +147,7 @@ type Watcher struct {
 	Printer Printer
 	Args    []string
 
-	printNamespace bool
-	errorChan      chan error
+	errorChan chan error
 }
 
 func (w *Watcher) ErrorChan() <-chan error {
@@ -223,10 +224,12 @@ func (w *Watcher) watch(ctx context.Context, clearBeforePrinting bool) error {
 	obj := info.Object
 	mapping := info.Mapping
 
+	printNamespace := w.Options.AllNamespaces
 	if mapping != nil && mapping.Scope.Name() == meta.RESTScopeNameRoot {
 		// Resource isn't namespaced
-		w.printNamespace = false
+		printNamespace = false
 	}
+	w.Printer.Configure(mapping.GroupVersionKind, printNamespace)
 
 	// watching from resourceVersion 0, starts the watch at ~now and
 	// will return an initial watch event.  Starting form ~now, rather
@@ -252,7 +255,7 @@ func (w *Watcher) watch(ctx context.Context, clearBeforePrinting bool) error {
 	}
 
 	for _, objToPrint := range objsToPrint {
-		if _, err := w.Printer.PrintObj(objToPrint, w.printNamespace, watch.Added); err != nil {
+		if _, err := w.Printer.PrintObj(objToPrint, watch.Added); err != nil {
 			return err
 		}
 	}
@@ -276,7 +279,7 @@ func (w *Watcher) pipeEvents(ctx context.Context, r *resource.Result, resVersion
 			if !ok {
 				return fmt.Errorf("watch channel closed")
 			}
-			cmd, err := w.Printer.PrintObj(event.Object, w.printNamespace, event.Type)
+			cmd, err := w.Printer.PrintObj(event.Object, event.Type)
 			if err != nil {
 				return err
 			}
@@ -289,34 +292,46 @@ type Printer struct {
 	Table      *table.Model
 	WideOutput bool
 	colDefs    []metav1.TableColumnDefinition
+	LabelCols  []string
+
+	info           schema.GroupVersionKind
+	apiVersion     string
+	kind           string
+	printNamespace bool
+}
+
+func (p *Printer) Configure(info schema.GroupVersionKind, printNamespace bool) {
+	p.info = info
+	p.apiVersion, p.kind = info.ToAPIVersionAndKind()
+	p.printNamespace = printNamespace
 }
 
 func (p *Printer) Clear() {
 	p.Table.SetRows(nil)
 }
 
-func (p *Printer) PrintObj(obj runtime.Object, printNamespace bool, eventType watch.EventType) (tea.Cmd, error) {
+func (p *Printer) PrintObj(obj runtime.Object, eventType watch.EventType) (tea.Cmd, error) {
 	objTable, err := decodeIntoTable(obj)
 	if err != nil {
 		return nil, err
 	}
-	p.updateColDefHeaders(objTable, printNamespace)
-	return p.addObjectToTable(objTable, printNamespace, eventType)
+	p.updateColDefHeaders(objTable)
+	return p.addObjectToTable(objTable, eventType)
 }
 
-func (p *Printer) updateColDefHeaders(objTable *metav1.Table, printNamespace bool) {
+func (p *Printer) updateColDefHeaders(objTable *metav1.Table) {
 	if len(objTable.ColumnDefinitions) == 0 {
 		return
 	}
 
 	numColumns := len(objTable.ColumnDefinitions)
-	if printNamespace {
+	if p.printNamespace {
 		numColumns++
 	}
 
 	headers := make([]string, 0, numColumns)
 
-	if printNamespace {
+	if p.printNamespace {
 		headers = append(headers, "NAMESPACE")
 	}
 	for _, colDef := range objTable.ColumnDefinitions {
@@ -324,11 +339,23 @@ func (p *Printer) updateColDefHeaders(objTable *metav1.Table, printNamespace boo
 			headers = append(headers, strings.ToUpper(colDef.Name))
 		}
 	}
+	for _, label := range p.LabelCols {
+		headers = append(headers, labelColumnHeader(label))
+	}
 	p.Table.SetHeaders(headers)
 	p.colDefs = objTable.ColumnDefinitions
 }
 
-func (p *Printer) addObjectToTable(objTable *metav1.Table, printNamespace bool, eventType watch.EventType) (tea.Cmd, error) {
+func labelColumnHeader(label string) string {
+	label = strings.ToUpper(label)
+	index := strings.LastIndexByte(label, '/')
+	if index == -1 {
+		return label
+	}
+	return label[index+1:]
+}
+
+func (p *Printer) addObjectToTable(objTable *metav1.Table, eventType watch.EventType) (tea.Cmd, error) {
 	var cmd tea.Cmd
 	for _, row := range objTable.Rows {
 		unstrucObj, ok := row.Object.Object.(*unstructured.Unstructured)
@@ -360,7 +387,7 @@ func (p *Printer) addObjectToTable(objTable *metav1.Table, printNamespace bool, 
 			Fields:    make([]any, 0, len(p.colDefs)),
 			SortField: name,
 		}
-		if printNamespace {
+		if p.printNamespace {
 			namespace := metadata["namespace"]
 			tableRow.Fields = append(tableRow.Fields, namespace)
 			tableRow.SortField = fmt.Sprintf("%s/%s", namespace, name)
@@ -373,41 +400,11 @@ func (p *Printer) addObjectToTable(objTable *metav1.Table, printNamespace bool, 
 			if colDef.Priority != 0 && !p.WideOutput {
 				continue
 			}
-			cellStr := fmt.Sprint(cell)
-			switch strings.ToLower(colDef.Name) {
-			case "age", "created at":
-				tableRow.Fields = append(tableRow.Fields, creationTime)
-			case "status":
-				if eventType == watch.Deleted {
-					cell = "Deleted"
-				} else {
-					style := ParseStatusStyle(cellStr)
-					cell = table.StyledColumn{
-						Value: cell,
-						Style: style,
-					}
-				}
-				tableRow.Fields = append(tableRow.Fields, cell)
-			case "restarts":
-				if eventType != watch.Deleted && cellStr != "0" {
-					cell = table.StyledColumn{
-						Value: cell,
-						Style: StyleFractionWarning,
-					}
-				}
-				tableRow.Fields = append(tableRow.Fields, cell)
-			default:
-				if eventType != watch.Deleted {
-					fractionStyle, ok := ParseFractionStyle(cellStr)
-					if ok {
-						cell = table.StyledColumn{
-							Value: cell,
-							Style: fractionStyle,
-						}
-					}
-				}
-				tableRow.Fields = append(tableRow.Fields, cell)
-			}
+			tableRow.Fields = append(tableRow.Fields, p.parseCell(cell, eventType, colDef, creationTime))
+		}
+		for _, label := range p.LabelCols {
+			labelValue := unstrucObj.GetLabels()[label]
+			tableRow.Fields = append(tableRow.Fields, labelValue)
 		}
 		switch eventType {
 		case watch.Error:
@@ -421,6 +418,64 @@ func (p *Printer) addObjectToTable(objTable *metav1.Table, printNamespace bool, 
 		cmd = p.Table.AddRow(tableRow)
 	}
 	return cmd, nil
+}
+
+func (p *Printer) parseCell(cell any, eventType watch.EventType, colDef metav1.TableColumnDefinition, creationTime time.Time) any {
+	cellStr := fmt.Sprint(cell)
+	columnNameLower := strings.ToLower(colDef.Name)
+	switch {
+	case columnNameLower == "age",
+		// some non-namespaced resources (e.g Role) gives timestamp instead of age
+		columnNameLower == "created at":
+		return creationTime
+	case columnNameLower == "status":
+		if eventType == watch.Deleted {
+			cell = table.AgoColumn{
+				Value: "Deleted",
+				Time:  time.Now(),
+			}
+		} else {
+			style := ParseStatusStyle(cellStr)
+			cell = table.StyledColumn{
+				Value: cell,
+				Style: style,
+			}
+		}
+		return cell
+	case p.apiVersion == "v1" && p.kind == "Pod" && columnNameLower == "restarts":
+		// 0, the most common case
+		if cellStr == "0" {
+			return cell
+		}
+		countStr, dur, ok := parsePodRestarts(cellStr)
+		if ok {
+			cell = table.AgoColumn{
+				Value: countStr,
+				Time:  time.Now().Add(-dur),
+			}
+		}
+		// Only add styling if not deleted, to not add excess coloring
+		if eventType != watch.Deleted {
+			cell = table.StyledColumn{
+				Value: cell,
+				Style: StyleFractionWarning,
+			}
+		}
+		return cell
+	// Only parse fraction (e.g "1/2") if the resources was not deleted,
+	// so we don't have colored fraction on a grayed-out row.
+	case eventType != watch.Deleted:
+		fractionStyle, ok := ParseFractionStyle(cellStr)
+		if ok {
+			cell = table.StyledColumn{
+				Value: cell,
+				Style: fractionStyle,
+			}
+		}
+		return cell
+	default:
+		return cell
+	}
 }
 
 func transformRequests(req *rest.Request) {

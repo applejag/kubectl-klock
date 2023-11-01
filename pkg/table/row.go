@@ -42,6 +42,16 @@ type StyledColumn struct {
 	Style lipgloss.Style
 }
 
+type AgoColumn struct {
+	Value string
+	Time  time.Time
+}
+
+func (c AgoColumn) String() string {
+	dur := time.Since(c.Time)
+	return fmt.Sprintf("%s (%s ago)", c.Value, duration.HumanDuration(dur))
+}
+
 type Row struct {
 	ID        string
 	Fields    []any
@@ -98,6 +108,8 @@ func renderColumn(value any) string {
 	case time.Time:
 		dur := time.Since(value)
 		return duration.HumanDuration(dur)
+	case fmt.Stringer:
+		return value.String()
 	default:
 		if value == nil {
 			return ""
