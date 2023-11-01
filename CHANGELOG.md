@@ -16,7 +16,7 @@ This project tries to follow [SemVer 2.0.0](https://semver.org/).
 	https://changelog.md/
 -->
 
-## v0.5.0 (WIP)
+## v0.5.0 (2023-11-04)
 
 - BREAKING: Changed binary name from `klock` to `kubectl-klock`.
   Any automated tooling downloading from GitHub release assets may break. (#41)
