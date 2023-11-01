@@ -438,7 +438,7 @@ func (p *Printer) parseCell(cell any, eventType watch.EventType, object map[stri
 				Time:  time.Now(),
 			}
 		} else {
-			style := ParseStatusStyle(cellStr)
+			style := StatusStyle(cellStr)
 			cell = table.StyledColumn{
 				Value: cell,
 				Style: style,
@@ -451,6 +451,11 @@ func (p *Printer) parseCell(cell any, eventType watch.EventType, object map[stri
 			return cell
 		}
 		return time.Now().Add(-dur)
+	case p.apiVersion == "v1" && p.kind == "Event" && columnNameLower == "reason":
+		return table.StyledColumn{
+			Value: cell,
+			Style: StatusStyle(cellStr),
+		}
 	case p.apiVersion == "v1" && p.kind == "Pod" && columnNameLower == "restarts":
 		// 0, the most common case
 		if cellStr == "0" {
@@ -474,7 +479,7 @@ func (p *Printer) parseCell(cell any, eventType watch.EventType, object map[stri
 	// Only parse fraction (e.g "1/2") if the resources was not deleted,
 	// so we don't have colored fraction on a grayed-out row.
 	case eventType != watch.Deleted:
-		fractionStyle, ok := ParseFractionStyle(cellStr)
+		fractionStyle, ok := FractionStyle(cellStr)
 		if ok {
 			cell = table.StyledColumn{
 				Value: cell,
