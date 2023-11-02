@@ -39,7 +39,7 @@ var (
 	StyleStatusWarning = lipgloss.NewStyle().Foreground(lipgloss.ANSIColor(3))
 )
 
-func ParseFractionStyle(str string) (lipgloss.Style, bool) {
+func FractionStyle(str string) (lipgloss.Style, bool) {
 	var count int
 	var total int
 	if _, err := fmt.Sscanf(str, "%d/%d", &count, &total); err != nil {
@@ -51,7 +51,7 @@ func ParseFractionStyle(str string) (lipgloss.Style, bool) {
 	return StyleFractionWarning, true
 }
 
-func ParseStatusStyle(status string) lipgloss.Style {
+func StatusStyle(status string) lipgloss.Style {
 	switch status {
 	case
 		// from https://github.com/kubernetes/kubernetes/blob/master/pkg/kubelet/events/event.go
@@ -113,7 +113,6 @@ func ParseStatusStyle(status string) lipgloss.Style {
 		"Preempting",
 		// Pod event reason list
 		// Image event reason list
-		"Pulling",
 		// kubelet event reason list
 		"NodeNotReady",
 		"NodeSchedulable",
@@ -139,18 +138,19 @@ func ParseStatusStyle(status string) lipgloss.Style {
 	case
 		"Running",
 		"Completed",
+		"Pulled",
+		"Created",
+		"Rebooted",
+		"NodeReady",
+		"Started",
+		"Normal",
+		"VolumeResizeSuccessful",
+		"FileSystemResizeSuccessful",
 		"Ready":
 		return StyleStatusOK
 	}
 	// some ok status, not colored:
-	// "Pulled",
-	// "Created",
-	// "Rebooted",
 	// "SandboxChanged",
-	// "VolumeResizeSuccessful",
-	// "FileSystemResizeSuccessful",
-	// "NodeReady",
-	// "Started",
-	// "Normal",
+	// "Pulling",
 	return StyleStatusDefault
 }

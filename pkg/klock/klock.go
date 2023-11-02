@@ -387,10 +387,13 @@ func (p *Printer) addObjectToTable(objTable *metav1.Table, eventType watch.Event
 			Fields:    make([]any, 0, len(p.colDefs)),
 			SortField: name,
 		}
+		if p.apiVersion == "v1" && p.kind == "Event" {
+			tableRow.SortField = creationTimestamp
+		}
 		if p.printNamespace {
 			namespace := metadata["namespace"]
 			tableRow.Fields = append(tableRow.Fields, namespace)
-			tableRow.SortField = fmt.Sprintf("%s/%s", namespace, name)
+			tableRow.SortField = fmt.Sprintf("%s/%s", namespace, tableRow.SortField)
 		}
 		for i, cell := range row.Cells {
 			if i >= len(p.colDefs) {
@@ -400,7 +403,7 @@ func (p *Printer) addObjectToTable(objTable *metav1.Table, eventType watch.Event
 			if colDef.Priority != 0 && !p.WideOutput {
 				continue
 			}
-			tableRow.Fields = append(tableRow.Fields, p.parseCell(cell, eventType, colDef, creationTime))
+			tableRow.Fields = append(tableRow.Fields, p.parseCell(cell, eventType, unstrucObj.Object, colDef, creationTime))
 		}
 		for _, label := range p.LabelCols {
 			labelValue := unstrucObj.GetLabels()[label]
@@ -420,7 +423,7 @@ func (p *Printer) addObjectToTable(objTable *metav1.Table, eventType watch.Event
 	return cmd, nil
 }
 
-func (p *Printer) parseCell(cell any, eventType watch.EventType, colDef metav1.TableColumnDefinition, creationTime time.Time) any {
+func (p *Printer) parseCell(cell any, eventType watch.EventType, object map[string]any, colDef metav1.TableColumnDefinition, creationTime time.Time) any {
 	cellStr := fmt.Sprint(cell)
 	columnNameLower := strings.ToLower(colDef.Name)
 	switch {
@@ -435,13 +438,24 @@ func (p *Printer) parseCell(cell any, eventType watch.EventType, colDef metav1.T
 				Time:  time.Now(),
 			}
 		} else {
-			style := ParseStatusStyle(cellStr)
+			style := StatusStyle(cellStr)
 			cell = table.StyledColumn{
 				Value: cell,
 				Style: style,
 			}
 		}
 		return cell
+	case p.apiVersion == "v1" && p.kind == "Event" && columnNameLower == "last seen":
+		dur, ok := parseHumanDuration(cellStr)
+		if !ok {
+			return cell
+		}
+		return time.Now().Add(-dur)
+	case p.apiVersion == "v1" && p.kind == "Event" && columnNameLower == "reason":
+		return table.StyledColumn{
+			Value: cell,
+			Style: StatusStyle(cellStr),
+		}
 	case p.apiVersion == "v1" && p.kind == "Pod" && columnNameLower == "restarts":
 		// 0, the most common case
 		if cellStr == "0" {
@@ -465,7 +479,7 @@ func (p *Printer) parseCell(cell any, eventType watch.EventType, colDef metav1.T
 	// Only parse fraction (e.g "1/2") if the resources was not deleted,
 	// so we don't have colored fraction on a grayed-out row.
 	case eventType != watch.Deleted:
-		fractionStyle, ok := ParseFractionStyle(cellStr)
+		fractionStyle, ok := FractionStyle(cellStr)
 		if ok {
 			cell = table.StyledColumn{
 				Value: cell,
