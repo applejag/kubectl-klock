@@ -21,6 +21,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path"
 	"strings"
 	"time"
 
@@ -46,6 +47,7 @@ type Options struct {
 	FieldSelector   string
 	AllNamespaces   bool
 	WatchKubeconfig bool
+	LabelColumns    []string
 
 	Output string
 }
@@ -253,7 +255,7 @@ func (w *Watcher) startWatch(ctx context.Context, clearBeforePrinting bool) erro
 	}
 
 	for _, objToPrint := range objsToPrint {
-		if _, err := w.Printer.PrintObj(objToPrint, w.printNamespace, watch.Added); err != nil {
+		if _, err := w.Printer.PrintObj(objToPrint, w.printNamespace, w.LabelColumns, watch.Added); err != nil {
 			return err
 		}
 	}
@@ -296,7 +298,7 @@ func (w *Watcher) pipeEvents(ctx context.Context, r *resource.Result, resVersion
 			if !ok {
 				return fmt.Errorf("watch channel closed")
 			}
-			cmd, err := w.Printer.PrintObj(event.Object, w.printNamespace, event.Type)
+			cmd, err := w.Printer.PrintObj(event.Object, w.printNamespace, w.LabelColumns, event.Type)
 			if err != nil {
 				return err
 			}
@@ -315,16 +317,16 @@ func (p *Printer) Clear() {
 	p.Table.SetRows(nil)
 }
 
-func (p *Printer) PrintObj(obj runtime.Object, printNamespace bool, eventType watch.EventType) (tea.Cmd, error) {
+func (p *Printer) PrintObj(obj runtime.Object, printNamespace bool, labelCols []string, eventType watch.EventType) (tea.Cmd, error) {
 	objTable, err := decodeIntoTable(obj)
 	if err != nil {
 		return nil, err
 	}
-	p.updateColDefHeaders(objTable, printNamespace)
-	return p.addObjectToTable(objTable, printNamespace, eventType)
+	p.updateColDefHeaders(objTable, printNamespace, labelCols)
+	return p.addObjectToTable(objTable, printNamespace, labelCols, eventType)
 }
 
-func (p *Printer) updateColDefHeaders(objTable *metav1.Table, printNamespace bool) {
+func (p *Printer) updateColDefHeaders(objTable *metav1.Table, printNamespace bool, labelCols []string) {
 	if len(objTable.ColumnDefinitions) == 0 {
 		return
 	}
@@ -344,11 +346,14 @@ func (p *Printer) updateColDefHeaders(objTable *metav1.Table, printNamespace boo
 			headers = append(headers, strings.ToUpper(colDef.Name))
 		}
 	}
+	for _, label := range labelCols {
+		headers = append(headers, strings.ToUpper(path.Base(label)))
+	}
 	p.Table.SetHeaders(headers)
 	p.colDefs = objTable.ColumnDefinitions
 }
 
-func (p *Printer) addObjectToTable(objTable *metav1.Table, printNamespace bool, eventType watch.EventType) (tea.Cmd, error) {
+func (p *Printer) addObjectToTable(objTable *metav1.Table, printNamespace bool, labelCols []string, eventType watch.EventType) (tea.Cmd, error) {
 	var cmd tea.Cmd
 	for _, row := range objTable.Rows {
 		unstrucObj, ok := row.Object.Object.(*unstructured.Unstructured)
@@ -428,6 +433,10 @@ func (p *Printer) addObjectToTable(objTable *metav1.Table, printNamespace bool, 
 				}
 				tableRow.Fields = append(tableRow.Fields, cell)
 			}
+		}
+		for _, label := range labelCols {
+			labelValue := unstrucObj.GetLabels()[label]
+			tableRow.Fields = append(tableRow.Fields, labelValue)
 		}
 		switch eventType {
 		case watch.Error:
