@@ -24,6 +24,23 @@ import (
 	"time"
 )
 
+type Fraction struct {
+	Count int
+	Total int
+}
+
+func (f Fraction) String() string {
+	return fmt.Sprintf("%d/%d", f.Count, f.Total)
+}
+
+func ParseFraction(s string) (Fraction, bool) {
+	var f Fraction
+	if _, err := fmt.Sscanf(s, "%d/%d", &f.Count, &f.Total); err != nil {
+		return Fraction{}, false
+	}
+	return f, true
+}
+
 var podRestartsRegex = regexp.MustCompile(`^(\d+)(?: \((\S+) ago\))$`)
 
 func parsePodRestarts(s string) (string, time.Duration, bool) {
