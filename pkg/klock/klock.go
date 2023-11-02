@@ -403,7 +403,7 @@ func (p *Printer) addObjectToTable(objTable *metav1.Table, eventType watch.Event
 			if colDef.Priority != 0 && !p.WideOutput {
 				continue
 			}
-			tableRow.Fields = append(tableRow.Fields, p.parseCell(cell, eventType, unstrucObj.Object, colDef, creationTime))
+			tableRow.Fields = append(tableRow.Fields, p.parseCell(cell, row, eventType, unstrucObj.Object, colDef, creationTime))
 		}
 		for _, label := range p.LabelCols {
 			labelValue := unstrucObj.GetLabels()[label]
@@ -423,7 +423,7 @@ func (p *Printer) addObjectToTable(objTable *metav1.Table, eventType watch.Event
 	return cmd, nil
 }
 
-func (p *Printer) parseCell(cell any, eventType watch.EventType, object map[string]any, colDef metav1.TableColumnDefinition, creationTime time.Time) any {
+func (p *Printer) parseCell(cell any, row metav1.TableRow, eventType watch.EventType, object map[string]any, colDef metav1.TableColumnDefinition, creationTime time.Time) any {
 	cellStr := fmt.Sprint(cell)
 	columnNameLower := strings.ToLower(colDef.Name)
 	switch {
@@ -445,7 +445,36 @@ func (p *Printer) parseCell(cell any, eventType watch.EventType, object map[stri
 			}
 		}
 		return cell
-	case p.apiVersion == "v1" && p.kind == "Event" && columnNameLower == "last seen":
+	case p.apiVersion == "v1" && p.kind == "Event" && columnNameLower == "last seen",
+		p.apiVersion == "batch/v1" && p.kind == "CronJob" && columnNameLower == "last schedule":
+
+		dur, ok := parseHumanDuration(cellStr)
+		if !ok {
+			return cell
+		}
+		return time.Now().Add(-dur)
+	case p.apiVersion == "batch/v1" && p.kind == "Job" && columnNameLower == "duration":
+		var completionsCell any
+		for i, otherCell := range row.Cells {
+			if i >= len(p.colDefs) {
+				continue
+			}
+			def := p.colDefs[i]
+			if strings.EqualFold(def.Name, "completions") {
+				completionsCell = otherCell
+				break
+			}
+		}
+		if completionsCell == nil {
+			return cell
+		}
+		f, ok := ParseFraction(fmt.Sprint(completionsCell))
+		if !ok {
+			return cell
+		}
+		if f.Count >= f.Total {
+			return cell
+		}
 		dur, ok := parseHumanDuration(cellStr)
 		if !ok {
 			return cell

@@ -22,8 +22,6 @@
 package klock
 
 import (
-	"fmt"
-
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -40,12 +38,11 @@ var (
 )
 
 func FractionStyle(str string) (lipgloss.Style, bool) {
-	var count int
-	var total int
-	if _, err := fmt.Sscanf(str, "%d/%d", &count, &total); err != nil {
+	f, ok := ParseFraction(str)
+	if !ok {
 		return lipgloss.Style{}, false
 	}
-	if count == total {
+	if f.Count == f.Total {
 		return StyleFractionOK, true
 	}
 	return StyleFractionWarning, true
