@@ -50,6 +50,9 @@ This project tries to follow [SemVer 2.0.0](https://semver.org/).
 - Added timer on pod's "STATUS" column when a pod is deleted
   (e.g `Deleted (3m ago)`). (#56)
 
+- Fixed glitches when using flag `--watch-kubeconfig` / `-W`.
+  The watch was not properly restarting, but works great now. (#57)
+
 ## v0.4.0 (2023-09-03)
 
 - Added text filtering. (#32, thanks @semihbkgr!)
