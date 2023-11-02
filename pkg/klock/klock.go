@@ -21,6 +21,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path"
 	"strings"
 	"time"
 
@@ -346,7 +347,7 @@ func (p *Printer) updateColDefHeaders(objTable *metav1.Table, printNamespace boo
 		}
 	}
 	for _, label := range labelCols {
-		headers = append(headers, strings.ToUpper(label))
+		headers = append(headers, strings.ToUpper(path.Base(label)))
 	}
 	p.Table.SetHeaders(headers)
 	p.colDefs = objTable.ColumnDefinitions
