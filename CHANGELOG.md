@@ -41,7 +41,8 @@ This project tries to follow [SemVer 2.0.0](https://semver.org/).
 
 - Added Snap: `sudo snap install klock --edge` (#43)
 
-- Added --label-columns flag to present labels as columns (#55)
+- Added `--label-columns` / `-L` flag to present labels as columns.
+  (#55, thanks @semihbkgr!)
 
 ## v0.4.0 (2023-09-03)
 
