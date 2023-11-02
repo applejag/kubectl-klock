@@ -52,6 +52,10 @@ This project tries to follow [SemVer 2.0.0](https://semver.org/).
 
 - Added auto updating on event's "LAST SEEN" column. (#58)
 
+- Added auto updating on job's "DURATION" column. (#60)
+
+- Added auto updating on cronjob's "LAST SCHEDULE" column. (#60)
+
 - Added coloring on event's "REASON" column. (#58)
 
 - Fixed glitches when using flag `--watch-kubeconfig` / `-W`.
