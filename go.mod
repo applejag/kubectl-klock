@@ -12,7 +12,7 @@ require (
 	github.com/charmbracelet/lipgloss v0.9.1
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/muesli/reflow v0.3.0
-	github.com/spf13/cobra v1.7.0
+	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.17.0
 	k8s.io/apimachinery v0.28.3
 	k8s.io/cli-runtime v0.28.3
