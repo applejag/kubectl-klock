@@ -16,6 +16,14 @@ This project tries to follow [SemVer 2.0.0](https://semver.org/).
 	https://changelog.md/
 -->
 
+## v0.5.1 (WIP)
+
+- Fixes `--watch-kubeconfig` to reading a kubeconfig that has not yet been
+  fully flushed to disk. Only relevant on bigger kubeconfig files.
+
+  The fix is just adding a small 150ms sleep, which is hopefully enough time
+  for tools like `kubectx` to finish writing the kubeconfig file. (#63)
+
 ## v0.5.0 (2023-11-04)
 
 - BREAKING: Changed binary name from `klock` to `kubectl-klock`.

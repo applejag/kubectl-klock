@@ -174,12 +174,32 @@ func (w *Watcher) WatchLoop(ctx context.Context, restartChan <-chan struct{}) er
 			w.errorChan <- fmt.Errorf("restart in 5s: %w", err)
 			time.Sleep(5 * time.Second)
 		case <-restartChan:
+			// Prevent it from restarting too eagerly when we're told to restart
+			// so the filesystem has time to flush, such as in case of
+			// "kubectx" on bigger kubeconfigs.
+			// https://github.com/applejag/kubectl-klock/issues/62
+			slidingSleep(150*time.Millisecond, restartChan)
 			cancel()
 		case <-ctx.Done():
 			cancel()
 			return ctx.Err()
 		}
 		wg.Wait()
+	}
+}
+
+func slidingSleep(dur time.Duration, ch <-chan struct{}) {
+	timer := time.NewTimer(dur)
+	for {
+		select {
+		case <-timer.C:
+			return
+		case <-ch:
+			if !timer.Stop() {
+				<-timer.C
+			}
+			timer.Reset(dur)
+		}
 	}
 }
 
