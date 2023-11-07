@@ -199,7 +199,6 @@ func slidingSleep(dur time.Duration, ch <-chan struct{}) {
 				<-timer.C
 			}
 			timer.Reset(dur)
-			// do nothing
 		}
 	}
 }
