@@ -24,6 +24,9 @@ This project tries to follow [SemVer 2.0.0](https://semver.org/).
   The fix is just adding a small 150ms sleep, which is hopefully enough time
   for tools like `kubectx` to finish writing the kubeconfig file. (#63)
 
+- Changed to Go 1.21.4 to resolve vulnerability [GO-2023-2186](https://pkg.go.dev/vuln/GO-2023-2186),
+  where `filepath.IsLocal` incorrectly treated reserved names as local. (#66)
+
 ## v0.5.0 (2023-11-04)
 
 - BREAKING: Changed binary name from `klock` to `kubectl-klock`.
