@@ -27,6 +27,9 @@ This project tries to follow [SemVer 2.0.0](https://semver.org/).
 - Added spinner when the watch restarts (either from `--watch-kubeconfig` or
   from an error), to indicate that it's loading. (#64)
 
+- Changed to Go 1.21.4 to resolve vulnerability [GO-2023-2186](https://pkg.go.dev/vuln/GO-2023-2186),
+  where `filepath.IsLocal` incorrectly treated reserved names as local. (#66)
+
 ## v0.5.0 (2023-11-04)
 
 - BREAKING: Changed binary name from `klock` to `kubectl-klock`.
