@@ -171,9 +171,17 @@ func (w *Watcher) WatchLoop(ctx context.Context, restartChan <-chan struct{}) er
 		clearBeforePrinting = true
 		select {
 		case err := <-watchErrChan:
+			if cmd := w.Printer.Table.StartSpinner(); cmd != nil {
+				w.Program.Send(cmd())
+			}
 			w.errorChan <- fmt.Errorf("restart in 5s: %w", err)
 			time.Sleep(5 * time.Second)
+			w.Printer.Table.StopSpinner()
+			w.Printer.Table.SetError(nil)
 		case <-restartChan:
+			if cmd := w.Printer.Table.StartSpinner(); cmd != nil {
+				w.Program.Send(cmd())
+			}
 			// Prevent it from restarting too eagerly when we're told to restart
 			// so the filesystem has time to flush, such as in case of
 			// "kubectx" on bigger kubeconfigs.
