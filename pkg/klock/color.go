@@ -22,6 +22,9 @@
 package klock
 
 import (
+	"strings"
+
+	"github.com/applejag/kubectl-klock/pkg/table"
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -46,6 +49,25 @@ func FractionStyle(str string) (lipgloss.Style, bool) {
 		return StyleFractionOK, true
 	}
 	return StyleFractionWarning, true
+}
+
+func StatusColumn(status string) any {
+	if !strings.Contains(status, ",") {
+		return table.StyledColumn{
+			Value: status,
+			Style: StatusStyle(status),
+		}
+	}
+	column := table.JoinedColumn{
+		Delimiter: ",",
+	}
+	for _, s := range strings.Split(status, ",") {
+		column.Values = append(column.Values, table.StyledColumn{
+			Value: s,
+			Style: StatusStyle(s),
+		})
+	}
+	return column
 }
 
 func StatusStyle(status string) lipgloss.Style {
@@ -92,6 +114,9 @@ func StatusStyle(status string) lipgloss.Style {
 		// Lifecycle hooks
 		"FailedPostStartHook",
 		"FailedPreStopHook",
+		// Node status list
+		"NotReady",
+		"NetworkUnavailable",
 
 		// some other status
 		"CreateContainerConfigError",
@@ -124,6 +149,11 @@ func StatusStyle(status string) lipgloss.Style {
 		// Pod worker event reason list
 		// Config event reason list
 		// Lifecycle hooks
+		// Node event reason list
+		"SchedulingDisabled",
+		"DiskPressure",
+		"MemoryPressure",
+		"PIDPressure",
 
 		// some other status
 		"Pending",

@@ -461,18 +461,12 @@ func (p *Printer) parseCell(cell any, row metav1.TableRow, eventType watch.Event
 		return creationTime
 	case columnNameLower == "status":
 		if eventType == watch.Deleted {
-			cell = table.AgoColumn{
+			return table.AgoColumn{
 				Value: "Deleted",
 				Time:  time.Now(),
 			}
-		} else {
-			style := StatusStyle(cellStr)
-			cell = table.StyledColumn{
-				Value: cell,
-				Style: style,
-			}
 		}
-		return cell
+		return StatusColumn(cellStr)
 	case p.apiVersion == "v1" && p.kind == "Event" && columnNameLower == "last seen",
 		p.apiVersion == "batch/v1" && p.kind == "CronJob" && columnNameLower == "last schedule":
 
@@ -509,10 +503,7 @@ func (p *Printer) parseCell(cell any, row metav1.TableRow, eventType watch.Event
 		}
 		return time.Now().Add(-dur)
 	case p.apiVersion == "v1" && p.kind == "Event" && columnNameLower == "reason":
-		return table.StyledColumn{
-			Value: cell,
-			Style: StatusStyle(cellStr),
-		}
+		return StatusColumn(cellStr)
 	case p.apiVersion == "v1" && p.kind == "Pod" && columnNameLower == "restarts":
 		// 0, the most common case
 		if cellStr == "0" {
