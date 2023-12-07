@@ -22,6 +22,9 @@ This project tries to follow [SemVer 2.0.0](https://semver.org/).
   where `NotReady,SchedulingDisabled` would have red `NotReady`
   and orange `SchedulingDisabled`. (#69)
 
+- Changed Go version to 1.21.5, resolving vulnerability
+  <https://pkg.go.dev/vuln/GO-2023-2185> (#70)
+
 ## v0.5.1 (2023-11-11)
 
 - Fixes `--watch-kubeconfig` to reading a kubeconfig that has not yet been
