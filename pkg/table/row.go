@@ -19,6 +19,7 @@ package table
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/charmbracelet/lipgloss"
@@ -40,6 +41,11 @@ var DefaultRowStyle = RowStyles{
 type StyledColumn struct {
 	Value any
 	Style lipgloss.Style
+}
+
+type JoinedColumn struct {
+	Delimiter string
+	Values    []any
 }
 
 type AgoColumn struct {
@@ -101,6 +107,15 @@ func (r *Row) ReRenderFields() {
 
 func renderColumn(value any) string {
 	switch value := value.(type) {
+	case JoinedColumn:
+		var sb strings.Builder
+		for i, v := range value.Values {
+			if i > 0 {
+				sb.WriteString(value.Delimiter)
+			}
+			sb.WriteString(renderColumn(v))
+		}
+		return sb.String()
 	case StyledColumn:
 		return value.Style.Render(renderColumn(value.Value))
 	case string:
