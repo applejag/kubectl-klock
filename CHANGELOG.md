@@ -22,7 +22,8 @@ This project tries to follow [SemVer 2.0.0](https://semver.org/).
   where `NotReady,SchedulingDisabled` would have red `NotReady`
   and orange `SchedulingDisabled`. (#69)
 
-- Changed to Go 1.21.5 to resolve vulnerability [GO-2023-2185](https://pkg.go.dev/vuln/GO-2023-2185),
+- Changed to Go 1.21.5 to resolve vulnerability [GO-2023-2182](https://pkg.go.dev/vuln/GO-2023-2182),
+  for denial of service in net/http, and [GO-2023-2185](https://pkg.go.dev/vuln/GO-2023-2185)
   for insecure parsing of Windows paths with a `\??\` prefix. (#72)
 
 ## v0.5.1 (2023-11-11)
