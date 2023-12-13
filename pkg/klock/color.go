@@ -126,7 +126,10 @@ func StatusStyle(status string) lipgloss.Style {
 		"Evicted",
 		"FailedScheduling",
 		"Error",
-		"ErrImagePull":
+		"ErrImagePull",
+
+		// PVC status
+		"Lost":
 		return StyleStatusError
 	case
 		// from https://github.com/kubernetes/kubernetes/blob/master/pkg/kubelet/events/event.go
@@ -163,7 +166,11 @@ func StatusStyle(status string) lipgloss.Style {
 		"Warning",
 
 		// PV reclaim policy
-		"Delete":
+		"Delete",
+
+		// PVC status
+		"Available",
+		"Released":
 		return StyleStatusWarning
 	case
 		"Running",
@@ -179,7 +186,10 @@ func StatusStyle(status string) lipgloss.Style {
 		"Ready",
 
 		// PV reclaim policy
-		"Retain":
+		"Retain",
+
+		// PVC status
+		"Bound":
 		return StyleStatusOK
 	}
 	// some ok status, not colored:
