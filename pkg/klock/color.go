@@ -160,7 +160,10 @@ func StatusStyle(status string) lipgloss.Style {
 		"ContainerCreating",
 		"PodInitializing",
 		"Terminating",
-		"Warning":
+		"Warning",
+
+		// PV reclaim policy
+		"Delete":
 		return StyleStatusWarning
 	case
 		"Running",
@@ -173,7 +176,10 @@ func StatusStyle(status string) lipgloss.Style {
 		"Normal",
 		"VolumeResizeSuccessful",
 		"FileSystemResizeSuccessful",
-		"Ready":
+		"Ready",
+
+		// PV reclaim policy
+		"Retain":
 		return StyleStatusOK
 	}
 	// some ok status, not colored:

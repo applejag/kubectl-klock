@@ -524,6 +524,8 @@ func (p *Printer) parseCell(cell any, row metav1.TableRow, eventType watch.Event
 			}
 		}
 		return cell
+	case p.apiVersion == "storage.k8s.io/v1" && p.kind == "StorageClass" && columnNameLower == "reclaimpolicy":
+		return StatusColumn(cellStr)
 	// Only parse fraction (e.g "1/2") if the resources was not deleted,
 	// so we don't have colored fraction on a grayed-out row.
 	case eventType != watch.Deleted:
