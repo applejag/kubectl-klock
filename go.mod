@@ -7,17 +7,17 @@ module github.com/applejag/kubectl-klock
 go 1.21.5
 
 require (
-	github.com/charmbracelet/bubbles v0.16.1
-	github.com/charmbracelet/bubbletea v0.24.2
+	github.com/charmbracelet/bubbles v0.17.1
+	github.com/charmbracelet/bubbletea v0.25.0
 	github.com/charmbracelet/lipgloss v0.9.1
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/muesli/reflow v0.3.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.18.1
-	k8s.io/apimachinery v0.28.4
-	k8s.io/cli-runtime v0.28.4
-	k8s.io/client-go v0.28.4
-	k8s.io/kubectl v0.28.4
+	k8s.io/apimachinery v0.29.0
+	k8s.io/cli-runtime v0.29.0
+	k8s.io/client-go v0.29.0
+	k8s.io/kubectl v0.29.0
 )
 
 require (
@@ -46,6 +46,7 @@ require (
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/google/uuid v1.4.0 // indirect
+	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/imdario/mergo v0.3.16 // indirect
@@ -70,6 +71,7 @@ require (
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/muesli/termenv v0.15.2 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
+	github.com/mxk/go-flowrate v0.0.0-20140419014527-cca7078d478f // indirect
 	github.com/pelletier/go-toml/v2 v2.1.0 // indirect
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
 	github.com/pkg/errors v0.9.1 // indirect
@@ -100,8 +102,8 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/api v0.28.4 // indirect
-	k8s.io/component-base v0.28.4 // indirect
+	k8s.io/api v0.29.0 // indirect
+	k8s.io/component-base v0.29.0 // indirect
 	k8s.io/klog/v2 v2.110.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20231010175941-2dd684a91f00 // indirect
 	k8s.io/utils v0.0.0-20230726121419-3b25d923346b // indirect
