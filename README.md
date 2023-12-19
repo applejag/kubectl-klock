@@ -35,6 +35,15 @@ kubectl krew install klock
 sudo snap install klock
 ```
 
+### Scoop
+
+![Scoop](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fgithub.com%2Fapplejag%2Fapplejag-bucket%2Fraw%2Fmaster%2Fbucket%2Fkubectl-klock.json&query=%24.version&logo=scoop&label=applejag-bucket%2Fkubectl-klock)
+
+```pwsh
+scoop bucket add applejag https://github.com/applejag/applejag-bucket
+scoop install applejag/kubectl-klock
+```
+
 ### Nix
 
 [![Packaging status](https://repology.org/badge/vertical-allrepos/kubectl-klock.svg?header=)](https://repology.org/project/kubectl-klock/versions)
