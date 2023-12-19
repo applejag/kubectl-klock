@@ -138,6 +138,7 @@ func StatusStyle(status string) lipgloss.Style {
 		"Preempting",
 		// Pod event reason list
 		// Image event reason list
+		"Pulling",
 		// kubelet event reason list
 		"NodeNotReady",
 		"NodeSchedulable",
