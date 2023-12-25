@@ -13,7 +13,7 @@ require (
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/muesli/reflow v0.3.0
 	github.com/spf13/cobra v1.8.0
-	github.com/spf13/viper v1.18.1
+	github.com/spf13/viper v1.18.2
 	k8s.io/apimachinery v0.29.0
 	k8s.io/cli-runtime v0.29.0
 	k8s.io/client-go v0.29.0
