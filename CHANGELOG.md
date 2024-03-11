@@ -28,6 +28,11 @@ This project tries to follow [SemVer 2.0.0](https://semver.org/).
   for denial of service in net/http, and [GO-2023-2185](https://pkg.go.dev/vuln/GO-2023-2185)
   for insecure parsing of Windows paths with a `\??\` prefix. (#72)
 
+- Changed to Go 1.22.1 to stay up to date, but also to resolve
+  vulnerabilities [GO-2024-2600](https://pkg.go.dev/vuln/GO-2024-2600),
+  [GO-2024-2599](https://pkg.go.dev/vuln/GO-2024-2599),
+  and [GO-2024-2598](https://pkg.go.dev/vuln/GO-2024-2598). (#85)
+
 ## v0.5.1 (2023-11-11)
 
 - Fixes `--watch-kubeconfig` to reading a kubeconfig that has not yet been
