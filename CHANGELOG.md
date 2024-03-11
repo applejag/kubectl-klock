@@ -16,7 +16,7 @@ This project tries to follow [SemVer 2.0.0](https://semver.org/).
 	https://changelog.md/
 -->
 
-## v0.6.0 (WIP)
+## v0.6.0 (2024-03-11)
 
 - Added status coloring on multiple statuses,
   where `NotReady,SchedulingDisabled` would have red `NotReady`
