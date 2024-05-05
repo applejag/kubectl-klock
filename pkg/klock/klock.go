@@ -411,9 +411,10 @@ func (p *Printer) addObjectToTable(objTable *metav1.Table, eventType watch.Event
 			return nil, fmt.Errorf("metadata.creationTimestamp: %w", err)
 		}
 		tableRow := table.Row{
-			ID:        uid,
-			Fields:    make([]any, 0, len(p.colDefs)),
-			SortField: name,
+			ID:          uid,
+			Fields:      make([]any, 0, len(p.colDefs)),
+			SortField:   name,
+			FilterField: name,
 		}
 		if p.apiVersion == "v1" && p.kind == "Event" {
 			tableRow.SortField = creationTimestamp

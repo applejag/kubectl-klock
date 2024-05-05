@@ -167,6 +167,7 @@ func (m *Model) SetRows(rows []Row) tea.Cmd {
 
 func (m *Model) updateRows() {
 	m.updateFilteredRows()
+	m.updateFilterSuggestions()
 	m.updateColumnWidths()
 	m.updatePagination()
 }
@@ -192,6 +193,27 @@ func rowMatchesText(row Row, needle string) bool {
 		}
 	}
 	return false
+}
+
+func (m *Model) updateFilterSuggestions() {
+	m.filterInput.ShowSuggestions = true
+	var suggestions []string
+	for _, row := range m.filteredRows {
+		suggestions = append(suggestions, splitAndJoin(row.FilterField, "-")...)
+	}
+	m.filterInput.SetSuggestions(suggestions)
+}
+
+func splitAndJoin(s string, c string) []string {
+	split := strings.Split(s, c)
+	var joins []string
+	for i := range split {
+		if i == 0 {
+			joins = append(joins, split[i])
+		}
+		joins = append(joins, strings.Join(split[:i+1], c))
+	}
+	return joins
 }
 
 func (m *Model) SetError(err error) {

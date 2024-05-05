@@ -59,10 +59,11 @@ func (c AgoColumn) String() string {
 }
 
 type Row struct {
-	ID        string
-	Fields    []any
-	Status    Status
-	SortField string
+	ID          string
+	Fields      []any
+	Status      Status
+	SortField   string
+	FilterField string
 
 	renderedFields []string
 }
