@@ -167,8 +167,8 @@ func (m *Model) SetRows(rows []Row) tea.Cmd {
 
 func (m *Model) updateRows() {
 	m.updateFilteredRows()
-	m.updateColumnWidths()
 	m.updatePagination()
+	m.updateColumnWidths()
 }
 
 func (m *Model) updateFilteredRows() {
