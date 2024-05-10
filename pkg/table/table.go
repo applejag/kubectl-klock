@@ -301,6 +301,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch {
 		case m.filterInputEnabled && !m.KeyMap.EscapeFilterText(msg):
+			m.filterInput.KeyMap.NextSuggestion = m.KeyMap.NextSuggestion
+			m.filterInput.KeyMap.PrevSuggestion = m.KeyMap.PrevSuggestion
+			m.filterInput.KeyMap.AcceptSuggestion = m.KeyMap.AcceptSuggestion
 			i, cmd := m.filterInput.Update(msg)
 			m.filterInput = i
 			m.updateRows()
