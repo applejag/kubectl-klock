@@ -25,6 +25,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/applejag/kubectl-klock/internal/util"
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/paginator"
@@ -100,14 +101,15 @@ type Model struct {
 	filterInput textinput.Model
 	showSpinner bool
 
-	err                error
-	headers            []string
-	maxHeight          int
-	rows               []Row
-	filteredRows       []Row
-	columnWidths       []int
-	fullscreenOverride bool
-	quitting           bool
+	err                 error
+	headers             []string
+	maxHeight           int
+	rows                []Row
+	filteredRows        []Row
+	columnWidths        []int
+	fullscreenOverride  bool
+	quitting            bool
+	prevSuggestionCount int
 
 	filterInputEnabled bool
 }
@@ -197,23 +199,22 @@ func rowMatchesText(row Row, needle string) bool {
 
 func (m *Model) updateFilterSuggestions() {
 	m.filterInput.ShowSuggestions = true
-	var suggestions []string
-	for _, row := range m.filteredRows {
-		suggestions = append(suggestions, splitAndJoin(row.Suggestion, "-")...)
-	}
-	m.filterInput.SetSuggestions(suggestions)
-}
+	suggestionsMap := make(map[string]struct{}, m.prevSuggestionCount)
+	suggestions := make([]string, 0, m.prevSuggestionCount)
 
-func splitAndJoin(s string, c string) []string {
-	split := strings.Split(s, c)
-	var joins []string
-	for i := range split {
-		if i == 0 {
-			joins = append(joins, split[i])
+	for _, row := range m.filteredRows {
+		for _, split := range util.SplitsFromStart(row.Suggestion, '-') {
+			_, isDuplicate := suggestionsMap[split]
+			if isDuplicate {
+				continue
+			}
+			suggestionsMap[split] = struct{}{}
+			suggestions = append(suggestions, split)
 		}
-		joins = append(joins, strings.Join(split[:i+1], c))
 	}
-	return joins
+
+	m.prevSuggestionCount = len(suggestions)
+	m.filterInput.SetSuggestions(suggestions)
 }
 
 func (m *Model) SetError(err error) {
