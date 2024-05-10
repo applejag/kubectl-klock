@@ -32,13 +32,16 @@ type KeyMap struct {
 	GoToEnd   key.Binding
 
 	// Keybindings for view settings
-	Filter           key.Binding
 	ToggleDeleted    key.Binding
 	ToggleFullscreen key.Binding
 
 	// Keybindings used while the text-filter is enabled.
-	CloseFilter key.Binding
-	ClearFilter key.Binding
+	Filter           key.Binding
+	CloseFilter      key.Binding
+	ClearFilter      key.Binding
+	NextSuggestion   key.Binding
+	PrevSuggestion   key.Binding
+	AcceptSuggestion key.Binding
 
 	// Help toggle keybindings.
 	ShowFullHelp  key.Binding
@@ -76,16 +79,16 @@ var DefaultKeyMap = KeyMap{
 		key.WithHelp("f", "toggle fullscreen"),
 	),
 
-	Filter: key.NewBinding(
-		key.WithKeys("/"),
-		key.WithHelp("/", "filter by text"),
-	),
 	ToggleDeleted: key.NewBinding(
 		key.WithKeys("d"),
 		key.WithHelp("d", "show/hide deleted"),
 	),
 
 	// Filtering.
+	Filter: key.NewBinding(
+		key.WithKeys("/"),
+		key.WithHelp("/", "filter by text"),
+	),
 	CloseFilter: key.NewBinding(
 		key.WithKeys("enter"),
 		key.WithHelp("enter", "close the filter input field"),
@@ -93,6 +96,18 @@ var DefaultKeyMap = KeyMap{
 	ClearFilter: key.NewBinding(
 		key.WithKeys("esc"),
 		key.WithHelp("esc", "clear the applied filter"),
+	),
+	NextSuggestion: key.NewBinding(
+		key.WithKeys("down", "ctrl+n"),
+		key.WithHelp("↓/ctrl+n", "show next suggestion"),
+	),
+	PrevSuggestion: key.NewBinding(
+		key.WithKeys("up", "ctrl+p"),
+		key.WithHelp("↑/ctrl+p", "show previous suggestion"),
+	),
+	AcceptSuggestion: key.NewBinding(
+		key.WithKeys("tab"),
+		key.WithHelp("tab", "accept a suggestion"),
 	),
 
 	// Toggle help.
@@ -115,7 +130,7 @@ var DefaultKeyMap = KeyMap{
 // FullHelp returns bindings to show the full help view. It's part of the
 // help.KeyMap interface.
 func (m Model) FullHelp() [][]key.Binding {
-	kb := [][]key.Binding{{
+	browsingBindings := [][]key.Binding{{
 		m.KeyMap.NextPage,
 		m.KeyMap.PrevPage,
 		m.KeyMap.GoToStart,
@@ -132,18 +147,25 @@ func (m Model) FullHelp() [][]key.Binding {
 	//	}
 	//}
 
-	listLevelBindings := []key.Binding{
-		m.KeyMap.ToggleDeleted,
-		m.KeyMap.ToggleFullscreen,
+	filterBindings := []key.Binding{
 		m.KeyMap.Filter,
 		m.KeyMap.CloseFilter,
 		m.KeyMap.ClearFilter,
+		m.KeyMap.NextSuggestion,
+		m.KeyMap.PrevSuggestion,
+		m.KeyMap.AcceptSuggestion,
 	}
 
-	return append(kb,
-		listLevelBindings,
-		[]key.Binding{
-			m.KeyMap.ForceQuit,
-			m.KeyMap.CloseFullHelp,
-		})
+	actionsBindings := []key.Binding{
+		m.KeyMap.ForceQuit,
+		m.KeyMap.CloseFullHelp,
+		m.KeyMap.ToggleDeleted,
+		m.KeyMap.ToggleFullscreen,
+	}
+
+	return append(
+		browsingBindings,
+		filterBindings,
+		actionsBindings,
+	)
 }

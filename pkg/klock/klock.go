@@ -411,17 +411,18 @@ func (p *Printer) addObjectToTable(objTable *metav1.Table, eventType watch.Event
 			return nil, fmt.Errorf("metadata.creationTimestamp: %w", err)
 		}
 		tableRow := table.Row{
-			ID:        uid,
-			Fields:    make([]any, 0, len(p.colDefs)),
-			SortField: name,
+			ID:         uid,
+			Fields:     make([]any, 0, len(p.colDefs)),
+			SortKey:    name,
+			Suggestion: name,
 		}
 		if p.apiVersion == "v1" && p.kind == "Event" {
-			tableRow.SortField = creationTimestamp
+			tableRow.SortKey = creationTimestamp
 		}
 		if p.printNamespace {
 			namespace := metadata["namespace"]
 			tableRow.Fields = append(tableRow.Fields, namespace)
-			tableRow.SortField = fmt.Sprintf("%s/%s", namespace, tableRow.SortField)
+			tableRow.SortKey = fmt.Sprintf("%s/%s", namespace, tableRow.SortKey)
 		}
 		for i, cell := range row.Cells {
 			if i >= len(p.colDefs) {

@@ -25,6 +25,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/applejag/kubectl-klock/internal/util"
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/paginator"
@@ -100,14 +101,15 @@ type Model struct {
 	filterInput textinput.Model
 	showSpinner bool
 
-	err                error
-	headers            []string
-	maxHeight          int
-	rows               []Row
-	filteredRows       []Row
-	columnWidths       []int
-	fullscreenOverride bool
-	quitting           bool
+	err                 error
+	headers             []string
+	maxHeight           int
+	rows                []Row
+	filteredRows        []Row
+	columnWidths        []int
+	fullscreenOverride  bool
+	quitting            bool
+	prevSuggestionCount int
 
 	filterInputEnabled bool
 }
@@ -167,6 +169,7 @@ func (m *Model) SetRows(rows []Row) tea.Cmd {
 
 func (m *Model) updateRows() {
 	m.updateFilteredRows()
+	m.updateFilterSuggestions()
 	m.updatePagination()
 	m.updateColumnWidths()
 }
@@ -192,6 +195,26 @@ func rowMatchesText(row Row, needle string) bool {
 		}
 	}
 	return false
+}
+
+func (m *Model) updateFilterSuggestions() {
+	m.filterInput.ShowSuggestions = true
+	suggestionsMap := make(map[string]struct{}, m.prevSuggestionCount)
+	suggestions := make([]string, 0, m.prevSuggestionCount)
+
+	for _, row := range m.filteredRows {
+		for _, split := range util.SplitsFromStart(row.Suggestion, '-') {
+			_, isDuplicate := suggestionsMap[split]
+			if isDuplicate {
+				continue
+			}
+			suggestionsMap[split] = struct{}{}
+			suggestions = append(suggestions, split)
+		}
+	}
+
+	m.prevSuggestionCount = len(suggestions)
+	m.filterInput.SetSuggestions(suggestions)
 }
 
 func (m *Model) SetError(err error) {
@@ -278,6 +301,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch {
 		case m.filterInputEnabled && !m.KeyMap.EscapeFilterText(msg):
+			m.filterInput.KeyMap.NextSuggestion = m.KeyMap.NextSuggestion
+			m.filterInput.KeyMap.PrevSuggestion = m.KeyMap.PrevSuggestion
+			m.filterInput.KeyMap.AcceptSuggestion = m.KeyMap.AcceptSuggestion
 			i, cmd := m.filterInput.Update(msg)
 			m.filterInput = i
 			m.updateRows()
