@@ -59,11 +59,11 @@ func (c AgoColumn) String() string {
 }
 
 type Row struct {
-	ID          string
-	Fields      []any
-	Status      Status
-	SortField   string
-	FilterField string
+	ID         string
+	Fields     []any
+	Status     Status
+	SortKey    string
+	Suggestion string
 
 	renderedFields []string
 }
@@ -79,8 +79,8 @@ const (
 
 // SortValue value is the value we use when sorting the list.
 func (r Row) SortValue() string {
-	if r.SortField != "" {
-		return r.SortField
+	if r.SortKey != "" {
+		return r.SortKey
 	}
 	if len(r.Fields) == 0 {
 		return ""

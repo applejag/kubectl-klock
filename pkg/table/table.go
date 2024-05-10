@@ -199,7 +199,7 @@ func (m *Model) updateFilterSuggestions() {
 	m.filterInput.ShowSuggestions = true
 	var suggestions []string
 	for _, row := range m.filteredRows {
-		suggestions = append(suggestions, splitAndJoin(row.FilterField, "-")...)
+		suggestions = append(suggestions, splitAndJoin(row.Suggestion, "-")...)
 	}
 	m.filterInput.SetSuggestions(suggestions)
 }
