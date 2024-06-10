@@ -26,7 +26,7 @@ jobs:
           mkdir -pv $HOME/.cache/snapcraft/stage-packages
 
       - name: GoReleaser
-        uses: goreleaser/goreleaser-action@v5
+        uses: goreleaser/goreleaser-action@v6
         with:
           version: latest
           args: release --clean --skip=publish --snapshot
