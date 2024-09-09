@@ -7,7 +7,7 @@ module github.com/applejag/kubectl-klock
 go 1.22.5
 
 require (
-	github.com/charmbracelet/bubbles v0.19.0
+	github.com/charmbracelet/bubbles v0.20.0
 	github.com/charmbracelet/bubbletea v1.1.0
 	github.com/charmbracelet/lipgloss v0.13.0
 	github.com/fsnotify/fsnotify v1.7.0
