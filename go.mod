@@ -8,16 +8,16 @@ go 1.22.5
 
 require (
 	github.com/charmbracelet/bubbles v0.20.0
-	github.com/charmbracelet/bubbletea v1.1.0
+	github.com/charmbracelet/bubbletea v1.1.1
 	github.com/charmbracelet/lipgloss v0.13.0
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/muesli/reflow v0.3.0
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
-	k8s.io/apimachinery v0.31.0
-	k8s.io/cli-runtime v0.31.0
-	k8s.io/client-go v0.31.0
-	k8s.io/kubectl v0.31.0
+	k8s.io/apimachinery v0.31.1
+	k8s.io/cli-runtime v0.31.1
+	k8s.io/client-go v0.31.1
+	k8s.io/kubectl v0.31.1
 )
 
 require (
@@ -104,8 +104,8 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/api v0.31.0 // indirect
-	k8s.io/component-base v0.31.0 // indirect
+	k8s.io/api v0.31.1 // indirect
+	k8s.io/component-base v0.31.1 // indirect
 	k8s.io/klog/v2 v2.130.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20240430033511-f0e62f92d13f // indirect
 	k8s.io/utils v0.0.0-20240711033017-18e509b52bc8 // indirect
