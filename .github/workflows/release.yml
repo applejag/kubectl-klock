@@ -20,7 +20,7 @@ jobs:
           go-version-file: go.mod
 
       - name: Setup Snapcraft
-        uses: samuelmeuli/action-snapcraft@v2
+        uses: samuelmeuli/action-snapcraft@v3
       - name: Create Snapcraft cache dirs
         run: |
           mkdir -pv $HOME/.cache/snapcraft/download
