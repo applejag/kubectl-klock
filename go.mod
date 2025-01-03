@@ -4,7 +4,7 @@
 
 module github.com/applejag/kubectl-klock
 
-go 1.22.5
+go 1.23.4
 
 require (
 	github.com/charmbracelet/bubbles v0.20.0
