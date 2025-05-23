@@ -18,32 +18,22 @@
 package cmd
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"strings"
 
-	"github.com/kubecolor/kubecolor/config"
-	"github.com/kubecolor/kubecolor/printer"
-	"github.com/mattn/go-colorable"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"k8s.io/kubectl/pkg/util/completion"
-	"k8s.io/kubectl/pkg/util/templates"
 
 	"github.com/applejag/kubectl-klock/pkg/klock"
 )
 
-var (
-	Stdout = colorable.NewColorableStdout()
-	Stderr = colorable.NewColorableStderr()
-)
-
 var Version string
 
-func RootCmd(kubecolorConfig *config.Config) *cobra.Command {
+func RootCmd() *cobra.Command {
 	kubeConfigFlags := genericclioptions.NewConfigFlags(false)
 	f := cmdutil.NewFactory(kubeConfigFlags)
 
@@ -68,8 +58,10 @@ func RootCmd(kubecolorConfig *config.Config) *cobra.Command {
  Performs the equivalent to running "watch kubectl get pods", but using
  the same protocol as "kubectl get pods --watch".
 
-Use "kubectl api-resources" for a complete list of supported resources.`,
-		Example: `  # Watch all pods
+Use "kubectl api-resources" for a complete list of supported resources.
+
+Examples:
+  # Watch all pods
   kubectl klock pods
 
   # Watch all pods with more information (such as node name)
@@ -95,7 +87,8 @@ Use "kubectl api-resources" for a complete list of supported resources.`,
   # Watch all pods, but restart the watch when your ~/.kube/config file changes,
   # such as when using "kubectl config use-context NAME"
   kubectl klock pods --watch-kubeconfig
-  kubectl klock pods -W`,
+  kubectl klock pods -W
+`,
 		SilenceErrors: true,
 		SilenceUsage:  true,
 		Args:          cobra.MinimumNArgs(1),
@@ -110,8 +103,6 @@ Use "kubectl api-resources" for a complete list of supported resources.`,
 	}
 
 	cobra.OnInitialize(initConfig)
-
-	o.Kubecolor = kubecolorConfig
 
 	o.ConfigFlags = kubeConfigFlags
 	o.ConfigFlags.AddFlags(cmd.Flags())
@@ -136,33 +127,12 @@ Use "kubectl api-resources" for a complete list of supported resources.`,
 	cmd.InitDefaultCompletionCmd()
 	cmd.RemoveCommand(tmpChild)
 
-	cmd.SetErr(Stderr)
-	cmd.SetOut(Stdout)
-
-	// Use kubectl --help templates
-
-	cmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
-		templates.ActsAsRootCommand(cmd, nil, templates.CommandGroup{})
-		var buf bytes.Buffer
-		cmd.SetOut(&buf)
-		cmd.Help()
-		p := printer.HelpPrinter{
-			Theme: &kubecolorConfig.Theme,
-		}
-		p.Print(&buf, Stdout)
-	})
-
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	return cmd
 }
 
 func InitAndExecute() {
-	kubecolorConfig, err := getKubecolorConfig()
-	if err != nil {
-		fmt.Println("ERROR:", err)
-		os.Exit(1)
-	}
-	if err := RootCmd(kubecolorConfig).Execute(); err != nil {
+	if err := RootCmd().Execute(); err != nil {
 		fmt.Println("ERROR:", err)
 		os.Exit(1)
 	}
@@ -170,15 +140,4 @@ func InitAndExecute() {
 
 func initConfig() {
 	viper.AutomaticEnv()
-}
-
-func getKubecolorConfig() (*config.Config, error) {
-	v, err := config.LoadViper()
-	if err != nil {
-		return nil, err
-	}
-	if config.ApplyThemePreset(v); err != nil {
-		return nil, err
-	}
-	return config.Unmarshal(v)
 }
