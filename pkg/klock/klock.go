@@ -25,7 +25,11 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/fsnotify/fsnotify"
+	"github.com/gookit/color"
+	"github.com/kubecolor/kubecolor/config"
+	kubecolor "github.com/kubecolor/kubecolor/config/color"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -42,6 +46,7 @@ import (
 
 type Options struct {
 	ConfigFlags *genericclioptions.ConfigFlags
+	Kubecolor   *config.Config
 
 	LabelSelector   string
 	FieldSelector   string
@@ -86,7 +91,23 @@ func Execute(o Options, args []string) error {
 	}
 
 	t := table.New()
+
+	if o.Kubecolor != nil {
+		overrideLipglossWithKubecolor(&t.Styles.Header, o.Kubecolor.Theme.Table.Header)
+		overrideLipglossWithKubecolor(&t.Styles.Row.Deleted, o.Kubecolor.Theme.Base.Muted)
+		overrideLipglossWithKubecolor(&t.Styles.Row.Error, o.Kubecolor.Theme.Base.Danger)
+		overrideLipglossWithKubecolor(&t.Styles.NoneFound, o.Kubecolor.Theme.Base.Muted)
+		overrideLipglossWithKubecolor(&t.Styles.FilterInfo, o.Kubecolor.Theme.Base.Muted)
+		overrideLipglossWithKubecolor(&t.Styles.FilterPrompt, o.Kubecolor.Theme.Base.Secondary)
+		overrideLipglossWithKubecolor(&t.Styles.FilterNoneVisible, o.Kubecolor.Theme.Base.Warning)
+		overrideLipglossWithKubecolor(&t.Styles.Toggles, o.Kubecolor.Theme.Base.Muted)
+
+		overrideLipglossWithKubecolor(&StyleFractionOK, o.Kubecolor.Theme.Data.Ratio.Equal)
+		overrideLipglossWithKubecolor(&StyleFractionWarning, o.Kubecolor.Theme.Data.Ratio.Unequal)
+	}
+
 	printer := Printer{
+		Kubecolor:  o.Kubecolor,
 		Table:      t,
 		WideOutput: o.Output == "wide",
 		LabelCols:  o.LabelColumns,
@@ -317,6 +338,7 @@ func (w *Watcher) pipeEvents(ctx context.Context, r *resource.Result, resVersion
 }
 
 type Printer struct {
+	Kubecolor  *config.Config
 	Table      *table.Model
 	WideOutput bool
 	colDefs    []metav1.TableColumnDefinition
@@ -415,6 +437,7 @@ func (p *Printer) addObjectToTable(objTable *metav1.Table, eventType watch.Event
 			Fields:     make([]any, 0, len(p.colDefs)),
 			SortKey:    name,
 			Suggestion: name,
+			Kubecolor:  p.Kubecolor,
 		}
 		if p.apiVersion == "v1" && p.kind == "Event" {
 			tableRow.SortKey = creationTimestamp
@@ -561,4 +584,51 @@ func transformRequests(req *rest.Request) {
 		fmt.Sprintf("application/json;as=Table;v=%s;g=%s", metav1beta1.SchemeGroupVersion.Version, metav1beta1.GroupName),
 		"application/json",
 	}, ","))
+}
+
+func overrideLipglossWithKubecolor(style *lipgloss.Style, c kubecolor.Color) {
+	*style = kubecolorColorToLipgloss(c).SetString(style.Value())
+}
+
+func kubecolorColorToLipgloss(c kubecolor.Color) lipgloss.Style {
+	style := lipgloss.NewStyle()
+	for _, col := range c.Parsed {
+		switch col := col.(type) {
+		case color.Color256:
+			if col.IsFg() {
+				style = style.Foreground(lipgloss.Color("#" + col.RGB().Hex()))
+			} else {
+				style = style.Background(lipgloss.Color("#" + col.RGB().Hex()))
+			}
+		case color.RGBColor:
+			if col.Color().IsFg() {
+				style = style.Foreground(lipgloss.Color("#" + col.Hex()))
+			} else {
+				style = style.Background(lipgloss.Color("#" + col.Hex()))
+			}
+		case color.Color:
+			switch {
+			case col.IsFg():
+				style = style.Foreground(lipgloss.Color("#" + col.RGB().Hex()))
+			case col.IsBg():
+				style = style.Background(lipgloss.Color("#" + col.RGB().Hex()))
+			case col.IsOption():
+				switch col {
+				case color.OpBold:
+					style = style.Bold(true)
+				case color.OpItalic:
+					style = style.Italic(true)
+				case color.OpUnderscore:
+					style = style.Underline(true)
+				case color.OpFuzzy:
+					style = style.Faint(true)
+				case color.OpStrikethrough:
+					style = style.Strikethrough(true)
+				}
+			}
+		default:
+			fmt.Printf("unknown: %T\n", col)
+		}
+	}
+	return style
 }

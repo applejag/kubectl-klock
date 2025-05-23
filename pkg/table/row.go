@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/kubecolor/kubecolor/config"
 	"k8s.io/apimachinery/pkg/util/duration"
 )
 
@@ -64,6 +65,7 @@ type Row struct {
 	Status     Status
 	SortKey    string
 	Suggestion string
+	Kubecolor  *config.Config
 
 	renderedFields []string
 }
@@ -102,11 +104,11 @@ func (r *Row) RenderedFields() []string {
 func (r *Row) ReRenderFields() {
 	r.renderedFields = resizeSlice(r.renderedFields, len(r.Fields))
 	for i, col := range r.Fields {
-		r.renderedFields[i] = renderColumn(col)
+		r.renderedFields[i] = renderColumn(col, i, r.Kubecolor)
 	}
 }
 
-func renderColumn(value any) string {
+func renderColumn(value any, index int, cfg *config.Config) string {
 	switch value := value.(type) {
 	case JoinedColumn:
 		var sb strings.Builder
@@ -114,22 +116,41 @@ func renderColumn(value any) string {
 			if i > 0 {
 				sb.WriteString(value.Delimiter)
 			}
-			sb.WriteString(renderColumn(v))
+			sb.WriteString(renderColumn(v, index, cfg))
 		}
 		return sb.String()
 	case StyledColumn:
-		return value.Style.Render(renderColumn(value.Value))
+		if value.Style.GetForeground() == (lipgloss.NoColor{}) {
+			return value.Style.Render(renderColumn(value.Value, index, cfg))
+		} else {
+			return value.Style.Render(renderColumn(value.Value, index, nil))
+		}
 	case string:
-		return value
+		return colorFromColumn(value, index, cfg)
 	case time.Time:
 		dur := time.Since(value)
-		return duration.HumanDuration(dur)
+		str := duration.HumanDuration(dur)
+		if cfg.ObjFreshThreshold > 0 && time.Since(value) <= cfg.ObjFreshThreshold {
+			return cfg.Theme.Data.DurationFresh.Render(str)
+		}
+		return colorFromColumn(str, index, cfg)
 	case fmt.Stringer:
 		return value.String()
 	default:
 		if value == nil {
 			return ""
 		}
-		return fmt.Sprint(value)
+		return colorFromColumn(fmt.Sprint(value), index, cfg)
 	}
+}
+
+func colorFromColumn(s string, index int, cfg *config.Config) string {
+	if cfg == nil {
+		return s
+	}
+	slice := cfg.Theme.Table.Columns
+	if len(slice) == 0 {
+		return s
+	}
+	return slice[index%len(slice)].Render(s)
 }
