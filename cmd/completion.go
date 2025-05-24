@@ -13,24 +13,10 @@ import (
 // registerCompletionFuncForGlobalFlags was copied from
 // [https://github.com/kubernetes/kubectl/blob/7ce6599fc128a522ffa08ba0a594be801afb5cd4/pkg/cmd/cmd.go#L548-L569]
 func registerCompletionFuncForGlobalFlags(cmd *cobra.Command, f cmdutil.Factory) {
-	cmdutil.CheckErr(cmd.RegisterFlagCompletionFunc(
-		"namespace",
-		func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-			return completion.CompGetResource(f, "namespace", toComplete), cobra.ShellCompDirectiveNoFileComp
-		}))
-	cmdutil.CheckErr(cmd.RegisterFlagCompletionFunc(
-		"context",
-		func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-			return completion.ListContextsInConfig(toComplete), cobra.ShellCompDirectiveNoFileComp
-		}))
-	cmdutil.CheckErr(cmd.RegisterFlagCompletionFunc(
-		"cluster",
-		func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-			return completion.ListClustersInConfig(toComplete), cobra.ShellCompDirectiveNoFileComp
-		}))
-	cmdutil.CheckErr(cmd.RegisterFlagCompletionFunc(
-		"user",
-		func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-			return completion.ListUsersInConfig(toComplete), cobra.ShellCompDirectiveNoFileComp
-		}))
+	completion.SetFactoryForCompletion(f)
+
+	cmdutil.CheckErr(cmd.RegisterFlagCompletionFunc("namespace", completion.ResourceNameCompletionFunc(f, "namespace")))
+	cmdutil.CheckErr(cmd.RegisterFlagCompletionFunc("context", completion.ContextCompletionFunc))
+	cmdutil.CheckErr(cmd.RegisterFlagCompletionFunc("cluster", completion.ClusterCompletionFunc))
+	cmdutil.CheckErr(cmd.RegisterFlagCompletionFunc("user", completion.UserCompletionFunc))
 }
