@@ -59,7 +59,7 @@ func RootCmd(kubecolorConfig *config.Config) *cobra.Command {
 	k := initConfig()
 
 	var o klock.Options
-	cmd := &cobra.Command{
+	root := &cobra.Command{
 		Use:   use,
 		Short: "Watches resources",
 		Long: `Watches resources.
@@ -75,33 +75,34 @@ func RootCmd(kubecolorConfig *config.Config) *cobra.Command {
  the same protocol as "kubectl get pods --watch".
 
 Use "kubectl api-resources" for a complete list of supported resources.`,
-		Example: `  # Watch all pods
-  kubectl klock pods
+		Example: templates.Examples(`
+			# Watch all pods
+			kubectl klock pods
 
-  # Watch all pods with more information (such as node name)
-  kubectl klock pods -o wide
+			# Watch all pods with more information (such as node name)
+			kubectl klock pods -o wide
 
-  # Watch a specific pod
-  kubectl klock pods my-pod-7d68885db5-6dfst
+			# Watch a specific pod
+			kubectl klock pods my-pod-7d68885db5-6dfst
 
-  # Watch a subset of pods, filtering on labels
-  kubectl klock pods --selector app=my-app
-  kubectl klock pods -l app=my-app
+			# Watch a subset of pods, filtering on labels
+			kubectl klock pods --selector app=my-app
+			kubectl klock pods -l app=my-app
 
-  # Watch all pods in all namespaces
-  kubectl klock pods --all-namespaces
-  kubectl klock pods -A
+			# Watch all pods in all namespaces
+			kubectl klock pods --all-namespaces
+			kubectl klock pods -A
 
-  # Watch other resource types
-  kubectl klock cronjobs
-  kubectl klock deployments
-  kubectl klock statefulsets
-  kubectl klock nodes
+			# Watch other resource types
+			kubectl klock cronjobs
+			kubectl klock deployments
+			kubectl klock statefulsets
+			kubectl klock nodes
 
-  # Watch all pods, but restart the watch when your ~/.kube/config file changes,
-  # such as when using "kubectl config use-context NAME"
-  kubectl klock pods --watch-kubeconfig
-  kubectl klock pods -W`,
+			# Watch all pods, but restart the watch when your ~/.kube/config file changes,
+			# such as when using "kubectl config use-context NAME"
+			kubectl klock pods --watch-kubeconfig
+			kubectl klock pods -W`),
 		SilenceErrors: true,
 		SilenceUsage:  true,
 		Args:          cobra.MinimumNArgs(1),
@@ -127,46 +128,76 @@ Use "kubectl api-resources" for a complete list of supported resources.`,
 	o.HideDeleted = types.NewOptionalDuration(10 * time.Second)
 
 	o.ConfigFlags = kubeConfigFlags
-	o.ConfigFlags.AddFlags(cmd.Flags())
+	o.ConfigFlags.AddFlags(root.PersistentFlags())
 
-	cmd.Flags().BoolP("all-namespaces", "A", o.AllNamespaces, "If present, list the requested object(s) across all namespaces. Namespace in current context is ignored even if specified with --namespace.")
-	cmd.Flags().String("field-selector", o.FieldSelector, "Selector (field query) to filter on, supports '=', '==', and '!='.(e.g. --field-selector key1=value1,key2=value2). The server only supports a limited number of field queries per type.")
-	cmd.Flags().StringP("output", "o", o.Output, "Output format. Only a small subset of formats found in 'kubectl get' are supported by kubectl-klock.")
-	cmd.Flags().BoolP("watch-kubeconfig", "W", o.WatchKubeconfig, "Restart the watch when the kubeconfig file changes.")
-	cmd.Flags().StringSliceP("label-columns", "L", o.LabelColumns, "Accepts a comma separated list of labels that are going to be presented as columns.")
-	cmd.Flags().Var(&o.HideDeleted, "hide-deleted", `Hide deleted elements after this duration. Example: "10s", "1m". Set to "0" to always hide, and "false" to show forever.`)
-	cmdutil.AddLabelSelectorFlagVar(cmd, &o.LabelSelector)
+	root.Flags().BoolP("all-namespaces", "A", o.AllNamespaces, "If present, list the requested object(s) across all namespaces. Namespace in current context is ignored even if specified with --namespace.")
+	root.Flags().String("field-selector", o.FieldSelector, "Selector (field query) to filter on, supports '=', '==', and '!='.(e.g. --field-selector key1=value1,key2=value2). The server only supports a limited number of field queries per type.")
+	root.Flags().StringP("output", "o", o.Output, "Output format. Only a small subset of formats found in 'kubectl get' are supported by kubectl-klock.")
+	root.Flags().BoolP("watch-kubeconfig", "W", o.WatchKubeconfig, "Restart the watch when the kubeconfig file changes.")
+	root.Flags().StringSliceP("label-columns", "L", o.LabelColumns, "Accepts a comma separated list of labels that are going to be presented as columns.")
+	root.Flags().Var(&o.HideDeleted, "hide-deleted", `Hide deleted elements after this duration. Example: "10s", "1m". Set to "0" to always hide, and "false" to show forever.`)
+	cmdutil.AddLabelSelectorFlagVar(root, &o.LabelSelector)
 
-	cmd.RegisterFlagCompletionFunc("output", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	root.RegisterFlagCompletionFunc("output", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return []string{"wide"}, cobra.ShellCompDirectiveNoFileComp
 	})
 
-	registerCompletionFuncForGlobalFlags(cmd, f)
+	registerCompletionFuncForGlobalFlags(root, f)
 
-	// Must add temporary subcommand, as Cobra won't add completion commands
-	// if the command doesn't have any subcommands.
-	tmpChild := &cobra.Command{Use: "tmp", Hidden: true}
-	cmd.AddCommand(tmpChild)
-	cmd.InitDefaultCompletionCmd()
-	cmd.RemoveCommand(tmpChild)
+	root.InitDefaultCompletionCmd()
 
-	cmd.SetErr(Stderr)
-	cmd.SetOut(Stdout)
+	root.SetErr(Stderr)
+	root.SetOut(Stdout)
 
 	// Use kubectl --help templates
 
-	cmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
-		templates.ActsAsRootCommand(cmd, nil, templates.CommandGroup{})
-		var buf bytes.Buffer
-		cmd.SetOut(&buf)
-		cmd.Help()
-		p := printer.HelpPrinter{
-			Theme: &kubecolorConfig.Theme,
-		}
-		p.Print(&buf, Stdout)
+	root.SetUsageFunc(func(cmd *cobra.Command) error {
+		templates.ActsAsRootCommand(root, nil, templates.CommandGroup{})
+		p := &printer.HelpPrinter{Theme: &kubecolorConfig.Theme}
+		printUsageViaKubecolor(cmd, p)
+		return nil
+	})
+	root.SetHelpFunc(func(cmd *cobra.Command, args []string) {
+		templates.ActsAsRootCommand(root, nil, templates.CommandGroup{})
+		p := &printer.HelpPrinter{Theme: &kubecolorConfig.Theme}
+		printHelpViaKubecolor(cmd, p)
 	})
 
-	return cmd
+	optionsCmd := &cobra.Command{
+		Use:   "options",
+		Short: "Print the list of flags inherited by all commands",
+		Long:  "Print the list of flags inherited by all commands",
+		Example: templates.Examples(`
+				# Print flags inherited by all commands
+				kubectl klock options`),
+		Run: func(cmd *cobra.Command, args []string) {
+			cmd.Usage()
+		},
+	}
+	root.AddCommand(optionsCmd)
+	optionsCmd.SetUsageFunc(func(cmd *cobra.Command) error {
+		templates.UseOptionsTemplates(cmd)
+		p := &printer.OptionsPrinter{Theme: &kubecolorConfig.Theme}
+		printUsageViaKubecolor(cmd, p)
+		return nil
+	})
+	optionsCmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {})
+
+	return root
+}
+
+func printHelpViaKubecolor(cmd *cobra.Command, p printer.Printer) {
+	var buf bytes.Buffer
+	cmd.SetOut(&buf)
+	cmd.Help()
+	p.Print(&buf, Stdout)
+}
+
+func printUsageViaKubecolor(cmd *cobra.Command, p printer.Printer) {
+	var buf bytes.Buffer
+	cmd.SetOut(&buf)
+	cmd.Usage()
+	p.Print(&buf, Stdout)
 }
 
 func InitAndExecute() {
