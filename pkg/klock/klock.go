@@ -45,16 +45,17 @@ import (
 )
 
 type Options struct {
-	ConfigFlags *genericclioptions.ConfigFlags
-	Kubecolor   *config.Config
+	ConfigFlags *genericclioptions.ConfigFlags `koanf:"-"`
+	Kubecolor   *config.Config                 `koanf:"-"`
 
-	LabelSelector   string
-	FieldSelector   string
-	AllNamespaces   bool
-	WatchKubeconfig bool
-	LabelColumns    []string
-
-	Output string
+	AllNamespaces   bool          `koanf:"all-namespaces"`
+	FieldSelector   string        `koanf:"field-selector"`
+	LabelColumns    []string      `koanf:"label-columns"`
+	LabelSelector   string        `koanf:"label-selector"`
+	NoDeleted       bool          `koanf:"no-deleted"`
+	NoDeletedAfter  time.Duration `koanf:"no-deleted-after"`
+	Output          string        `koanf:"output"`
+	WatchKubeconfig bool          `koanf:"watch-kubeconfig"`
 }
 
 func (o Options) Validate() error {
