@@ -248,10 +248,7 @@ func (m *Model) sortItems() {
 }
 
 func (m *Model) updatePagination() {
-	perPage := m.maxHeight - 2 // 1 for header & 1 for paginator
-	if perPage < 1 {
-		perPage = 1
-	}
+	perPage := max(m.maxHeight-2, 1) // 1 for header & 1 for paginator
 	m.Paginator.PerPage = perPage
 	m.Paginator.SetTotalPages(len(m.filteredRows))
 

@@ -104,6 +104,11 @@ func Execute(o Options, args []string) error {
 
 		overrideLipglossWithKubecolor(&StyleFractionOK, o.Kubecolor.Theme.Data.Ratio.Equal)
 		overrideLipglossWithKubecolor(&StyleFractionWarning, o.Kubecolor.Theme.Data.Ratio.Unequal)
+
+		StyleStatusDefault = lipgloss.NewStyle()
+		overrideLipglossWithKubecolor(&StyleStatusOK, o.Kubecolor.Theme.Status.Success)
+		overrideLipglossWithKubecolor(&StyleStatusError, o.Kubecolor.Theme.Status.Error)
+		overrideLipglossWithKubecolor(&StyleStatusWarning, o.Kubecolor.Theme.Status.Warning)
 	}
 
 	printer := Printer{

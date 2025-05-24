@@ -61,7 +61,7 @@ func StatusColumn(status string) any {
 	column := table.JoinedColumn{
 		Delimiter: ",",
 	}
-	for _, s := range strings.Split(status, ",") {
+	for s := range strings.SplitSeq(status, ",") {
 		column.Values = append(column.Values, table.StyledColumn{
 			Value: s,
 			Style: StatusStyle(s),
