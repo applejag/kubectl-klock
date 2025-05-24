@@ -19,6 +19,7 @@ package main
 
 import (
 	_ "embed"
+	"runtime/debug"
 	"strings"
 
 	"github.com/applejag/kubectl-klock/cmd"
@@ -28,12 +29,44 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/exec"
 )
 
-// set via ldflags or from VERSION file
-//
-//go:embed VERSION
+// set via ldflags
 var version string
 
 func main() {
-	cmd.Version = strings.TrimSpace(version)
+	cmd.Version = getVersion()
 	cmd.InitAndExecute()
+}
+
+func getVersion() string {
+	if trimmed := strings.TrimSpace(version); trimmed != "" {
+		return trimmed
+	}
+	if info, ok := debug.ReadBuildInfo(); ok {
+		if info.Main.Version != "(devel)" {
+			return info.Main.Version
+		}
+		if v, ok := getVCSBuildVersion(info); ok {
+			return v
+		}
+	}
+	return "(unset)"
+}
+
+func getVCSBuildVersion(info *debug.BuildInfo) (string, bool) {
+	var (
+		revision string
+		dirty    string
+	)
+	for _, v := range info.Settings {
+		switch v.Key {
+		case "vcs.revision":
+			revision = v.Value
+		case "vcs.modified":
+			dirty = " (dirty)"
+		}
+	}
+	if revision == "" {
+		return "", false
+	}
+	return revision + dirty, true
 }
