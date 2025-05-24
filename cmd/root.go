@@ -124,7 +124,7 @@ Use "kubectl api-resources" for a complete list of supported resources.`,
 	}
 
 	o.Kubecolor = kubecolorConfig
-	o.HideDeleted = types.NewOptionalDuration(30 * time.Second)
+	o.HideDeleted = types.NewOptionalDuration(10 * time.Second)
 
 	o.ConfigFlags = kubeConfigFlags
 	o.ConfigFlags.AddFlags(cmd.Flags())
