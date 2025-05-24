@@ -65,7 +65,9 @@ type Row struct {
 	Status     Status
 	SortKey    string
 	Suggestion string
-	Kubecolor  *config.Config
+
+	Kubecolor                 *config.Config
+	HasLeadingNamespaceColumn bool
 
 	renderedFields []string
 }
@@ -103,8 +105,12 @@ func (r *Row) RenderedFields() []string {
 
 func (r *Row) ReRenderFields() {
 	r.renderedFields = resizeSlice(r.renderedFields, len(r.Fields))
+	offset := 0
+	if r.HasLeadingNamespaceColumn {
+		offset = -1
+	}
 	for i, col := range r.Fields {
-		r.renderedFields[i] = renderColumn(col, i, r.Kubecolor)
+		r.renderedFields[i] = renderColumn(col, i+offset, r.Kubecolor)
 	}
 }
 
@@ -151,6 +157,9 @@ func colorFromColumn(s string, index int, cfg *config.Config) string {
 	slice := cfg.Theme.Table.Columns
 	if len(slice) == 0 {
 		return s
+	}
+	for index < 0 {
+		index += len(slice)
 	}
 	return slice[index%len(slice)].Render(s)
 }
