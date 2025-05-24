@@ -6,10 +6,14 @@ name: release
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - "v*.*.*"
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
+      attestations: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -34,9 +38,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Attest release artifacts
+        uses: actions/attest-build-provenance@db473fddc028af60658334401dc6fa3ffd8669fd # v2.3.0
+        with:
+          subject-path: "dist/kubectl-klock_*.tar.gz, dist/kubectl-klock_*.zip"
+
       - name: Update new version in krew-index
         uses: rajatjindal/krew-release-bot@v0.0.47
-          
+
       - name: Publish Snaps to the Snap Store (stable channel)
         run: for snap in $(ls dist/*.snap); do snapcraft upload --release=edge $snap; done
         env:
