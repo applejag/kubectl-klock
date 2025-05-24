@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/applejag/kubectl-klock/internal/util"
+	"github.com/applejag/kubectl-klock/pkg/types"
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/paginator"
@@ -34,6 +35,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/muesli/reflow/ansi"
+	"k8s.io/apimachinery/pkg/util/duration"
 )
 
 type Styles struct {
@@ -85,10 +87,11 @@ var DefaultStyles = Styles{
 }
 
 type Model struct {
-	Styles      Styles
-	CellSpacing int
-	HideDeleted bool
-	ShowHelp    bool
+	Styles           Styles
+	CellSpacing      int
+	ShowDeleted      bool
+	HideDeletedAfter types.OptionalDuration
+	ShowHelp         bool
 
 	// Key mappings for navigating the list.
 	KeyMap KeyMap
@@ -176,7 +179,10 @@ func (m *Model) updateFilteredRows() {
 	filterText := m.filterText()
 	m.filteredRows = make([]Row, 0, len(m.rows))
 	for _, row := range m.rows {
-		if m.HideDeleted && row.Status == StatusDeleted {
+		if dur, hasDur := m.HideDeletedAfter.Duration(); hasDur &&
+			!m.ShowDeleted &&
+			row.Status == StatusDeleted &&
+			time.Since(row.DeletedAt) >= dur {
 			continue
 		}
 		if filterText != "" && !rowMatchesText(row, filterText) {
@@ -315,7 +321,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.updateColumnWidths()
 			return m, nil
 		case key.Matches(msg, m.KeyMap.ToggleDeleted):
-			m.HideDeleted = !m.HideDeleted
+			m.ShowDeleted = !m.ShowDeleted
 			m.updateRows()
 			return m, nil
 		case key.Matches(msg, m.KeyMap.ToggleFullscreen):
@@ -345,6 +351,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, cmd
 		}
 	case TickMsg:
+		m.updateFilteredRows()
+		m.updatePagination()
 		for i := range m.rows {
 			m.rows[i].ReRenderFields()
 		}
@@ -414,8 +422,14 @@ func (m Model) View() string {
 		status = append(status, m.Styles.Toggles.Render("force fullscreen"))
 	}
 
-	if m.HideDeleted {
-		status = append(status, m.Styles.Toggles.Render("hide deleted"))
+	if m.ShowDeleted {
+		status = append(status, m.Styles.Toggles.Render("show all deleted"))
+	} else if dur, ok := m.HideDeletedAfter.Duration(); ok {
+		if dur <= 0 {
+			status = append(status, m.Styles.Toggles.Render("hide deleted"))
+		} else {
+			status = append(status, m.Styles.Toggles.Render(fmt.Sprintf("hide deleted after %s", duration.HumanDuration(dur))))
+		}
 	}
 
 	if len(status) > 0 {

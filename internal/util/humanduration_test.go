@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License along
 // with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-package klock
+package util
 
 import (
 	"testing"
@@ -116,7 +116,7 @@ func TestParseHumanDuration(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.input, func(t *testing.T) {
-			dur, ok := parseHumanDuration(tc.input)
+			dur, ok := ParseHumanDuration(tc.input)
 			if tc.ok != ok {
 				t.Fatalf("want ok=%t, got ok=%t & dur=%s", tc.ok, ok, dur)
 			}

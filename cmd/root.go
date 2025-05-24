@@ -22,18 +22,22 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
+	"github.com/knadh/koanf/providers/env"
+	"github.com/knadh/koanf/providers/posflag"
+	"github.com/knadh/koanf/v2"
 	"github.com/kubecolor/kubecolor/config"
 	"github.com/kubecolor/kubecolor/printer"
 	"github.com/mattn/go-colorable"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"k8s.io/kubectl/pkg/util/completion"
 	"k8s.io/kubectl/pkg/util/templates"
 
 	"github.com/applejag/kubectl-klock/pkg/klock"
+	"github.com/applejag/kubectl-klock/pkg/types"
 )
 
 var (
@@ -51,6 +55,8 @@ func RootCmd(kubecolorConfig *config.Config) *cobra.Command {
 	if useEnv := os.Getenv("KLOCK_USAGE_NAME"); useEnv != "" {
 		use = useEnv
 	}
+
+	k := initConfig()
 
 	var o klock.Options
 	cmd := &cobra.Command{
@@ -99,8 +105,16 @@ Use "kubectl api-resources" for a complete list of supported resources.`,
 		SilenceErrors: true,
 		SilenceUsage:  true,
 		Args:          cobra.MinimumNArgs(1),
-		PreRun: func(cmd *cobra.Command, args []string) {
-			viper.BindPFlags(cmd.Flags())
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if err := k.Load(posflag.Provider(cmd.Flags(), ".", k), nil); err != nil {
+				return err
+			}
+
+			if err := k.Unmarshal("", &o); err != nil {
+				return err
+			}
+
+			return nil
 		},
 		Version: Version,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -109,18 +123,18 @@ Use "kubectl api-resources" for a complete list of supported resources.`,
 		ValidArgsFunction: completion.ResourceTypeAndNameCompletionFunc(f),
 	}
 
-	cobra.OnInitialize(initConfig)
-
 	o.Kubecolor = kubecolorConfig
+	o.HideDeleted = types.NewOptionalDuration(10 * time.Second)
 
 	o.ConfigFlags = kubeConfigFlags
 	o.ConfigFlags.AddFlags(cmd.Flags())
 
-	cmd.Flags().BoolVarP(&o.AllNamespaces, "all-namespaces", "A", o.AllNamespaces, "If present, list the requested object(s) across all namespaces. Namespace in current context is ignored even if specified with --namespace.")
-	cmd.Flags().StringVar(&o.FieldSelector, "field-selector", o.FieldSelector, "Selector (field query) to filter on, supports '=', '==', and '!='.(e.g. --field-selector key1=value1,key2=value2). The server only supports a limited number of field queries per type.")
-	cmd.Flags().StringVarP(&o.Output, "output", "o", o.Output, "Output format. Only a small subset of formats found in 'kubectl get' are supported by kubectl-klock.")
-	cmd.Flags().BoolVarP(&o.WatchKubeconfig, "watch-kubeconfig", "W", o.WatchKubeconfig, "Restart the watch when the kubeconfig file changes.")
-	cmd.Flags().StringSliceVarP(&o.LabelColumns, "label-columns", "L", o.LabelColumns, "Accepts a comma separated list of labels that are going to be presented as columns.")
+	cmd.Flags().BoolP("all-namespaces", "A", o.AllNamespaces, "If present, list the requested object(s) across all namespaces. Namespace in current context is ignored even if specified with --namespace.")
+	cmd.Flags().String("field-selector", o.FieldSelector, "Selector (field query) to filter on, supports '=', '==', and '!='.(e.g. --field-selector key1=value1,key2=value2). The server only supports a limited number of field queries per type.")
+	cmd.Flags().StringP("output", "o", o.Output, "Output format. Only a small subset of formats found in 'kubectl get' are supported by kubectl-klock.")
+	cmd.Flags().BoolP("watch-kubeconfig", "W", o.WatchKubeconfig, "Restart the watch when the kubeconfig file changes.")
+	cmd.Flags().StringSliceP("label-columns", "L", o.LabelColumns, "Accepts a comma separated list of labels that are going to be presented as columns.")
+	cmd.Flags().Var(&o.HideDeleted, "hide-deleted", `Hide deleted elements after this duration. Example: "10s", "1m". Set to "0" to always hide, and "false" to show forever.`)
 	cmdutil.AddLabelSelectorFlagVar(cmd, &o.LabelSelector)
 
 	cmd.RegisterFlagCompletionFunc("output", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
@@ -152,7 +166,6 @@ Use "kubectl api-resources" for a complete list of supported resources.`,
 		p.Print(&buf, Stdout)
 	})
 
-	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	return cmd
 }
 
@@ -168,8 +181,19 @@ func InitAndExecute() {
 	}
 }
 
-func initConfig() {
-	viper.AutomaticEnv()
+func initConfig() *koanf.Koanf {
+	k := koanf.New(".")
+
+	replacer := strings.NewReplacer("_", "-")
+	k.Load(env.Provider("KLOCK_", "__", func(s string) string {
+		return replacer.Replace(
+			strings.ToLower(
+				strings.TrimPrefix(s, "KLOCK_"),
+			),
+		)
+	}), nil)
+
+	return k
 }
 
 func getKubecolorConfig() (*config.Config, error) {

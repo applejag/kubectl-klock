@@ -41,20 +41,22 @@ import (
 	"k8s.io/cli-runtime/pkg/resource"
 	"k8s.io/client-go/rest"
 
+	"github.com/applejag/kubectl-klock/internal/util"
 	"github.com/applejag/kubectl-klock/pkg/table"
+	"github.com/applejag/kubectl-klock/pkg/types"
 )
 
 type Options struct {
-	ConfigFlags *genericclioptions.ConfigFlags
-	Kubecolor   *config.Config
+	ConfigFlags *genericclioptions.ConfigFlags `koanf:"-"`
+	Kubecolor   *config.Config                 `koanf:"-"`
 
-	LabelSelector   string
-	FieldSelector   string
-	AllNamespaces   bool
-	WatchKubeconfig bool
-	LabelColumns    []string
-
-	Output string
+	AllNamespaces   bool                   `koanf:"all-namespaces"`
+	FieldSelector   string                 `koanf:"field-selector"`
+	LabelColumns    []string               `koanf:"label-columns"`
+	LabelSelector   string                 `koanf:"label-selector"`
+	HideDeleted     types.OptionalDuration `koanf:"hide-deleted"`
+	Output          string                 `koanf:"output"`
+	WatchKubeconfig bool                   `koanf:"watch-kubeconfig"`
 }
 
 func (o Options) Validate() error {
@@ -91,6 +93,7 @@ func Execute(o Options, args []string) error {
 	}
 
 	t := table.New()
+	t.HideDeletedAfter = o.HideDeleted
 
 	if o.Kubecolor != nil {
 		overrideLipglossWithKubecolor(&t.Styles.Header, o.Kubecolor.Theme.Table.Header)
@@ -112,10 +115,11 @@ func Execute(o Options, args []string) error {
 	}
 
 	printer := Printer{
-		Kubecolor:  o.Kubecolor,
-		Table:      t,
-		WideOutput: o.Output == "wide",
-		LabelCols:  o.LabelColumns,
+		Kubecolor:        o.Kubecolor,
+		Table:            t,
+		HideDeletedAfter: o.HideDeleted,
+		WideOutput:       o.Output == "wide",
+		LabelCols:        o.LabelColumns,
 	}
 	p := tea.NewProgram(t)
 	w := NewWatcher(o, p, printer, args)
@@ -343,11 +347,12 @@ func (w *Watcher) pipeEvents(ctx context.Context, r *resource.Result, resVersion
 }
 
 type Printer struct {
-	Kubecolor  *config.Config
-	Table      *table.Model
-	WideOutput bool
-	colDefs    []metav1.TableColumnDefinition
-	LabelCols  []string
+	Kubecolor        *config.Config
+	Table            *table.Model
+	HideDeletedAfter types.OptionalDuration
+	WideOutput       bool
+	colDefs          []metav1.TableColumnDefinition
+	LabelCols        []string
 
 	info           schema.GroupVersionKind
 	apiVersion     string
@@ -471,7 +476,7 @@ func (p *Printer) addObjectToTable(objTable *metav1.Table, eventType watch.Event
 		case watch.Error:
 			tableRow.Status = table.StatusError
 		case watch.Deleted:
-			tableRow.Status = table.StatusDeleted
+			tableRow.MarkDeleted()
 		}
 		// it's fine to only use the latest returned cmd, because of how
 		// [table.AddRow] is implemented
@@ -500,7 +505,7 @@ func (p *Printer) parseCell(cell any, row metav1.TableRow, eventType watch.Event
 	case p.apiVersion == "v1" && p.kind == "Event" && columnNameLower == "last seen",
 		p.apiVersion == "batch/v1" && p.kind == "CronJob" && columnNameLower == "last schedule":
 
-		dur, ok := parseHumanDuration(cellStr)
+		dur, ok := util.ParseHumanDuration(cellStr)
 		if !ok {
 			return cell
 		}
@@ -527,7 +532,7 @@ func (p *Printer) parseCell(cell any, row metav1.TableRow, eventType watch.Event
 		if f.Count >= f.Total {
 			return cell
 		}
-		dur, ok := parseHumanDuration(cellStr)
+		dur, ok := util.ParseHumanDuration(cellStr)
 		if !ok {
 			return cell
 		}

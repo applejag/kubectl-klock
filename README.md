@@ -118,7 +118,7 @@ There's also some hotkeys available:
 ```text
   →/l/pgdn next page      /        filter by text                  ctrl+c quit
   ←/h/pgup prev page      enter    close the filter input field    ?/esc  close help
-  g/home   go to start    esc      clear the applied filter        d      show/hide deleted
+  g/home   go to start    esc      clear the applied filter        d      show all deleted
   G/end    go to end      ↓/ctrl+n show next suggestion            f      toggle fullscreen
                           ↑/ctrl+p show previous suggestion
                           tab      accept a suggestion
@@ -143,6 +143,29 @@ There's also some hotkeys available:
   such as when changed by [kubectx](https://github.com/ahmetb/kubectx).
 
 - Color themes powered by [kubecolor](https://kubecolor.github.io/)
+
+- Shows deleted table rows for a short duration,
+  controllable via the `--hide-deleted=10s` flag
+  and `KLOCK_HIDE_DELETED=10s` environment variable.
+  Can be disabled to always show deleted rows by setting `--hide-deleted=false`
+
+### Environment variables
+
+Command-line flags can be controlled via environment variables:
+
+```bash
+export KLOCK_ALL_NAMESPACES="true"                     # --all-namespaces
+export KLOCK_FIELD_SELECTOR="status.phase!=Succeeded"  # --field-separator
+export KLOCK_HIDE_DELETED="false"                      # --hide-deleted
+export KLOCK_LABEL_COLUMNS="app.kubernetes.io/name"    # --label-columns
+export KLOCK_OUTPUT="wide"                             # --output
+export KLOCK_SELECTOR="team!=frontend"                 # --selector
+export KLOCK_WATCH_KUBECONFIG="true"                   # --watch-kubeconfig
+```
+
+The command-line flags have precedense over the environment variables.
+So if you set `KLOCK_ALL_NAMESPACES=true` then you can revert the value
+by passing the flag `--all-namespaces=false`
 
 ### Color themes
 
