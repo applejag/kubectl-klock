@@ -63,6 +63,7 @@ type Row struct {
 	ID         string
 	Fields     []any
 	Status     Status
+	DeletedAt  time.Time
 	SortKey    string
 	Suggestion string
 
@@ -116,6 +117,14 @@ func (r *Row) ReRenderFields() {
 	for i, col := range r.Fields {
 		r.renderedFields[i] = renderColumn(col, i+offset, cfg)
 	}
+}
+
+func (r *Row) MarkDeleted() {
+	if r.Status == StatusDeleted {
+		return
+	}
+	r.Status = StatusDeleted
+	r.DeletedAt = time.Now()
 }
 
 func renderColumn(value any, index int, cfg *config.Config) string {

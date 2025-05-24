@@ -19,9 +19,10 @@ package klock
 
 import (
 	"fmt"
-	"io"
 	"regexp"
 	"time"
+
+	"github.com/applejag/kubectl-klock/internal/util"
 )
 
 type Fraction struct {
@@ -55,49 +56,9 @@ func parsePodRestarts(s string) (string, time.Duration, bool) {
 	}
 	groupCount := groups[1]
 	groupDur := groups[2]
-	dur, ok := parseHumanDuration(groupDur)
+	dur, ok := util.ParseHumanDuration(groupDur)
 	if !ok {
 		return s, 0, false
 	}
 	return groupCount, dur, true
-}
-
-func parseHumanDuration(s string) (time.Duration, bool) {
-	const (
-		DAY = time.Hour * 24
-		// This is how [k8s.io/apimachinery/pkg/util/duration] defines a year
-		YEAR = DAY * 365
-	)
-
-	rest := s
-	var dur time.Duration
-
-	for rest != "" {
-		num, char, newRest, ok := parseHumanDurationSegment(rest)
-		if !ok {
-			return dur, false
-		}
-		rest = newRest
-		switch char {
-		case 'y':
-			dur += time.Duration(num) * YEAR
-		case 'd':
-			dur += time.Duration(num) * DAY
-		case 'h':
-			dur += time.Duration(num) * time.Hour
-		case 'm':
-			dur += time.Duration(num) * time.Minute
-		case 's':
-			dur += time.Duration(num) * time.Second
-		default:
-			return dur, false
-		}
-	}
-	return dur, true
-}
-
-func parseHumanDurationSegment(s string) (num int, char rune, rest string, ok bool) {
-	n, err := fmt.Sscanf(s, "%d%c%s", &num, &char, &rest)
-	ok = (err == io.EOF && n == 2) || err == nil
-	return
 }

@@ -118,7 +118,7 @@ There's also some hotkeys available:
 ```text
   →/l/pgdn next page      /        filter by text                  ctrl+c quit
   ←/h/pgup prev page      enter    close the filter input field    ?/esc  close help
-  g/home   go to start    esc      clear the applied filter        d      show/hide deleted
+  g/home   go to start    esc      clear the applied filter        d      show all deleted
   G/end    go to end      ↓/ctrl+n show next suggestion            f      toggle fullscreen
                           ↑/ctrl+p show previous suggestion
                           tab      accept a suggestion

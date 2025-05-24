@@ -81,7 +81,7 @@ var DefaultKeyMap = KeyMap{
 
 	ToggleDeleted: key.NewBinding(
 		key.WithKeys("d"),
-		key.WithHelp("d", "show/hide deleted"),
+		key.WithHelp("d", "show all deleted"),
 	),
 
 	// Filtering.

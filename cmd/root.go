@@ -37,6 +37,7 @@ import (
 	"k8s.io/kubectl/pkg/util/templates"
 
 	"github.com/applejag/kubectl-klock/pkg/klock"
+	"github.com/applejag/kubectl-klock/pkg/types"
 )
 
 var (
@@ -123,7 +124,7 @@ Use "kubectl api-resources" for a complete list of supported resources.`,
 	}
 
 	o.Kubecolor = kubecolorConfig
-	o.NoDeletedAfter = 30 * time.Second
+	o.HideDeleted = types.NewOptionalDuration(30 * time.Second)
 
 	o.ConfigFlags = kubeConfigFlags
 	o.ConfigFlags.AddFlags(cmd.Flags())
@@ -133,8 +134,7 @@ Use "kubectl api-resources" for a complete list of supported resources.`,
 	cmd.Flags().StringP("output", "o", o.Output, "Output format. Only a small subset of formats found in 'kubectl get' are supported by kubectl-klock.")
 	cmd.Flags().BoolP("watch-kubeconfig", "W", o.WatchKubeconfig, "Restart the watch when the kubeconfig file changes.")
 	cmd.Flags().StringSliceP("label-columns", "L", o.LabelColumns, "Accepts a comma separated list of labels that are going to be presented as columns.")
-	cmd.Flags().Bool("no-deleted", o.NoDeleted, "Hide deleted rows by default, and lets you show deleted rows by pressing the 'd' hotkey")
-	cmd.Flags().Duration("no-deleted-after", o.NoDeletedAfter, "Removes deleted rows after this duration. Example: 10s, 1m. Set to 0 to show forever.")
+	cmd.Flags().Var(&o.HideDeleted, "hide-deleted", `Hide deleted elements after this duration. Example: "10s", "1m". Set to "0" to always hide, and "false" to show forever.`)
 	cmdutil.AddLabelSelectorFlagVar(cmd, &o.LabelSelector)
 
 	cmd.RegisterFlagCompletionFunc("output", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
