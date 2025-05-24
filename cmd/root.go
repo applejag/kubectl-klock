@@ -177,7 +177,7 @@ func getKubecolorConfig() (*config.Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	if config.ApplyThemePreset(v); err != nil {
+	if err := config.ApplyThemePreset(v); err != nil {
 		return nil, err
 	}
 	return config.Unmarshal(v)
