@@ -37,9 +37,8 @@ import (
 )
 
 type Styles struct {
-	TitleBar lipgloss.Style
-	Title    lipgloss.Style
-	Row      RowStyles
+	Header lipgloss.Style
+	Row    RowStyles
 
 	NoneFound         lipgloss.Style
 	Error             lipgloss.Style
@@ -55,9 +54,8 @@ type Styles struct {
 var subduedColor = lipgloss.AdaptiveColor{Light: "#9B9B9B", Dark: "#5C5C5C"}
 
 var DefaultStyles = Styles{
-	TitleBar: lipgloss.NewStyle(),
-	Title:    lipgloss.NewStyle(),
-	Row:      DefaultRowStyle,
+	Header: lipgloss.NewStyle(),
+	Row:    DefaultRowStyle,
 
 	NoneFound: lipgloss.NewStyle().
 		Foreground(lipgloss.ANSIColor(3)).
@@ -250,10 +248,7 @@ func (m *Model) sortItems() {
 }
 
 func (m *Model) updatePagination() {
-	perPage := m.maxHeight - 2 // 1 for header & 1 for paginator
-	if perPage < 1 {
-		perPage = 1
-	}
+	perPage := max(m.maxHeight-2, 1) // 1 for header & 1 for paginator
 	m.Paginator.PerPage = perPage
 	m.Paginator.SetTotalPages(len(m.filteredRows))
 
@@ -383,7 +378,7 @@ func (m Model) View() string {
 			buf.WriteString(m.filterInput.View())
 			buf.WriteByte('\n')
 		} else if len(currentPage) > 0 {
-			m.columnsView(&buf, m.headers, lipgloss.Style{})
+			m.columnsView(&buf, m.headers, m.Styles.Header)
 			buf.WriteByte('\n')
 		}
 	}

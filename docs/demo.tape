@@ -10,8 +10,8 @@ Require kubectl
 Require kubectl-klock
 
 Set Shell "bash"
-Set TypingSpeed 100ms
-Set FontSize 24
+Set TypingSpeed 80ms
+Set FontSize 20
 Set Width 1024
 Set Height 720
 
@@ -25,12 +25,7 @@ Enter
 Sleep 1s
 Show
 
-Sleep 3s
-
-Type "# `kubectl klock pods` is similar to `kubectl get pods -w`"
 Sleep 2s
-Enter
-Sleep 3s
 
 Type "kubectl klock pods"
 Sleep 500ms
@@ -41,10 +36,10 @@ Ctrl+B
 Type '"'
 Sleep 5s
 
-Type "# This split represents a different terminal window"
-Sleep 500ms 
+Type "# Just using a tmux split here"
+Sleep 500ms
 Enter
-Sleep 5s
+Sleep 2s
 
 Type "kubectl run nginx --image nginx"
 Sleep 500ms
@@ -52,12 +47,12 @@ Enter
 Sleep 5s
 
 Type "kubectl run --rm -it ubuntu --image ubuntu"
-Sleep 500ms 
+Sleep 500ms
 Enter
 Sleep 3s
 
 Type "echo 'Hello from the ubuntu container'"
-Sleep 500ms 
+Sleep 500ms
 Enter
 Sleep 3s
 
@@ -67,7 +62,7 @@ Enter
 Sleep 3s
 
 Type "kubectl delete pod nginx"
-Sleep 500ms 
+Sleep 500ms
 Enter
 
 Sleep 10s
