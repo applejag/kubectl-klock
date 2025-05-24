@@ -16,7 +16,7 @@ build: dist/${BINARY} bin/klock.kubectl-klock.completion.bash
 bin/klock.kubectl-klock.completion.bash: dist/${BINARY} go.mod go.sum
 	KLOCK_USAGE_NAME=klock.kubectl-klock dist/${BINARY} completion bash > bin/klock.kubectl-klock.completion.bash
 
-dist/${BINARY}: dist cmd/*.go pkg/*/*.go VERSION
+dist/${BINARY}: dist cmd/*.go pkg/*/*.go
 	go build -o dist/${BINARY}
 
 dist:
