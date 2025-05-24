@@ -154,13 +154,13 @@ There's also some hotkeys available:
 Command-line flags can be controlled via environment variables:
 
 ```bash
-export KLOCK_ALL_NAMESPACES=true                       # --all-namespaces
+export KLOCK_ALL_NAMESPACES="true"                     # --all-namespaces
 export KLOCK_FIELD_SELECTOR="status.phase!=Succeeded"  # --field-separator
 export KLOCK_HIDE_DELETED="false"                      # --hide-deleted
 export KLOCK_LABEL_COLUMNS="app.kubernetes.io/name"    # --label-columns
 export KLOCK_OUTPUT="wide"                             # --output
 export KLOCK_SELECTOR="team!=frontend"                 # --selector
-export KLOCK_WATCH_KUBECONFIG=true                     # --watch-kubeconfig
+export KLOCK_WATCH_KUBECONFIG="true"                   # --watch-kubeconfig
 ```
 
 The command-line flags have precedense over the environment variables.
