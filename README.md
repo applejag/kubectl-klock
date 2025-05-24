@@ -142,7 +142,35 @@ There's also some hotkeys available:
 - Restart watch when kubeconfig file changes (flag: `--watch-kubeconfig`, `-W`),
   such as when changed by [kubectx](https://github.com/ahmetb/kubectx).
 
-## Completion
+- Color themes powered by [kubecolor](https://kubecolor.github.io/)
+
+### Color themes
+
+Klock uses kubecolor's coloring logic and behavior when coloring its output.
+See: <https://kubecolor.github.io/customizing/themes/>
+
+Color settings that klock uses:
+
+- `KUBECOLOR_THEME_BASE_DANGER` for rows with errors
+- `KUBECOLOR_THEME_BASE_MUTED` for "No resources found"
+- `KUBECOLOR_THEME_BASE_MUTED` for deleted rows
+- `KUBECOLOR_THEME_BASE_MUTED` for status line
+- `KUBECOLOR_THEME_BASE_SECONDARY` for "FILTER:" prompt
+- `KUBECOLOR_THEME_BASE_WARNING` for "No resources visible" when filtering
+- `KUBECOLOR_THEME_DATA_DURATIONFRESH` for `AGE: 12h` when below threshold
+- `KUBECOLOR_THEME_DATA_RATIO_EQUAL` for `READY: 1/1`
+- `KUBECOLOR_THEME_DATA_RATIO_UNEQUAL` for `READY: 0/1`
+- `KUBECOLOR_THEME_STATUS_ERROR` for `STATUS: CrashLoopBackOff`
+- `KUBECOLOR_THEME_STATUS_SUCCESS` for `STATUS: Running`
+- `KUBECOLOR_THEME_STATUS_WARNING` for `STATUS: Terminating`
+- `KUBECOLOR_THEME_TABLE_COLUMNS` for table columns
+- `KUBECOLOR_THEME_TABLE_HEADER` for table header
+
+You can configure these colors either via
+[environment variables](https://kubecolor.github.io/reference/environment-variables/)
+or via the [`~/.kube/color.yaml` config file](https://kubecolor.github.io/reference/config/)
+
+### Completion
 
 To get completion when writing `kubectl klock`, you need to add
 [`./bin/kubectl_complete-klock`](./bin/kubectl_complete-klock)
