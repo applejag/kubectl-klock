@@ -109,8 +109,12 @@ func (r *Row) ReRenderFields() {
 	if r.HasLeadingNamespaceColumn {
 		offset = -1
 	}
+	cfg := r.Kubecolor
+	if r.Status == StatusDeleted {
+		cfg = nil
+	}
 	for i, col := range r.Fields {
-		r.renderedFields[i] = renderColumn(col, i+offset, r.Kubecolor)
+		r.renderedFields[i] = renderColumn(col, i+offset, cfg)
 	}
 }
 
@@ -126,7 +130,7 @@ func renderColumn(value any, index int, cfg *config.Config) string {
 		}
 		return sb.String()
 	case StyledColumn:
-		if value.Style.GetForeground() == (lipgloss.NoColor{}) {
+		if cfg != nil && value.Style.GetForeground() == (lipgloss.NoColor{}) {
 			return value.Style.Render(renderColumn(value.Value, index, cfg))
 		} else {
 			return value.Style.Render(renderColumn(value.Value, index, nil))
@@ -136,7 +140,7 @@ func renderColumn(value any, index int, cfg *config.Config) string {
 	case time.Time:
 		dur := time.Since(value)
 		str := duration.HumanDuration(dur)
-		if cfg.ObjFreshThreshold > 0 && time.Since(value) <= cfg.ObjFreshThreshold {
+		if cfg != nil && cfg.ObjFreshThreshold > 0 && time.Since(value) <= cfg.ObjFreshThreshold {
 			return cfg.Theme.Data.DurationFresh.Render(str)
 		}
 		return colorFromColumn(str, index, cfg)
