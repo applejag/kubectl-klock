@@ -4,19 +4,20 @@
 
 # yaml-language-server: $schema=https://goreleaser.com/static/schema.json
 project_name: kubectl-klock
+version: 2
 release:
   github:
     owner: applejag
     name: kubectl-klock
 builds:
   - goos:
-    - linux
-    - windows
-    - darwin
+      - linux
+      - windows
+      - darwin
     goarch:
-    - amd64
-    - arm64
-    - "386"
+      - amd64
+      - arm64
+      - "386"
     env:
       - CGO_ENABLED=0
       - GO111MODULE=on
@@ -63,9 +64,8 @@ snapcrafts:
           - network
 
 archives:
-  - builds:
-    - kubectl-klock
+  - ids: [kubectl-klock]
     name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
     format_overrides:
-    - goos: windows
-      format: zip
+      - goos: windows
+        formats: [zip]
