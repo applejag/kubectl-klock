@@ -257,10 +257,10 @@ func (w *Watcher) watch(ctx context.Context, clearBeforePrinting bool) error {
 	r := resource.NewBuilder(w.ConfigFlags).
 		Unstructured().
 		NamespaceParam(ns).DefaultNamespace().AllNamespaces(w.AllNamespaces).
-		//FilenameParam(o.ExplicitNamespace, &o.FilenameOptions).
+		// FilenameParam(o.ExplicitNamespace, &o.FilenameOptions).
 		LabelSelectorParam(w.LabelSelector).
 		FieldSelectorParam(w.FieldSelector).
-		//RequestChunksOf(o.ChunkSize).
+		// RequestChunksOf(o.ChunkSize).
 		ResourceTypeOrNameArgs(true, w.Args...).
 		SingleResourceType().
 		Latest().
@@ -620,9 +620,9 @@ func kubecolorColorToLipgloss(c kubecolor.Color) lipgloss.Style {
 		case color.Color:
 			switch {
 			case col.IsFg():
-				style = style.Foreground(lipgloss.Color("#" + col.RGB().Hex()))
+				style = style.Foreground(lipgloss.ANSIColor(uint(col) - uint(color.FgBase)))
 			case col.IsBg():
-				style = style.Background(lipgloss.Color("#" + col.RGB().Hex()))
+				style = style.Background(lipgloss.ANSIColor(uint(col) - uint(color.BgBase)))
 			case col.IsOption():
 				switch col {
 				case color.OpBold:
