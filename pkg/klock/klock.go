@@ -468,9 +468,9 @@ func (p *Printer) addObjectToTable(objTable *metav1.Table, eventType watch.Event
 			}
 			tableRow.Fields = append(tableRow.Fields, p.parseCell(cell, row, eventType, unstrucObj.Object, colDef, creationTime))
 		}
+		objLabels := unstrucObj.GetLabels()
 		for _, label := range p.LabelCols {
-			labelValue := unstrucObj.GetLabels()[label]
-			tableRow.Fields = append(tableRow.Fields, labelValue)
+			tableRow.Fields = append(tableRow.Fields, objLabels[label])
 		}
 		switch eventType {
 		case watch.Error:
@@ -479,7 +479,7 @@ func (p *Printer) addObjectToTable(objTable *metav1.Table, eventType watch.Event
 			tableRow.MarkDeleted()
 		}
 		// it's fine to only use the latest returned cmd, because of how
-		// [table.AddRow] is implemented
+		// [table.Model.AddRow] is implemented
 
 		cmd = p.Table.AddRow(tableRow)
 	}

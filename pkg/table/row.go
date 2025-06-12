@@ -105,7 +105,10 @@ func (r *Row) RenderedFields() []string {
 }
 
 func (r *Row) ReRenderFields() {
-	r.renderedFields = resizeSlice(r.renderedFields, len(r.Fields))
+	// Store result in an temporary variable, to avoid possibility of another
+	// goroutine changing the slice size beneath our feet while we update it
+	// See: https://github.com/applejag/kubectl-klock/issues/161
+	rendered := resizeSlice(r.renderedFields, len(r.Fields))
 	offset := 0
 	if r.HasLeadingNamespaceColumn {
 		offset = -1
@@ -115,8 +118,9 @@ func (r *Row) ReRenderFields() {
 		cfg = nil
 	}
 	for i, col := range r.Fields {
-		r.renderedFields[i] = renderColumn(col, i+offset, cfg)
+		rendered[i] = renderColumn(col, i+offset, cfg)
 	}
+	r.renderedFields = rendered
 }
 
 func (r *Row) MarkDeleted() {
