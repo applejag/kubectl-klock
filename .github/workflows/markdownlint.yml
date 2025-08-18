@@ -15,7 +15,7 @@ jobs:
     name: remark-lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: markdownlint
         uses: reviewdog/action-markdownlint@v0
         with:
