@@ -46,7 +46,7 @@ jobs:
 
     # Using newer version of Go than ubuntu-latest comes shipped with,
     # so we must install it manually via setup-go.
-    - uses: actions/setup-go@v5
+    - uses: actions/setup-go@v6
       with:
         go-version-file: go.mod
 
