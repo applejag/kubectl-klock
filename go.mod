@@ -4,7 +4,7 @@
 
 module github.com/applejag/kubectl-klock
 
-go 1.24.7
+go 1.25.3
 
 require (
 	github.com/charmbracelet/bubbles v0.21.0
@@ -15,7 +15,7 @@ require (
 	github.com/knadh/koanf/providers/env v1.1.0
 	github.com/knadh/koanf/providers/posflag v1.0.1
 	github.com/knadh/koanf/v2 v2.3.0
-	github.com/kubecolor/kubecolor v0.5.2
+	github.com/kubecolor/kubecolor v0.5.3
 	github.com/mattn/go-colorable v0.1.14
 	github.com/muesli/reflow v0.3.0
 	github.com/spf13/cobra v1.10.1
