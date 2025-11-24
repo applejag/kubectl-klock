@@ -42,7 +42,7 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
     # Using newer version of Go than ubuntu-latest comes shipped with,
     # so we must install it manually via setup-go.
