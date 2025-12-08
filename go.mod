@@ -18,7 +18,7 @@ require (
 	github.com/kubecolor/kubecolor v0.5.3
 	github.com/mattn/go-colorable v0.1.14
 	github.com/muesli/reflow v0.3.0
-	github.com/spf13/cobra v1.10.1
+	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
 	k8s.io/apimachinery v0.34.2
 	k8s.io/cli-runtime v0.34.2
