@@ -172,6 +172,16 @@ by passing the flag `--all-namespaces=false`
 Klock uses kubecolor's coloring logic and behavior when coloring its output.
 See: <https://kubecolor.github.io/customizing/themes/>
 
+> [!NOTE]
+> If you have a light background, then switch `kubectl-klock` to use the light
+> theme by setting the [`KUBECOLOR_PRESET=light`](https://kubecolor.github.io/reference/environment-variables/#kubecolor_preset)
+> environment variable:
+>
+> ```bash
+> export KUBECOLOR_PRESET="light"
+> kubectl klock --help
+> ```
+
 Color settings that klock uses:
 
 - `KUBECOLOR_THEME_BASE_DANGER` for rows with errors
