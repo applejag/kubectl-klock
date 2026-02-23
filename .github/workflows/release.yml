@@ -31,7 +31,7 @@ jobs:
           mkdir -pv $HOME/.cache/snapcraft/stage-packages
 
       - name: GoReleaser
-        uses: goreleaser/goreleaser-action@v6
+        uses: goreleaser/goreleaser-action@v7
         with:
           version: ~> v2
           args: release --clean
@@ -44,7 +44,7 @@ jobs:
           subject-path: "dist/kubectl-klock_*.tar.gz, dist/kubectl-klock_*.zip"
 
       - name: Update new version in krew-index
-        uses: rajatjindal/krew-release-bot@v0.0.47
+        uses: rajatjindal/krew-release-bot@v0.0.50
 
       - name: Publish Snaps to the Snap Store (stable channel)
         run: for snap in $(ls dist/*.snap); do snapcraft upload --release=edge $snap; done
