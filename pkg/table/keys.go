@@ -137,7 +137,7 @@ func (m Model) FullHelp() [][]key.Binding {
 		m.KeyMap.GoToEnd,
 	}}
 
-	//filtering := m.filterState == Filtering
+	// filtering := m.filterState == Filtering
 
 	//// If the delegate implements the help.KeyMap interface add full help
 	//// keybindings to a special section of the full help.

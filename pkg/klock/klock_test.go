@@ -17,7 +17,9 @@
 
 package klock
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestLabelColumnHeader(t *testing.T) {
 	tests := []struct {
@@ -55,6 +57,65 @@ func TestLabelColumnHeader(t *testing.T) {
 			got := labelColumnHeader(tc.input)
 			if got != tc.want {
 				t.Errorf("value did not match\nwant: %q\ngot:  %q", tc.want, got)
+			}
+		})
+	}
+}
+
+func Test_parseArgs(t *testing.T) {
+	type args struct {
+		args []string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "no args",
+			args: args{
+				args: []string{},
+			},
+			wantErr: true,
+		}, {
+			name: "single arg",
+			args: args{
+				args: []string{
+					"pods",
+				},
+			},
+			wantErr: false,
+		}, {
+			name: "multiple args",
+			args: args{
+				args: []string{
+					"pods",
+					"nginx",
+				},
+			},
+			wantErr: false,
+		}, {
+			name: "resource/name",
+			args: args{
+				args: []string{
+					"pods/nginx",
+				},
+			},
+			wantErr: false,
+		}, {
+			name: "comma separated args",
+			args: args{
+				args: []string{
+					"pods,nodes",
+				},
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := parseArgs(tt.args.args); (err != nil) != tt.wantErr {
+				t.Errorf("parseArgs() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

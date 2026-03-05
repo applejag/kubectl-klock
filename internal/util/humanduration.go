@@ -66,5 +66,5 @@ func ParseHumanDuration(s string) (time.Duration, bool) {
 func parseHumanDurationSegment(s string) (num int, char rune, rest string, ok bool) {
 	n, err := fmt.Sscanf(s, "%d%c%s", &num, &char, &rest)
 	ok = (err == io.EOF && n == 2) || err == nil
-	return
+	return num, char, rest, ok
 }
