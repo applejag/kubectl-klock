@@ -76,20 +76,18 @@ func (o Options) Validate() error {
 	}
 }
 
-func parseArgs(args []string) error {
-	if len(args) < 1 {
-		return errors.New("please specify a resource type, or ")
-	}
-
+// validateArgs returns an error if there's something wrong with the provided args.
+//
+// The "args" is assumed to not be an empty slice
+func validateArgs(args []string) error {
 	if strings.Contains(args[0], ",") {
-		return errors.New("fatal: only one resource kind can be watched at a time")
+		return errors.New("only one resource kind can be watched at a time")
 	}
-
 	return nil
 }
 
 func Execute(o Options, args []string) error {
-	err := parseArgs(args)
+	err := validateArgs(args)
 	if err != nil {
 		return err
 	}
