@@ -79,7 +79,7 @@ func TestParseHumanDuration(t *testing.T) {
 		YEAR = DAY * 365
 	)
 
-	nowFunc = func() time.Time { return time.Date(2025, 0o1, 0o1, 12, 0, 0, 0, time.UTC) }
+	nowFunc = func() time.Time { return time.Date(2025, 1, 1, 12, 0, 0, 0, time.UTC) }
 	defer func() { nowFunc = time.Now }()
 
 	tests := []struct {
