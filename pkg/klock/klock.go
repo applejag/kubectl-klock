@@ -81,7 +81,8 @@ func (o Options) Validate() error {
 // The "args" is assumed to not be an empty slice
 func validateArgs(args []string) error {
 	if strings.Contains(args[0], ",") {
-		return errors.New("only one resource kind can be watched at a time")
+		// same error as in "kubectl get pod,svc --watch"
+		return errors.New("you may only specify a single resource type")
 	}
 	return nil
 }

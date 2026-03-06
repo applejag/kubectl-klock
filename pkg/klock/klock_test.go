@@ -86,7 +86,7 @@ func TestValidateArgs(t *testing.T) {
 		{
 			name:    "comma separated args",
 			args:    []string{"pods,nodes"},
-			wantErr: "only one resource kind can be watched at a time",
+			wantErr: "you may only specify a single resource type",
 		},
 	}
 	for _, test := range tests {
