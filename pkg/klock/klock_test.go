@@ -17,7 +17,9 @@
 
 package klock
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestLabelColumnHeader(t *testing.T) {
 	tests := []struct {
@@ -50,11 +52,52 @@ func TestLabelColumnHeader(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
-		t.Run(tc.input, func(t *testing.T) {
-			got := labelColumnHeader(tc.input)
-			if got != tc.want {
-				t.Errorf("value did not match\nwant: %q\ngot:  %q", tc.want, got)
+	for _, test := range tests {
+		t.Run(test.input, func(t *testing.T) {
+			got := labelColumnHeader(test.input)
+			if got != test.want {
+				t.Errorf("value did not match\nwant: %q\ngot:  %q", test.want, got)
+			}
+		})
+	}
+}
+
+func TestValidateArgs(t *testing.T) {
+	tests := []struct {
+		name    string
+		args    []string
+		wantErr string
+	}{
+		{
+			name:    "single arg",
+			args:    []string{"pods"},
+			wantErr: "",
+		},
+		{
+			name:    "multiple args",
+			args:    []string{"pods", "nginx"},
+			wantErr: "",
+		},
+		{
+			name:    "resource/name",
+			args:    []string{"pods/nginx"},
+			wantErr: "",
+		},
+		{
+			name:    "comma separated args",
+			args:    []string{"pods,nodes"},
+			wantErr: "you may only specify a single resource type",
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			err := validateArgs(test.args)
+			t.Logf("args: %#v", test.args)
+			if test.wantErr == "" && err != nil {
+				t.Errorf("unexpected error: %q", err)
+			}
+			if test.wantErr != "" && (err == nil || err.Error() != test.wantErr) {
+				t.Errorf("wrong error result\nwant: %q\ngot:  %q", test.wantErr, err)
 			}
 		})
 	}

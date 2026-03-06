@@ -19,6 +19,7 @@ package klock
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -75,7 +76,21 @@ func (o Options) Validate() error {
 	}
 }
 
+// validateArgs returns an error if there's something wrong with the provided args.
+//
+// The "args" is assumed to not be an empty slice
+func validateArgs(args []string) error {
+	if strings.Contains(args[0], ",") {
+		// same error as in "kubectl get pod,svc --watch"
+		return errors.New("you may only specify a single resource type")
+	}
+	return nil
+}
+
 func Execute(o Options, args []string) error {
+	if err := validateArgs(args); err != nil {
+		return err
+	}
 	if err := o.Validate(); err != nil {
 		return err
 	}

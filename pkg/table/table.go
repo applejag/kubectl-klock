@@ -479,7 +479,7 @@ var lotsOfSpaces = strings.Repeat(" ", 200)
 func (m Model) columnsView(buf *bytes.Buffer, columns []string, style lipgloss.Style) {
 	for i, col := range columns {
 		if i > 0 {
-			//TODO: test style.Width()
+			// TODO: test style.Width()
 			spacing := m.CellSpacing + m.columnWidths[i-1] - ansi.PrintableRuneWidth(columns[i-1])
 			if spacing > 0 {
 				fmt.Fprint(buf, lotsOfSpaces[:spacing])

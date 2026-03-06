@@ -23,6 +23,9 @@ import (
 	"time"
 )
 
+// nowFunc can be overridden in tests
+var nowFunc = time.Now
+
 func ParseHumanDuration(s string) (time.Duration, bool) {
 	const (
 		DAY = time.Hour * 24
@@ -39,16 +42,16 @@ func ParseHumanDuration(s string) (time.Duration, bool) {
 		rest = newRest
 		switch char {
 		case 'y':
-			now := time.Now()
+			now := nowFunc()
 			dur += now.AddDate(num, 0, 0).Sub(now)
 		case 'M':
-			now := time.Now()
+			now := nowFunc()
 			dur += now.AddDate(0, num, 0).Sub(now)
 		case 'w':
-			now := time.Now()
+			now := nowFunc()
 			dur += now.AddDate(0, 0, 7*num).Sub(now)
 		case 'd':
-			now := time.Now()
+			now := nowFunc()
 			dur += now.AddDate(0, 0, num).Sub(now)
 		case 'h':
 			dur += time.Duration(num) * time.Hour
@@ -66,5 +69,5 @@ func ParseHumanDuration(s string) (time.Duration, bool) {
 func parseHumanDurationSegment(s string) (num int, char rune, rest string, ok bool) {
 	n, err := fmt.Sscanf(s, "%d%c%s", &num, &char, &rest)
 	ok = (err == io.EOF && n == 2) || err == nil
-	return
+	return num, char, rest, ok
 }

@@ -46,8 +46,10 @@ func NewOptionalDuration(dur time.Duration) OptionalDuration {
 	return OptionalDuration{Value: dur, HasValue: true}
 }
 
-var _ encoding.TextUnmarshaler = &OptionalDuration{}
-var _ pflag.Value = &OptionalDuration{}
+var (
+	_ encoding.TextUnmarshaler = &OptionalDuration{}
+	_ pflag.Value              = &OptionalDuration{}
+)
 
 func (o OptionalDuration) Duration() (time.Duration, bool) {
 	return o.Value, o.HasValue
