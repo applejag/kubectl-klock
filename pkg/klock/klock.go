@@ -87,11 +87,9 @@ func validateArgs(args []string) error {
 }
 
 func Execute(o Options, args []string) error {
-	err := validateArgs(args)
-	if err != nil {
+	if err := validateArgs(args); err != nil {
 		return err
 	}
-
 	if err := o.Validate(); err != nil {
 		return err
 	}
@@ -172,7 +170,7 @@ func Execute(o Options, args []string) error {
 		w.WatchLoop(ctx, restartChan)
 	}()
 
-	_, err = p.Run()
+	_, err := p.Run()
 	return err
 }
 
