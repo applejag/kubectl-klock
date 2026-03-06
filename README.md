@@ -163,7 +163,7 @@ export KLOCK_SELECTOR="team!=frontend"                 # --selector
 export KLOCK_WATCH_KUBECONFIG="true"                   # --watch-kubeconfig
 ```
 
-The command-line flags have precedense over the environment variables.
+The command-line flags have precedence over the environment variables.
 So if you set `KLOCK_ALL_NAMESPACES=true` then you can revert the value
 by passing the flag `--all-namespaces=false`
 
