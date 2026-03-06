@@ -1,3 +1,7 @@
+SPDX-FileCopyrightText: 2026 Kalle Fagerberg
+
+SPDX-License-Identifier: CC0-1.0
+
 diff --git a/bin/klock.kubectl-klock.completion.bash b/bin/klock.kubectl-klock.completion.bash
 index 0a73fd2..ecedbc2 100755
 --- a/bin/klock.kubectl-klock.completion.bash
