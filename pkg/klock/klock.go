@@ -127,6 +127,10 @@ func Execute(o Options, args []string) error {
 		overrideLipglossWithKubecolor(&StyleStatusOK, o.Kubecolor.Theme.Status.Success)
 		overrideLipglossWithKubecolor(&StyleStatusError, o.Kubecolor.Theme.Status.Error)
 		overrideLipglossWithKubecolor(&StyleStatusWarning, o.Kubecolor.Theme.Status.Warning)
+
+		overrideLipglossWithKubecolor(&StyleStatusNull, o.Kubecolor.Theme.Data.Null)
+		overrideLipglossWithKubecolor(&StyleStatusTrue, o.Kubecolor.Theme.Data.True)
+		overrideLipglossWithKubecolor(&StyleStatusFalse, o.Kubecolor.Theme.Data.False)
 	}
 
 	printer := Printer{
@@ -509,14 +513,6 @@ func (p *Printer) parseCell(cell any, row metav1.TableRow, eventType watch.Event
 		// some non-namespaced resources (e.g Role) gives timestamp instead of age
 		columnNameLower == "created at":
 		return creationTime
-	case columnNameLower == "status":
-		if eventType == watch.Deleted {
-			return table.AgoColumn{
-				Value: "Deleted",
-				Time:  time.Now(),
-			}
-		}
-		return StatusColumn(cellStr)
 	case p.apiVersion == "v1" && p.kind == "Event" && columnNameLower == "last seen",
 		p.apiVersion == "batch/v1" && p.kind == "CronJob" && columnNameLower == "last schedule":
 
@@ -552,8 +548,6 @@ func (p *Printer) parseCell(cell any, row metav1.TableRow, eventType watch.Event
 			return cell
 		}
 		return time.Now().Add(-dur)
-	case p.apiVersion == "v1" && p.kind == "Event" && columnNameLower == "reason":
-		return StatusColumn(cellStr)
 	case p.apiVersion == "v1" && p.kind == "Pod" && columnNameLower == "restarts":
 		// 0, the most common case
 		if cellStr == "0" {
@@ -574,13 +568,13 @@ func (p *Printer) parseCell(cell any, row metav1.TableRow, eventType watch.Event
 			}
 		}
 		return cell
-	case p.apiVersion == "storage.k8s.io/v1" && p.kind == "StorageClass" && columnNameLower == "reclaimpolicy":
-		return StatusColumn(cellStr)
-	case p.apiVersion == "v1" && p.kind == "PersistentVolume" && columnNameLower == "reclaim policy":
-		return StatusColumn(cellStr)
-	case p.apiVersion == "v1" && p.kind == "PersistentVolume" && columnNameLower == "status":
-		return StatusColumn(cellStr)
-	case p.apiVersion == "v1" && p.kind == "PersistentVolumeClaim" && columnNameLower == "status":
+	case columnNameLower == "status":
+		if eventType == watch.Deleted {
+			return table.AgoColumn{
+				Value: "Deleted",
+				Time:  time.Now(),
+			}
+		}
 		return StatusColumn(cellStr)
 	// Only parse fraction (e.g "1/2") if the resources was not deleted,
 	// so we don't have colored fraction on a grayed-out row.
@@ -592,9 +586,9 @@ func (p *Printer) parseCell(cell any, row metav1.TableRow, eventType watch.Event
 				Style: fractionStyle,
 			}
 		}
-		return cell
+		return StatusColumn(cellStr)
 	default:
-		return cell
+		return cellStr
 	}
 }
 
