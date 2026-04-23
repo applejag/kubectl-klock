@@ -38,6 +38,10 @@ var (
 	StyleStatusOK      = lipgloss.NewStyle().Foreground(lipgloss.ANSIColor(2))
 	StyleStatusError   = lipgloss.NewStyle().Foreground(lipgloss.ANSIColor(1))
 	StyleStatusWarning = lipgloss.NewStyle().Foreground(lipgloss.ANSIColor(3))
+
+	StyleStatusNull  = lipgloss.NewStyle().Foreground(lipgloss.ANSIColor(8))
+	StyleStatusTrue  = lipgloss.NewStyle().Foreground(lipgloss.ANSIColor(2))
+	StyleStatusFalse = lipgloss.NewStyle().Foreground(lipgloss.ANSIColor(3))
 )
 
 func FractionStyle(str string) (lipgloss.Style, bool) {
@@ -99,6 +103,7 @@ func StatusStyle(status string) lipgloss.Style {
 		"ContainerGCFailed",
 		"ImageGCFailed",
 		"FailedNodeAllocatableEnforcement",
+		"FailedCreate",
 		"FailedCreatePodSandBox",
 		"FailedPodSandBoxStatus",
 		"FailedMountOnFilesystemMismatch",
@@ -112,6 +117,9 @@ func StatusStyle(status string) lipgloss.Style {
 		// Config event reason list
 		"FailedValidation",
 		// Lifecycle hooks
+		"PreCreateHookError",
+		"PreStartHookError",
+		"PostStartHookError",
 		"FailedPostStartHook",
 		"FailedPreStopHook",
 		// Node status list
@@ -119,15 +127,20 @@ func StatusStyle(status string) lipgloss.Style {
 		"NetworkUnavailable",
 
 		// some other status
-		"CreateContainerConfigError",
 		"ContainerStatusUnknown",
+		"CreateContainerConfigError",
+		"CreateContainerError",
+		"ContainerCannotRun",
 		"CrashLoopBackOff",
+		"DeadlineExceeded",
 		"ImagePullBackOff",
 		"Evicted",
 		"FailedScheduling",
 		"Error",
 		"ErrImagePull",
-
+		"OOMKilled",
+		"RunContainerError",
+		"StartError",
 		// PVC status
 		"Lost":
 		return StyleStatusError
@@ -147,23 +160,20 @@ func StatusStyle(status string) lipgloss.Style {
 		"SuccessfulAttachVolume",
 		"SuccessfulMountVolume",
 		"NodeAllocatableEnforced",
+		"SchedulingDisabled",
 		// Image manager event reason list
 		// Probe event reason list
 		"ProbeWarning",
 		// Pod worker event reason list
 		// Config event reason list
 		// Lifecycle hooks
-		// Node event reason list
-		"SchedulingDisabled",
-		"DiskPressure",
-		"MemoryPressure",
-		"PIDPressure",
 
 		// some other status
 		"Pending",
 		"ContainerCreating",
 		"PodInitializing",
 		"Terminating",
+		"Terminated",
 		"Warning",
 
 		// PV reclaim policy
@@ -171,7 +181,9 @@ func StatusStyle(status string) lipgloss.Style {
 
 		// PVC status
 		"Available",
-		"Released":
+		"Released",
+
+		"ScalingReplicaSet":
 		return StyleStatusWarning
 	case
 		"Running",
@@ -185,6 +197,8 @@ func StatusStyle(status string) lipgloss.Style {
 		"VolumeResizeSuccessful",
 		"FileSystemResizeSuccessful",
 		"Ready",
+		"Scheduled",
+		"SuccessfulCreate",
 
 		// PV reclaim policy
 		"Retain",
@@ -192,6 +206,14 @@ func StatusStyle(status string) lipgloss.Style {
 		// PVC status
 		"Bound":
 		return StyleStatusOK
+
+	// Also allow some data-related values, common in CRD statuses (e.g. READY column with True/False)
+	case "null", "<none>", "<unknown>", "<unset>", "<nil>", "<invalid>":
+		return StyleStatusNull
+	case "true", "True", "TRUE":
+		return StyleStatusTrue
+	case "false", "False", "FALSE":
+		return StyleStatusFalse
 	}
 	// some ok status, not colored:
 	// "SandboxChanged",
