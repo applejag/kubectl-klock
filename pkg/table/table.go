@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/applejag/kubectl-klock/internal/util"
@@ -102,6 +103,14 @@ type Model struct {
 	filterInput textinput.Model
 	showSpinner bool
 
+	// mu protects all mutable state below (and the fields above that are
+	// written after construction) from concurrent access.  The Kubernetes
+	// watch goroutine calls AddRow/SetRows/SetHeaders/SetError/StartSpinner/
+	// StopSpinner while the bubbletea event loop calls Update/View on the
+	// main goroutine.
+	// See: https://github.com/applejag/kubectl-klock/issues/161
+	mu sync.Mutex
+
 	err                 error
 	headers             []string
 	maxHeight           int
@@ -135,6 +144,12 @@ func New() *Model {
 }
 
 func (m *Model) RowIndex(id string) int {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return m.rowIndex(id)
+}
+
+func (m *Model) rowIndex(id string) int {
 	for i, row := range m.rows {
 		if row.ID == id {
 			return i
@@ -144,7 +159,9 @@ func (m *Model) RowIndex(id string) int {
 }
 
 func (m *Model) AddRow(row Row) tea.Cmd {
-	index := m.RowIndex(row.ID)
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	index := m.rowIndex(row.ID)
 	if index == -1 {
 		m.rows = append(m.rows, row)
 	} else {
@@ -152,17 +169,19 @@ func (m *Model) AddRow(row Row) tea.Cmd {
 	}
 
 	m.sortItems()
-	m.StopSpinner()
+	m.stopSpinner()
 	m.updateRows()
 	fullscreenCmd := m.updateFullscreenCmd()
 	return fullscreenCmd
 }
 
 func (m *Model) SetRows(rows []Row) tea.Cmd {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.rows = slices.Clone(rows)
 	m.sortItems()
 	if len(m.rows) > 0 {
-		m.StopSpinner()
+		m.stopSpinner()
 	}
 	m.updateRows()
 	return m.updateFullscreenCmd()
@@ -222,6 +241,8 @@ func (m *Model) updateFilterSuggestions() {
 }
 
 func (m *Model) SetError(err error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.err = err
 }
 
@@ -264,7 +285,7 @@ func (m *Model) updatePagination() {
 	}
 }
 
-func (m Model) Init() tea.Cmd {
+func (m *Model) Init() tea.Cmd {
 	cmd := doTick()
 	if m.showSpinner {
 		cmd = tea.Batch(cmd, m.spinner.Tick)
@@ -273,6 +294,8 @@ func (m Model) Init() tea.Cmd {
 }
 
 func (m *Model) SetHeaders(headers []string) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.headers = headers
 	m.updateColumnWidths()
 }
@@ -286,6 +309,12 @@ func doTick() tea.Cmd {
 }
 
 func (m *Model) StartSpinner() tea.Cmd {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return m.startSpinner()
+}
+
+func (m *Model) startSpinner() tea.Cmd {
 	if m.showSpinner {
 		return nil
 	}
@@ -294,10 +323,18 @@ func (m *Model) StartSpinner() tea.Cmd {
 }
 
 func (m *Model) StopSpinner() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.stopSpinner()
+}
+
+func (m *Model) stopSpinner() {
 	m.showSpinner = false
 }
 
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch {
@@ -368,7 +405,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (m Model) View() string {
+func (m *Model) View() string {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	if m.ShowHelp {
 		return m.help.FullHelpView(m.FullHelp())
 	}
@@ -446,7 +485,7 @@ func (m Model) View() string {
 	return buf.String()
 }
 
-func (m Model) currentPaginatedPage() []Row {
+func (m *Model) currentPaginatedPage() []Row {
 	if len(m.filteredRows) == 0 {
 		return nil
 	}
@@ -454,7 +493,7 @@ func (m Model) currentPaginatedPage() []Row {
 	return m.filteredRows[start:end]
 }
 
-func (m Model) viewWriteRows(buf *bytes.Buffer, currentPage []Row) {
+func (m *Model) viewWriteRows(buf *bytes.Buffer, currentPage []Row) {
 	for i, row := range currentPage {
 		if i > 0 {
 			buf.WriteByte('\n')
@@ -463,7 +502,7 @@ func (m Model) viewWriteRows(buf *bytes.Buffer, currentPage []Row) {
 	}
 }
 
-func (m Model) rowView(buf *bytes.Buffer, row Row) {
+func (m *Model) rowView(buf *bytes.Buffer, row Row) {
 	style := m.Styles.Row.Cell
 	switch row.Status {
 	case StatusError:
@@ -476,7 +515,7 @@ func (m Model) rowView(buf *bytes.Buffer, row Row) {
 
 var lotsOfSpaces = strings.Repeat(" ", 200)
 
-func (m Model) columnsView(buf *bytes.Buffer, columns []string, style lipgloss.Style) {
+func (m *Model) columnsView(buf *bytes.Buffer, columns []string, style lipgloss.Style) {
 	for i, col := range columns {
 		if i > 0 {
 			// TODO: test style.Width()
