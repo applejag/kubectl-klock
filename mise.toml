@@ -1,0 +1,6 @@
+# SPDX-FileCopyrightText: 2023 Kalle Fagerberg
+#
+# SPDX-License-Identifier: CC0-1.0
+
+[tools]
+go = "1.26.3"
