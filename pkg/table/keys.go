@@ -129,7 +129,7 @@ var DefaultKeyMap = KeyMap{
 
 // FullHelp returns bindings to show the full help view. It's part of the
 // help.KeyMap interface.
-func (m Model) FullHelp() [][]key.Binding {
+func (m *Model) FullHelp() [][]key.Binding {
 	browsingBindings := [][]key.Binding{{
 		m.KeyMap.NextPage,
 		m.KeyMap.PrevPage,
