@@ -581,7 +581,7 @@ func (p *Printer) parseCell(cell any, row metav1.TableRow, eventType watch.Event
 	case eventType != watch.Deleted:
 		fractionStyle, ok := FractionStyle(cellStr)
 		if ok {
-			cell = table.StyledColumn{
+			return table.StyledColumn{
 				Value: cell,
 				Style: fractionStyle,
 			}
