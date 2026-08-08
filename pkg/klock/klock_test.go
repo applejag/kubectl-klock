@@ -19,7 +19,48 @@ package klock
 
 import (
 	"testing"
+	"time"
+
+	"github.com/applejag/kubectl-klock/pkg/table"
+	"github.com/charmbracelet/lipgloss"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/watch"
 )
+
+func TestParseCellFractionColoring(t *testing.T) {
+	tests := []struct {
+		name      string
+		cellValue string
+		wantStyle lipgloss.Style
+	}{
+		{
+			name:      "ready fraction ok",
+			cellValue: "1/1",
+			wantStyle: StyleFractionOK,
+		},
+		{
+			name:      "ready fraction warning",
+			cellValue: "0/1",
+			wantStyle: StyleFractionWarning,
+		},
+	}
+
+	p := &Printer{}
+	colDef := metav1.TableColumnDefinition{Name: "Ready"}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got := p.parseCell(test.cellValue, metav1.TableRow{}, watch.Added, nil, colDef, time.Now())
+			styled, ok := got.(table.StyledColumn)
+			if !ok {
+				t.Fatalf("expected table.StyledColumn, got %T (%v)", got, got)
+			}
+			if got, want := styled.Style.GetForeground(), test.wantStyle.GetForeground(); got != want {
+				t.Errorf("wrong foreground for %q\nwant: %v\ngot:  %v", test.cellValue, want, got)
+			}
+		})
+	}
+}
 
 func TestLabelColumnHeader(t *testing.T) {
 	tests := []struct {
