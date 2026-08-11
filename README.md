@@ -212,6 +212,6 @@ to your `PATH`.
 For example:
 
 ```sh
-sudo curl https://github.com/applejag/kubectl-klock/raw/main/bin/kubectl_complete-klock -o /usr/local/bin/kubectl_complete-klock
-sudo chmod +x /usr/local/bin/kubectl_complete-klock
+curl -sSfL https://github.com/applejag/kubectl-klock/raw/main/bin/kubectl_complete-klock -o ~/.local/bin/kubectl_complete-klock
+chmod -v +x ~/.local/bin/kubectl_complete-klock
 ```
