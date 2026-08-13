@@ -13,7 +13,7 @@ require (
 	github.com/fsnotify/fsnotify v1.10.1
 	github.com/gookit/color v1.6.1
 	github.com/knadh/koanf/providers/env v1.1.0
-	github.com/knadh/koanf/providers/posflag v1.0.1
+	github.com/knadh/koanf/providers/posflag v1.0.2
 	github.com/knadh/koanf/v2 v2.3.5
 	github.com/kubecolor/kubecolor v0.6.0
 	github.com/mattn/go-colorable v0.1.15
