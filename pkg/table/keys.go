@@ -49,6 +49,11 @@ type KeyMap struct {
 
 	// The quit-no-matter-what keybinding. This will be caught when filtering.
 	ForceQuit key.Binding
+
+	ColumnsMenu key.Binding
+	ColumnDown key.Binding
+	ColumnUp key.Binding
+	ColumnToggle key.Binding
 }
 
 func (k KeyMap) EscapeFilterText(keyMsg tea.KeyMsg) bool {
@@ -125,6 +130,24 @@ var DefaultKeyMap = KeyMap{
 		key.WithKeys("ctrl+c"),
 		key.WithHelp("ctrl+c", "quit"),
 	),
+
+	// Toggle columns and columns navigation
+	ColumnsMenu: key.NewBinding(
+		key.WithKeys("t"),
+		key.WithHelp("t", "toggle columns menu"),
+	),
+	ColumnUp: key.NewBinding(
+		key.WithKeys("up", "k"),
+		key.WithHelp("↑/k", "move up"),
+	),
+	ColumnDown: key.NewBinding(
+		key.WithKeys("down", "j"),
+		key.WithHelp("↓/j", "move down"),
+	),
+	ColumnToggle: key.NewBinding(
+		key.WithKeys("enter", " "),
+		key.WithHelp("enter/space", "toggle column"),
+	),
 }
 
 // FullHelp returns bindings to show the full help view. It's part of the
@@ -154,6 +177,7 @@ func (m *Model) FullHelp() [][]key.Binding {
 		m.KeyMap.NextSuggestion,
 		m.KeyMap.PrevSuggestion,
 		m.KeyMap.AcceptSuggestion,
+		m.KeyMap.ColumnsMenu,
 	}
 
 	actionsBindings := []key.Binding{
@@ -161,6 +185,9 @@ func (m *Model) FullHelp() [][]key.Binding {
 		m.KeyMap.CloseFullHelp,
 		m.KeyMap.ToggleDeleted,
 		m.KeyMap.ToggleFullscreen,
+		m.KeyMap.ColumnUp,
+		m.KeyMap.ColumnDown,
+		m.KeyMap.ColumnToggle,
 	}
 
 	return append(

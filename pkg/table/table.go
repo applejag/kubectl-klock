@@ -122,6 +122,10 @@ type Model struct {
 	prevSuggestionCount int
 
 	filterInputEnabled bool
+
+	hiddenColumns 		map[int]bool
+	columnsInputEnabled bool
+	columnsCursor       int
 }
 
 func New() *Model {
@@ -136,6 +140,9 @@ func New() *Model {
 
 		filterInput:        textinput.New(),
 		filterInputEnabled: false,
+
+		hiddenColumns: 		 map[int]bool{},
+		columnsInputEnabled: false,
 
 		headers:   nil,
 		maxHeight: 30,
@@ -301,6 +308,7 @@ func (m *Model) SetHeaders(headers []string) {
 }
 
 type TickMsg time.Time
+	m.updateColumnWidths()
 
 func doTick() tea.Cmd {
 	return tea.Tick(time.Second, func(t time.Time) tea.Msg {
@@ -380,6 +388,23 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.filterInputEnabled = true
 			m.updateRows()
 			return m, m.filterInput.Focus()
+		case key.Matches(msg, m.KeyMap.ColumnsMenu):
+			m.columnsInputEnabled = !m.columnsInputEnabled
+			return m, nil
+		case m.columnsInputEnabled && key.Matches(msg, m.KeyMap.ColumnUp):
+			if m.columnsCursor > 0 {
+				m.columnsCursor--
+			}
+			return m, nil
+		case m.columnsInputEnabled && key.Matches(msg, m.KeyMap.ColumnDown):
+			if m.columnsCursor < len(m.headers)-1 {
+				m.columnsCursor++
+			}
+			return m, nil
+		case m.columnsInputEnabled && key.Matches(msg, m.KeyMap.ColumnToggle):
+			m.hiddenColumns[m.columnsCursor] = !m.hiddenColumns[m.columnsCursor]
+			m.updateColumnWidths()
+			return m, nil
 		}
 	case spinner.TickMsg:
 		s, cmd := m.spinner.Update(msg)
@@ -424,8 +449,25 @@ func (m *Model) View() string {
 			m.filterInput.PromptStyle = m.Styles.FilterPrompt
 			buf.WriteString(m.filterInput.View())
 			buf.WriteByte('\n')
+		} else if m.columnsInputEnabled {
+			for i := range m.headers {
+				cursor := " "
+				if i == m.columnsCursor {
+					cursor = ">"
+				}
+				box := "[ ]"
+				if m.hiddenColumns[i] {
+					box = "[x]"
+				}
+				buf.WriteString(fmt.Sprintf("%s %s %s", cursor, box, m.headers[i]))
+				buf.WriteByte('\n')
+			}
 		} else if len(currentPage) > 0 {
-			m.columnsView(&buf, m.headers, m.Styles.Header)
+			if len(m.visibleHeaders()) == 0 {
+				buf.WriteString(m.Styles.FilterNoneVisible.Render("0 columns enabled, press t to toggle columns"))
+			} else {
+				m.columnsView(&buf, m.visibleHeaders(), m.Styles.Header)
+			}
 			buf.WriteByte('\n')
 		}
 	}
@@ -510,7 +552,8 @@ func (m *Model) rowView(buf *bytes.Buffer, row Row) {
 	case StatusDeleted:
 		style = m.Styles.Row.Deleted
 	}
-	m.columnsView(buf, row.RenderedFields(), style)
+	m.columnsView(buf, 	m.visibleFields(row.RenderedFields()), style)
+
 }
 
 var lotsOfSpaces = strings.Repeat(" ", 200)
@@ -529,9 +572,14 @@ func (m *Model) columnsView(buf *bytes.Buffer, columns []string, style lipgloss.
 }
 
 func (m *Model) updateColumnWidths() {
-	lengths := expandToMaxLengths(nil, m.headers)
+	// lengths := expandToMaxLengths(nil, m.headers)
+	// for _, row := range m.currentPaginatedPage() {
+	// 	lengths = expandToMaxLengths(lengths, row.RenderedFields())
+	// }
+	// m.columnWidths = lengths
+	lengths := expandToMaxLengths(nil, m.visibleHeaders())
 	for _, row := range m.currentPaginatedPage() {
-		lengths = expandToMaxLengths(lengths, row.RenderedFields())
+		lengths = expandToMaxLengths(lengths, m.visibleFields(row.RenderedFields()))
 	}
 	m.columnWidths = lengths
 }
@@ -562,4 +610,21 @@ func expandSlice[S ~[]E, E any](slice S, minLen int) S {
 		return slice[:minLen]
 	}
 	return append(slice, make(S, delta)...)
+}
+
+func (m *Model) visibleHeaders() []string {
+	return m.visibleFields(m.headers)	
+}
+
+func (m *Model) visibleFields(fields []string) []string {
+	if len(m.hiddenColumns) == 0 {
+		return fields
+	}
+	visible := make([]string, 0, len(fields))
+	for i, f := range fields {
+		if !m.hiddenColumns[i] {
+			visible = append(visible, f)
+		}
+	}
+	return visible
 }
