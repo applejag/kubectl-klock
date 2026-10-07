@@ -24,6 +24,7 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/kubecolor/kubecolor/config"
+	"github.com/kubecolor/kubecolor/config/color"
 	"k8s.io/apimachinery/pkg/util/duration"
 )
 
@@ -153,8 +154,8 @@ func renderColumn(value any, index int, cfg *config.Config) string {
 	case time.Time:
 		dur := time.Since(value)
 		str := duration.HumanDuration(dur)
-		if cfg != nil && cfg.ObjFreshThreshold > 0 && time.Since(value) <= cfg.ObjFreshThreshold {
-			return cfg.Theme.Data.DurationFresh.Render(str)
+		if c, ok := freshColor(dur, cfg); ok {
+			return c.Render(str)
 		}
 		return colorFromColumn(str, index, cfg)
 	case fmt.Stringer:
@@ -165,6 +166,24 @@ func renderColumn(value any, index int, cfg *config.Config) string {
 		}
 		return colorFromColumn(fmt.Sprint(value), index, cfg)
 	}
+}
+
+// freshColor returns the theme.data.durationFresh color for the first
+// objFreshThreshold that the age is below, pairing thresholds and colors by
+// position the same way kubecolor does.
+func freshColor(age time.Duration, cfg *config.Config) (color.Color, bool) {
+	if cfg == nil {
+		return color.Color{}, false
+	}
+	for i, threshold := range cfg.ObjFreshThreshold {
+		if age < threshold {
+			if i < len(cfg.Theme.Data.DurationFresh) {
+				return cfg.Theme.Data.DurationFresh[i], true
+			}
+			break
+		}
+	}
+	return color.Color{}, false
 }
 
 func colorFromColumn(s string, index int, cfg *config.Config) string {

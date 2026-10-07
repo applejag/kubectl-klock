@@ -30,6 +30,7 @@ import (
 	"github.com/kubecolor/kubecolor/config"
 	"github.com/kubecolor/kubecolor/printer"
 	"github.com/mattn/go-colorable"
+	"github.com/muesli/termenv"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
@@ -232,8 +233,7 @@ func getKubecolorConfig() (*config.Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := config.ApplyThemePreset(v); err != nil {
-		return nil, err
-	}
-	return config.Unmarshal(v)
+	// Unmarshal also applies the theme preset. The terminal info is used to
+	// resolve the "auto" presets to their dark or light variant.
+	return config.Unmarshal(v, termenv.DefaultOutput())
 }
