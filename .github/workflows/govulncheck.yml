@@ -3,20 +3,52 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 name: govulncheck
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
 
-permissions:
-  contents: read
+on:
+  schedule:
+    - cron: 0 8 * * 1 # 08:00 on mondays
+  workflow_dispatch: # allow for triggering manually
+
+permissions: {}
 
 jobs:
   govulncheck:
     runs-on: ubuntu-latest
     name: Run govulncheck
+    permissions:
+      contents: read
+      issues: write
     steps:
-      - uses: golang/govulncheck-action@032d45514ae346b1db93c04b0c90b841c370344f # v1.1.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-           go-version-file: go.mod
+          persist-credentials: false
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # 7.0.0
+        with:
+          go-version-file: go.mod
+
+      - name: Install govulncheck
+        run: go install golang.org/x/vuln/cmd/govulncheck@latest
+        shell: bash
+
+      - name: Run govulncheck
+        id: govulncheck
+        run: |
+          echo "govulncheck<<GOVULNCHECK_OUTPUT" >> $GITHUB_OUTPUT
+          set +e # don't exit on error
+          govulncheck ./... 2>&1 | tee --append $GITHUB_OUTPUT
+          exit_status=$?
+          echo "GOVULNCHECK_OUTPUT" >> $GITHUB_OUTPUT
+          exit $exit_status
+        shell: bash
+
+      - name: Create GitHub issue
+        uses: JasonEtco/create-an-issue@1b14a70e4d8dc185e5cc76d3bec9eab20257b2c5 # v2.9.2
+        if: ${{ !cancelled() && steps.govulncheck.conclusion == 'failure' && github.event_name == 'schedule' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GOVULNCHECK_OUTPUT: ${{ steps.govulncheck.outputs.govulncheck }}
+          ACTION_FULL_URL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        with:
+          filename: .github/issue_govulncheck_template.md
+          update_existing: true
