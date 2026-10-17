@@ -30,6 +30,7 @@ import (
 	"github.com/kubecolor/kubecolor/config"
 	"github.com/kubecolor/kubecolor/printer"
 	"github.com/mattn/go-colorable"
+	"github.com/muesli/termenv"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
@@ -232,8 +233,5 @@ func getKubecolorConfig() (*config.Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := config.ApplyThemePreset(v); err != nil {
-		return nil, err
-	}
-	return config.Unmarshal(v)
+	return config.Unmarshal(v, termenv.DefaultOutput())
 }

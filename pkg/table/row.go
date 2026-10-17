@@ -24,6 +24,7 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/kubecolor/kubecolor/config"
+	"github.com/kubecolor/kubecolor/printer"
 	"k8s.io/apimachinery/pkg/util/duration"
 )
 
@@ -153,8 +154,10 @@ func renderColumn(value any, index int, cfg *config.Config) string {
 	case time.Time:
 		dur := time.Since(value)
 		str := duration.HumanDuration(dur)
-		if cfg != nil && cfg.ObjFreshThreshold > 0 && time.Since(value) <= cfg.ObjFreshThreshold {
-			return cfg.Theme.Data.DurationFresh.Render(str)
+		if cfg != nil {
+			if c := printer.ColorDuration(dur, cfg.ObjFreshThreshold, &cfg.Theme); !c.IsNoop() {
+				return c.Render(str)
+			}
 		}
 		return colorFromColumn(str, index, cfg)
 	case fmt.Stringer:
