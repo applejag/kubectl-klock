@@ -154,8 +154,10 @@ func renderColumn(value any, index int, cfg *config.Config) string {
 	case time.Time:
 		dur := time.Since(value)
 		str := duration.HumanDuration(dur)
-		if c := printer.ColorDuration(dur, cfg.ObjFreshThreshold, &cfg.Theme); !c.IsNoop() {
-			return c.Render(str)
+		if cfg != nil {
+			if c := printer.ColorDuration(dur, cfg.ObjFreshThreshold, &cfg.Theme); !c.IsNoop() {
+				return c.Render(str)
+			}
 		}
 		return colorFromColumn(str, index, cfg)
 	case fmt.Stringer:
