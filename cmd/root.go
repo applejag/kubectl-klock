@@ -233,7 +233,5 @@ func getKubecolorConfig() (*config.Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	// Unmarshal also applies the theme preset. The terminal info is used to
-	// resolve the "auto" presets to their dark or light variant.
 	return config.Unmarshal(v, termenv.DefaultOutput())
 }
