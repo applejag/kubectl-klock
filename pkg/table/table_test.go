@@ -25,9 +25,6 @@ import (
 	"github.com/kubecolor/kubecolor/config/color"
 )
 
-func Test(t *testing.T) {
-}
-
 func TestFreshColor(t *testing.T) {
 	green := color.MustParse("green")
 	yellow := color.MustParse("yellow")
