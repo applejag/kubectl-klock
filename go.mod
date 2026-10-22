@@ -16,7 +16,7 @@ require (
 	github.com/knadh/koanf/providers/posflag v1.0.2
 	github.com/knadh/koanf/v2 v2.3.6
 	github.com/kubecolor/kubecolor v0.8.0
-	github.com/mattn/go-colorable v0.1.15
+	github.com/mattn/go-colorable v0.1.16
 	github.com/muesli/reflow v0.3.0
 	github.com/muesli/termenv v0.16.0
 	github.com/spf13/cobra v1.10.2
