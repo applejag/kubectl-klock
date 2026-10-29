@@ -25,7 +25,7 @@ jobs:
           persist-credentials: false
 
       - name: markdownlint
-        uses: reviewdog/action-markdownlint@b85a623ec721cb42896c485633f527cbd2d58063 # v0.31.5
+        uses: reviewdog/action-markdownlint@0f00f9816d25b024975712a1ad4ea03dbf5848a6 # v0.31.7
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           reporter: github-pr-review
