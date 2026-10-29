@@ -14,7 +14,7 @@ require (
 	github.com/gookit/color v1.6.2
 	github.com/knadh/koanf/providers/env v1.1.0
 	github.com/knadh/koanf/providers/posflag v1.0.2
-	github.com/knadh/koanf/v2 v2.3.8
+	github.com/knadh/koanf/v2 v2.4.1
 	github.com/kubecolor/kubecolor v0.8.0
 	github.com/mattn/go-colorable v0.1.16
 	github.com/muesli/reflow v0.3.0
