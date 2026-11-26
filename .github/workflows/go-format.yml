@@ -25,7 +25,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup Go
-        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
         with:
           go-version-file: go.mod
 
@@ -38,6 +38,6 @@ jobs:
           find . -name '*.go' -not -path './api/**'
           goimports -w $(find . -name '*.go' -not -path './api/**')
 
-      - uses: reviewdog/action-suggester@ac5ce6d94e35c00530447dc63c271e38e4fd36c6 # v1.26.3
+      - uses: reviewdog/action-suggester@fd22a83b1ebc13fd8aee5d57b06793fce6f20fb9 # v1.27.1
         with:
           tool_name: goimports
